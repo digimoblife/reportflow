@@ -23,6 +23,23 @@ putuskan berbeda. Setiap entri menyebut section PRD terkait.
 - Koneksi `pgsql` memaksa `timezone = UTC` untuk session database.
 - Model menulis timestamp dengan offset (`Y-m-d H:i:sP`, trait `StoresTimestampsWithOffset`).
   Tanpa ini Eloquent membuang offset sehingga Carbon ber-zona `Asia/Jakarta` tersimpan seolah UTC.
+- **Binding datetime dengan offset (ketergantungan pada internal Laravel).** `Connection::prepareBindings()`
+  memformat nilai `DateTimeInterface` dengan `getDateFormat()` milik **query grammar**, default
+  `Y-m-d H:i:s` (tanpa offset). Akibatnya Carbon ber-zona `Asia/Jakarta` dibandingkan dengan kolom
+  `timestamptz` seolah-olah UTC dan hasilnya bergeser 7 jam. `App\Database\PostgresConnection`
+  (didaftarkan lewat `Connection::resolverFor('pgsql')` di `AppServiceProvider`) memakai
+  `App\Database\Query\Grammars\PostgresGrammar` yang memformat `Y-m-d H:i:sP`.
+  - Kita bergantung pada dua hal internal: `prepareBindings()` memakai `Grammar::getDateFormat()`, dan
+    `PostgresConnection::getDefaultQueryGrammar()` dapat di-override. `DatetimeBindingTest` ("binds datetimes
+    with their UTC offset") gagal jelas jika salah satunya berubah saat upgrade Laravel; test itu memeriksa
+    hasil `prepareBindings()` dan string yang benar-benar diterima PostgreSQL (`select ?::text`).
+  - Kolom `date` tidak terpengaruh: PostgreSQL membuang jam dan offset saat membaca literal ke `date`, jadi yang
+    dipakai adalah tanggal kalender pada zona milik Carbon itu. Pemanggil tetap harus mengubah ke zona user
+    sebelum membandingkan atau menulis `date` (00:30 Jakarta adalah 17:30 UTC hari sebelumnya).
+  - `whereDate()` pada kolom `timestamptz` membandingkan tanggal kalender **UTC** (session timezone = UTC),
+    bukan tanggal Jakarta. Untuk batas hari zona user pakai `whereBetween` dengan awal/akhir hari ber-zona.
+  - `Model::getDateFormat()` (trait `StoresTimestampsWithOffset`) mengatur penulisan atribut model; grammar di
+    atas mengatur nilai di klausa query. Keduanya diperlukan.
 - `activities.activity_date`, `reports.period_start`, `reports.period_end` bertipe `date`: tanggal
   kalender dalam zona waktu user, bukan titik waktu. Konversi ke zona user dilakukan sebelum menulis.
 
@@ -120,8 +137,22 @@ Aturan:
 - Nilai enum disimpan sebagai string backing value (`"in_progress"`), bukan label.
 - `waiting_reason` selalu ada (boleh `null`) di event yang memuat `status`.
 - Reopen (Completed → In Progress, Cancelled → Open) dicatat sebagai `reopened`, bukan `status_changed`.
-- Perubahan hanya `waiting_reason` (waiting → waiting) dicatat sebagai `status_changed` dengan status
-  sama di kedua sisi. Ini bukan transisi status menurut `TaskStatusTransition`.
+- **KEPUTUSAN TERBUKA untuk rencana M4 (belum dipilih):** bagaimana mencatat perubahan yang hanya mengubah
+  `waiting_reason` (waiting → waiting). Ini bukan transisi status menurut `TaskStatusTransition`. Seeder dan
+  test M1 belum bergantung pada salah satu opsi.
+  - **(a) Tipe event terpisah `waiting_reason_changed`.**
+    - Kelebihan: `status_changed` selalu berarti status berubah, jadi laporan, filter audit, dan hitungan
+      "berapa kali status berubah" tidak perlu mengecualikan kasus from == to. Undo dan tampilan timeline
+      memperlakukannya sebagai jenis perubahan sendiri.
+    - Kekurangan: nilai enum baru `TaskEventType` dan migrasi yang mengganti CHECK `task_events_event_type_check`
+      (aturan "menambah nilai = migrasi baru"), plus satu cabang lagi di undo dan di tampilan timeline.
+  - **(b) Tetap `status_changed` dengan status sama di kedua sisi.**
+    - Kelebihan: tanpa perubahan skema atau enum, dan bentuk `from_value`/`to_value` sudah ditentukan
+      (`{"status", "waiting_reason"}`).
+    - Kekurangan: konsumen wajib membedakan "status berubah" dari "hanya alasan berubah" dengan membandingkan
+      `from_value.status` dan `to_value.status`. Undo harus memulihkan `waiting_reason` tanpa memanggil
+      `TaskStatusTransition` (tidak ada transisi), dan laporan/statistik yang menghitung `status_changed` harus
+      mengecualikan kasus ini agar tidak menghitung perubahan status yang tidak terjadi.
 
 ### Transisi status (PRD §14)
 
@@ -133,6 +164,17 @@ Aturan:
   sebagai **no-op tanpa `task_event`**, bukan error ke user.
 - "Draft … atau dihapus" di matriks bukan status: penghapusan Draft adalah soft delete (M4).
   Draft → Cancelled tidak diizinkan.
+
+### Lingkungan test
+
+- `phpunit.xml` memakai `tests/bootstrap.php`, yang menulis `APP_ENV=testing`, `DB_*` (guard `reportflow_test`),
+  dan `DEV_USER_*` kosong ke `$_ENV`, `$_SERVER`, dan `putenv()` sebelum Laravel boot. Sebabnya: `<env force="true">`
+  PHPUnit hanya menulis `$_ENV` dan `putenv()`, sedangkan repository dotenv Laravel membaca `$_SERVER` lebih dulu,
+  sehingga `APP_ENV=local` dari docker-compose mengalahkan phpunit.xml.
+- Test yang butuh environment lain memakai `withAppEnvironment()` (`tests/Pest.php`), yang me-restore nilai
+  sebelumnya dan boot ulang aplikasi. Jangan mengandalkan transaksi `RefreshDatabase` di dalam callback-nya.
+- Jangan memanggil `db:seed` tanpa `--force` di test ber-environment production: prompt konfirmasi (Laravel Prompts)
+  dijawab "tidak" tanpa terminal sehingga command dibatalkan dan asersi lulus tanpa menguji guard seeder.
 
 ### Optimistic locking (PRD §23)
 
