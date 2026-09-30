@@ -1,14 +1,16 @@
 <?php
 
 use App\Models\AiInteraction;
-use App\Services\Ai\AIService;
 use App\Services\Ai\AiExtractionFailed;
 use App\Services\Ai\AiProviderException;
+use App\Services\Ai\AIService;
+use App\Services\Ai\ExtractionOutcome;
+use App\Services\Redaction\RedactionService;
 use App\Services\Worklog\CandidateBuilder;
 use Tests\Support\Extraction;
 use Tests\Support\FakeSecrets;
 
-function runExtraction(array $w, string $message = 'Harbor Portal: webhook sudah jalan', ?int $inboundId = null): App\Services\Ai\ExtractionOutcome
+function runExtraction(array $w, string $message = 'Harbor Portal: webhook sudah jalan', ?int $inboundId = null): ExtractionOutcome
 {
     $set = app(CandidateBuilder::class)->build($message, $w['today']);
 
@@ -132,7 +134,7 @@ it('accepts another prompt version by reference', function () {
 it('keeps secrets out of everything it sends and stores, given redacted input', function () {
     $w = worklogWorld();
     $canary = FakeSecrets::canary();
-    $message = app(App\Services\Redaction\RedactionService::class)->redact("Harbor Portal deploy pakai key $canary")->text;
+    $message = app(RedactionService::class)->redact("Harbor Portal deploy pakai key $canary")->text;
 
     runExtraction($w, $message);
 

@@ -1,17 +1,24 @@
 <?php
 
 use App\Enums\InboundMessageStatus;
+use App\Enums\TaskStatus;
 use App\Jobs\DeliverInboundConfirmation;
 use App\Jobs\ProcessInboundMessage;
+use App\Models\Activity;
+use App\Models\AiInteraction;
 use App\Models\InboundMessage;
+use App\Models\Project;
+use App\Models\Task;
 use App\Services\Ai\AiProviderException;
 use App\Services\Telegram\TelegramApiException;
+use App\Support\UserContext;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Support\Extraction;
 use Tests\Support\FakeSecrets;
 use Tests\Support\TelegramPayload;
 
@@ -309,4 +316,53 @@ it('serves a dashboard-sourced message without touching Telegram', function () {
     expect(storedMessages()->sole()->status)->toBe(InboundMessageStatus::Processed)
         ->and(fakeTelegram()->sent)->toBe([])
         ->and(fakeTelegram()->edits)->toBe([]);
+});
+
+/*
+| M3: the job now runs candidate retrieval, the AI call and validation.
+*/
+
+it('extracts and validates through the real queue, and logs the AI call for the message', function () {
+    app(UserContext::class)->runAs($this->user->id, function () {
+        $project = Project::factory()->create(['name' => 'Harbor Portal', 'slug' => 'harbor-portal']);
+        $task = Task::factory()->for($project)->create(['title' => 'Shipment Tracking API', 'status' => TaskStatus::InProgress]);
+        $this->taskId = $task->id;
+        $this->projectId = $project->id;
+    });
+    fakeAi()->respondWith(Extraction::json([Extraction::item($this->taskId, $this->projectId)]));
+    $logs = captureLogs();
+
+    send('Harbor Portal: tracking API sudah diuji', 40);
+    runWorker();
+
+    $message = storedMessages()->sole();
+    $interaction = asSystem(fn () => AiInteraction::query()->where('inbound_message_id', $message->id)->sole());
+
+    expect($message->status)->toBe(InboundMessageStatus::Processed)
+        ->and($interaction->success)->toBeTrue()
+        ->and($interaction->purpose)->toBe('worklog_extraction')
+        ->and($interaction->prompt_version)->toBe('worklog_extraction@v1')
+        ->and(collect($logs->getRecords())->firstWhere('message', 'worklog.extracted')->context['items'])->toBe(['accepted' => 1])
+        // nothing was written to tasks/activities yet (M4)
+        ->and(asSystem(fn () => Activity::query()->count()))->toBe(0)
+        ->and(isVariantOf(fakeTelegram()->edits[0]['text'], 'worklog.recorded_dummy'))->toBeTrue();
+});
+
+it('marks the message failed, with a code-only error, when the model never returns a valid extraction', function () {
+    fakeAi()->respondWith('{"items": "nope"}');
+    send('catatan yang tidak bisa dipahami model', 41);
+
+    runWorker();
+    advance(6);
+    runWorker();
+    advance(31);
+    runWorker();
+
+    $message = storedMessages()->sole();
+    expect($message->status)->toBe(InboundMessageStatus::Failed)
+        ->and($message->error)->toBe('worklog_failed:AiExtractionFailed')
+        ->and($message->text)->toBe('catatan yang tidak bisa dipahami model')
+        ->and(fakeAi()->requests)->toHaveCount(6)                     // 2 attempts x 3 job attempts
+        ->and(isVariantOf(fakeTelegram()->edits[0]['text'], 'worklog.failed'))->toBeTrue()
+        ->and(asSystem(fn () => AiInteraction::query()->where('success', false)->count()))->toBe(6);
 });

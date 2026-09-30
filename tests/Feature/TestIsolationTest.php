@@ -21,6 +21,8 @@ it('points every shared or external service at a test double or a dead host', fu
         ->and(config('telegram.client'))->toBe('fake')
         ->and(config('telegram.token'))->toBeIn([null, ''])
         ->and(config('ai.provider'))->toBe('fake')
+        ->and(config('ai.deepseek.api_key'))->toBeIn([null, ''])
+        ->and(config('ai.deepseek.base_url'))->toEndWith('.invalid')
         ->and(env('DEEPSEEK_API_KEY'))->toBeIn([null, ''])
         ->and(env('DEEPSEEK_BASE_URL'))->toEndWith('.invalid')
         ->and(config('services.ses.key'))->toBeIn([null, ''])

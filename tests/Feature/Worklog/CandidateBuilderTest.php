@@ -1,9 +1,11 @@
 <?php
 
 use App\Services\Worklog\CandidateBuilder;
+use App\Services\Worklog\CandidateSet;
+use App\Support\UserContext;
 use Carbon\CarbonImmutable;
 
-function candidateTitles(App\Services\Worklog\CandidateSet $set): array
+function candidateTitles(CandidateSet $set): array
 {
     $titles = array_column($set->tasks, 'title');
     sort($titles);
@@ -98,7 +100,7 @@ it('returns nothing when the user has no active project', function () {
 it('never sees another user when the context changes', function () {
     $w = worklogWorld();
 
-    $seenByStranger = app(App\Support\UserContext::class)->runAs($w['stranger']->id, fn () => app(CandidateBuilder::class)->build('Harbor Portal Clone', $w['today']));
+    $seenByStranger = app(UserContext::class)->runAs($w['stranger']->id, fn () => app(CandidateBuilder::class)->build('Harbor Portal Clone', $w['today']));
 
     expect(candidateTitles($seenByStranger))->toBe(['Stranger Task']);
 });

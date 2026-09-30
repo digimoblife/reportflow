@@ -1,15 +1,18 @@
 <?php
 
+use App\Models\Task;
 use App\Services\Ai\ExtractionSchema;
 use App\Services\Worklog\CandidateBuilder;
 use App\Services\Worklog\Extraction\ConfidenceLevel;
+use App\Services\Worklog\Extraction\ConfidencePolicy;
 use App\Services\Worklog\Extraction\ExtractionValidator;
 use App\Services\Worklog\Extraction\ItemDecision;
+use App\Services\Worklog\Extraction\ValidatedItem;
 use Carbon\CarbonImmutable;
 use Tests\Support\Extraction;
 
 /** Validate one item against the candidate set built for `$message`; returns the ValidatedItem. */
-function validateOne(array $w, array $item, string $message = 'Harbor Portal'): App\Services\Worklog\Extraction\ValidatedItem
+function validateOne(array $w, array $item, string $message = 'Harbor Portal'): ValidatedItem
 {
     $set = app(CandidateBuilder::class)->build($message, $w['today']);
     $payload = Extraction::payload([$item]);
@@ -235,7 +238,7 @@ describe('confidence (step 7)', function () {
 
         $stranger = validateOne($w, Extraction::item($w['invoice']->id, $w['harbor']->id, ['people' => ['Zed']]));
         $stale = validateOne($w, Extraction::item($w['sso']->id, $w['harbor']->id));
-        \App\Models\Task::query()->whereKey($w['sso']->id)->update(['last_activity_at' => '2026-03-01 00:00:00+00']);
+        Task::query()->whereKey($w['sso']->id)->update(['last_activity_at' => '2026-03-01 00:00:00+00']);
         $staleNow = validateOne($w, Extraction::item($w['sso']->id, $w['harbor']->id));
 
         expect($stranger->decision)->toBe(ItemDecision::NeedsConfirmation)->and($stranger->reasons)->toBe(['person_mismatch'])
@@ -246,7 +249,7 @@ describe('confidence (step 7)', function () {
     it('honours thresholds from config', function () {
         $w = worklogWorld();
         config(['ai.confidence.high' => 0.99]);
-        app()->forgetInstance(App\Services\Worklog\Extraction\ConfidencePolicy::class);
+        app()->forgetInstance(ConfidencePolicy::class);
         app()->forgetInstance(ExtractionValidator::class);
 
         $item = validateOne($w, Extraction::item($w['tracking']->id, $w['harbor']->id, ['confidence' => 0.95]));

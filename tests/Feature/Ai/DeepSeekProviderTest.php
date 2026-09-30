@@ -3,6 +3,7 @@
 use App\Services\Ai\AiProviderException;
 use App\Services\Ai\AiRequest;
 use App\Services\Ai\DeepSeekProvider;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -92,7 +93,7 @@ it('never lets the API key escape through transport failures', function () {
         $this->fail('expected exception');
     } catch (AiProviderException $e) {
         report($e);
-        $rendered = app(Illuminate\Contracts\Debug\ExceptionHandler::class)->render(request(), $e)->getContent();
+        $rendered = app(ExceptionHandler::class)->render(request(), $e)->getContent();
 
         expect($e->getPrevious())->toBeNull()
             ->and($e->getMessage())->not->toContain($this->key)

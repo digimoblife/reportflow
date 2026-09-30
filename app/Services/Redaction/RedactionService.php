@@ -62,6 +62,11 @@ final class RedactionService
             // 4. Env-style assignments: only the value is replaced, the variable name stays readable.
             $this->rule('~(?<![A-Za-z0-9_])[A-Z][A-Z0-9_]{0,60}(?:SECRET|TOKEN|PASSWORD|PASSWD|API_?KEY|PRIVATE_KEY|ACCESS_KEY|CREDENTIALS?)[A-Z0-9_]{0,60}[ \t]{0,4}=[ \t]{0,4}\K(?!\[REDACTED_SECRET\])(?:"[^"\r\n]{1,512}"|\'[^\'\r\n]{1,512}\'|[^\s"\']{1,512})~u', RedactionCategory::Password),
 
+            // 4b. Lower-case / mixed-case compound names (client_secret=…, api-key: …, access_token=…) and bare
+            //     `token=` / `secret=` / `apikey=` assignments (query strings, .ini). A plain prose "token: …" stays untouched.
+            $this->rule('~(?<![A-Za-z0-9_-])(?=[A-Za-z0-9_-]{0,60}[_-])[A-Za-z0-9_-]{0,60}?(?:secret|token|api[_-]?key|private[_-]?key|access[_-]?key|credentials?)[A-Za-z0-9_-]{0,60}["\']?[ \t]{0,4}[:=][ \t]{0,4}\K(?!\[REDACTED_SECRET\])(?:"[^"\r\n]{1,512}"|\'[^\'\r\n]{1,512}\'|[^\s"\']{1,512})~iu', RedactionCategory::Password),
+            $this->rule('~(?<![A-Za-z0-9_-])(?:secret|token|apikey|api[_-]?key)=\K(?!\[REDACTED_SECRET\])[^\s"\'&;]{1,512}~iu', RedactionCategory::Password),
+
             // 5. Password keywords. Strong keywords with ":" or "=" always redact the value that follows
             //    (also JSON/quoted forms). Weak keywords (pass, pwd, pw) need a secret-looking value.
             $this->rule('~(?<![A-Za-z0-9_])(?:password|passwd|passphrase|kata[ \t]?sandi|katasandi|sandi)(?:nya)?["\']?[ \t]{0,4}(?::|=|->)[ \t]{0,4}\K(?!\[REDACTED_SECRET\])(?:"[^"\r\n]{1,256}"|\'[^\'\r\n]{1,256}\'|[^\s\'";,]{1,256})~iu', RedactionCategory::Password),
