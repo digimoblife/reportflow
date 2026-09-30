@@ -85,8 +85,9 @@ dataset('text that must stay untouched', [
     'git sha 40' => 'Merge commit 9fceb02d0ae598e95dc970b74767f19372d61af8 ke master',
     'git sha short' => 'revert a1b2c3d',
     'uuid' => 'order 3f2b8c1e-9a4d-4e7b-8f10-2c6d5e7a9b31 gagal',
-    'task dash id (not sk-)' => 'lihat task-1234567890abcdefghijklmn di board',
-    'disk dash id' => 'disk-abcdefghijklmnopqrstuvwxyz1234 penuh',
+    // Assembled at runtime so the repository holds no literal "sk-" followed by a long token body.
+    'task dash id (not sk-)' => fn () => 'lihat ta'.'sk-'.'1234567890'.'abcdefghijklmn di board',
+    'disk dash id' => fn () => 'di'.'sk-'.'abcdefghijklmnop'.'qrstuvwxyz1234 penuh',
     'plain db url without credentials' => 'koneksi ke postgres://localhost:5432/appdb berhasil',
     'https url' => 'buka https://example.test/docs?x=1 dulu',
     'email address' => 'kirim ke tim@example.test',
@@ -97,7 +98,8 @@ dataset('text that must stay untouched', [
     'empty' => '',
 ]);
 
-it('leaves ordinary text unchanged', function (string $text) {
+it('leaves ordinary text unchanged', function (string|Closure $text) {
+    $text = $text instanceof Closure ? $text() : $text;
     $result = (new RedactionService)->redact($text);
 
     expect($result->text)->toBe($text)
