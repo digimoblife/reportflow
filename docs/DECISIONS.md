@@ -511,7 +511,8 @@ Prompt `worklog_extraction@v1`, model `deepseek-flash`, dataset `realistic` (107
   (3) pesan permintaan mencatat sandi ("pass db … tolong catat ya") tetap dibuat item (R105). Sisanya label yang meragukan (`review`).
 - Sesuai skill `prompt-eval`, v1 tidak diubah; perbaikan = `v2.md` lalu bandingkan dengan `--baseline`.
 
-### Prompt v2 vs v1 (DeepSeek, dataset `realistic`, 30 Sep 2026)
+### Prompt v2 vs v1 (DeepSeek, dataset `realistic`, 30 Sep 2026) — TIDAK VALID, lihat koreksi di bawahnya
+**Angka pada tabel di bagian ini salah:** `eval:run --prompt=` hanya dipakai pada tahap prefetch; tahap penilaian memakai prompt default (v1), sehingga run "v2" sebenarnya v1 (plus panggilan prefetch terbuang). Kesimpulan "v2 hanya menaikkan tipe" tidak berlaku.
 v2 = definisi tipe activity, "hanya yang sudah terjadi" (rencana bukan pekerjaan), status konservatif (bagian tugas selesai ≠ task selesai), tanggal Senin/tanggal 1 untuk minggu/bulan.
 Dua run per versi (concurrency 8, satu run v1 sebelumnya berurutan memberi hasil yang sama):
 
@@ -531,3 +532,23 @@ Dua run per versi (concurrency 8, satu run v1 sebelumnya berurutan memberi hasil
   saja tidak cukup untuk model ini; perbaikan andal perlu struktur di output (mis. field `happened` per item yang dibuang backend bila false) atau konfirmasi di M4 untuk status terminal (sudah rencana: Completed/Cancelled dari AI selalu eksplisit dan bisa di-undo).
 - **Keputusan user (30 Sep 2026): v2 menjadi default** (`ai.extraction.prompt = worklog_extraction@v2`). Masalah rencana masa depan dan status untuk bagian tugas diselesaikan di M4 lewat konfirmasi dan Undo, bukan lewat prompt.
 - `eval:run` kini punya `--concurrency` (prefetch paralel, hasil identik dengan berurutan), `--only`, `--ids`, `--limit`; 107 kasus ≈ 1 menit dengan concurrency 8 (sebelumnya ≈ 6 menit).
+
+### Koreksi: v1 vs v2 dengan harness yang sudah diperbaiki (30 Sep 2026)
+Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test (`runs the prompt version it was asked for`). Dua run per versi, `deepseek-flash`, dataset `realistic`, concurrency 8 (≈ 1,5 menit/run):
+
+| Metrik | v1 (run 1 / 2) | v2 (run 1 / 2) |
+|---|---|---|
+| Extraction (item ditemukan) | 96,0% / 97,0% | 98,0% / 97,0% |
+| Project | 96,0% / 97,0% | 98,0% / 97,0% |
+| Task matching | 94,4% / 95,3% | 95,3% / 94,4% |
+| Date | 98,9% / 98,9% | 98,9% / 97,8% |
+| Tipe activity | 76,2% / 76,2% | **83,0% / 82,2%** |
+| Status | 91,3% / 92,4% | **78,0% / 80,4%** |
+| Rencana masa depan (R085–R087) | 0/3 / 0/3 | **3/3 / 3/3** |
+
+- v2 **memperbaiki** rencana masa depan (tidak lagi dicatat sebagai pekerjaan) dan klasifikasi tipe (+6 poin, konsisten). Metrik bertarget PRD sama atau sedikit lebih baik; input token ≈ +28% (prompt lebih panjang).
+- v2 **menurunkan** skor status: model kini memindahkan task `open` ke `in_progress` setiap kali ada pekerjaan (mis. "schema voucher sudah dibuat", "bahas bug invoice"). Label dataset saya berasumsi
+  "status tidak berubah kecuali dinyatakan"; PRD §11 (contoh Day 3: "Domainnya sudah dibeli" → In Progress) justru mendukung perpindahan Open → In Progress saat ada kemajuan.
+  **Ini keputusan produk, bukan bug model** — masuk daftar keputusan terbuka M4: apakah pekerjaan pertama pada task Open otomatis memindahkannya ke In Progress? Bila ya, label dataset ikut diubah dan aturan dinyatakan eksplisit.
+- Klaim "bagian tugas selesai ≠ task selesai" (R063–R065) sebagian masih salah; ditangani konfirmasi status terminal di M4.
+- Default `ai.extraction.prompt` = `worklog_extraction@v2` (keputusan user).
