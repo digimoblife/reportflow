@@ -1,0 +1,467 @@
+{
+  "today": "2026-09-30",
+  "timezone": "Asia/Jakarta",
+  "projects": [
+    {
+      "key": "samudra",
+      "name": "Samudra Logistik Portal",
+      "aliases": [
+        "Samudra",
+        "SLP",
+        "portal samudra"
+      ]
+    },
+    {
+      "key": "berkah",
+      "name": "Toko Berkah Jaya Online",
+      "aliases": [
+        "Berkah",
+        "Toko Berkah",
+        "TBJ"
+      ]
+    },
+    {
+      "key": "klinik",
+      "name": "Klinik Sehat Sentosa System",
+      "aliases": [
+        "Klinik Sehat",
+        "Sehat Sentosa",
+        "KSS",
+        "klinik"
+      ]
+    },
+    {
+      "key": "kopi",
+      "name": "Kopi Rimba Mobile App",
+      "aliases": [
+        "Kopi Rimba",
+        "Rimba",
+        "KRA"
+      ]
+    },
+    {
+      "key": "cahaya",
+      "name": "Cahaya Ilmu LMS",
+      "aliases": [
+        "Cahaya Ilmu",
+        "LMS",
+        "cahaya"
+      ]
+    }
+  ],
+  "people": [
+    {
+      "key": "hendra",
+      "name": "Pak Hendra"
+    },
+    {
+      "key": "sari",
+      "name": "Bu Sari"
+    },
+    {
+      "key": "wulan",
+      "name": "dr. Wulan"
+    },
+    {
+      "key": "dimas",
+      "name": "Dimas"
+    },
+    {
+      "key": "fajar",
+      "name": "Fajar"
+    },
+    {
+      "key": "tika",
+      "name": "Tika"
+    },
+    {
+      "key": "budi",
+      "name": "Pak Budi"
+    },
+    {
+      "key": "rani",
+      "name": "Rani"
+    }
+  ],
+  "tasks": [
+    {
+      "key": "samudra:tracking",
+      "project": "samudra",
+      "title": "Integrasi API Tracking Kurir",
+      "status": "in_progress",
+      "people": [
+        "hendra"
+      ],
+      "last_activity_at": "2026-09-29T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-29",
+          "type": "development",
+          "summary": "Endpoint sinkronisasi status kurir selesai, tinggal retry logic"
+        },
+        {
+          "date": "2026-09-26",
+          "type": "research",
+          "summary": "Baca dokumentasi API kurir, rate limit 60 request per menit"
+        }
+      ]
+    },
+    {
+      "key": "samudra:invoice",
+      "project": "samudra",
+      "title": "Bug Total Invoice Multi Halaman",
+      "status": "open",
+      "people": [
+        "hendra"
+      ],
+      "last_activity_at": "2026-09-28T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-28",
+          "type": "request",
+          "summary": "Pak Hendra lapor total di invoice halaman 2 tampil dobel"
+        }
+      ]
+    },
+    {
+      "key": "samudra:sso",
+      "project": "samudra",
+      "title": "Login SSO Karyawan",
+      "status": "waiting",
+      "waiting_reason": "client",
+      "people": [
+        "hendra"
+      ],
+      "last_activity_at": "2026-09-22T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-22",
+          "type": "communication",
+          "summary": "Kirim metadata SAML ke IT Samudra, menunggu konfigurasi IdP mereka"
+        }
+      ]
+    },
+    {
+      "key": "samudra:dashboard",
+      "project": "samudra",
+      "title": "Dashboard Utilisasi Dermaga",
+      "status": "completed",
+      "people": [
+        "hendra"
+      ],
+      "completed_at": "2026-09-15T09:00:00+00:00",
+      "last_activity_at": "2026-09-15T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-15",
+          "type": "milestone",
+          "summary": "Dashboard di-approve Pak Hendra"
+        },
+        {
+          "date": "2026-09-11",
+          "type": "testing",
+          "summary": "UAT dengan tim operasional dermaga"
+        }
+      ]
+    },
+    {
+      "key": "samudra:audit",
+      "project": "samudra",
+      "title": "Audit Log Pengguna",
+      "status": "completed",
+      "people": [
+        "hendra"
+      ],
+      "completed_at": "2026-08-05T09:00:00+00:00",
+      "last_activity_at": "2026-08-05T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-08-05",
+          "type": "milestone",
+          "summary": "Audit log live di production"
+        }
+      ]
+    },
+    {
+      "key": "berkah:payment",
+      "project": "berkah",
+      "title": "Integrasi Payment Gateway Midtrans",
+      "status": "in_progress",
+      "people": [
+        "dimas",
+        "sari"
+      ],
+      "last_activity_at": "2026-09-29T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-29",
+          "type": "configuration",
+          "summary": "Sandbox Midtrans jalan, callback masih 401"
+        },
+        {
+          "date": "2026-09-25",
+          "type": "development",
+          "summary": "Halaman checkout terhubung ke API snap"
+        },
+        {
+          "date": "2026-09-22",
+          "type": "communication",
+          "summary": "Kickoff dengan Dimas soal alur pembayaran dan webhook"
+        }
+      ]
+    },
+    {
+      "key": "berkah:promo",
+      "project": "berkah",
+      "title": "Fitur Voucher Diskon",
+      "status": "open",
+      "people": [
+        "sari"
+      ],
+      "last_activity_at": "2026-09-27T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-27",
+          "type": "request",
+          "summary": "Bu Sari minta voucher persen dan nominal"
+        }
+      ]
+    },
+    {
+      "key": "berkah:stok",
+      "project": "berkah",
+      "title": "Sinkron Stok Marketplace",
+      "status": "blocked",
+      "people": [
+        "sari"
+      ],
+      "last_activity_at": "2026-09-24T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-24",
+          "type": "blocker",
+          "summary": "Akses API Tokopedia belum di-approve, menunggu review mereka"
+        }
+      ]
+    },
+    {
+      "key": "berkah:seo",
+      "project": "berkah",
+      "title": "Optimasi Kecepatan Halaman",
+      "status": "waiting",
+      "waiting_reason": "vendor",
+      "people": [
+        "rani"
+      ],
+      "last_activity_at": "2026-09-18T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-18",
+          "type": "investigation",
+          "summary": "Gambar produk terlalu besar, minta vendor hosting aktifkan CDN, menunggu vendor"
+        }
+      ]
+    },
+    {
+      "key": "klinik:antrian",
+      "project": "klinik",
+      "title": "Sistem Antrian Pasien",
+      "status": "in_progress",
+      "people": [
+        "wulan"
+      ],
+      "last_activity_at": "2026-09-29T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-29",
+          "type": "development",
+          "summary": "Tampilan layar antrian sudah jalan, suara panggilan belum"
+        },
+        {
+          "date": "2026-09-24",
+          "type": "development",
+          "summary": "API nomor antrian dan reset harian"
+        }
+      ]
+    },
+    {
+      "key": "klinik:resep",
+      "project": "klinik",
+      "title": "Cetak Resep dan Etiket Obat",
+      "status": "open",
+      "people": [
+        "wulan"
+      ],
+      "last_activity_at": "2026-09-26T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-26",
+          "type": "request",
+          "summary": "dr. Wulan minta etiket obat ukuran 5x3"
+        }
+      ]
+    },
+    {
+      "key": "klinik:bpjs",
+      "project": "klinik",
+      "title": "Bridging BPJS VClaim",
+      "status": "waiting",
+      "waiting_reason": "client",
+      "people": [
+        "wulan"
+      ],
+      "last_activity_at": "2026-09-16T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-16",
+          "type": "communication",
+          "summary": "Menunggu kredensial bridging dari BPJS lewat klinik"
+        }
+      ]
+    },
+    {
+      "key": "klinik:backup",
+      "project": "klinik",
+      "title": "Backup Database Harian",
+      "status": "completed",
+      "people": [],
+      "completed_at": "2026-09-20T09:00:00+00:00",
+      "last_activity_at": "2026-09-20T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-20",
+          "type": "configuration",
+          "summary": "Cron backup jalan, tes restore berhasil"
+        }
+      ]
+    },
+    {
+      "key": "kopi:menu",
+      "project": "kopi",
+      "title": "Halaman Menu dan Keranjang",
+      "status": "in_progress",
+      "people": [
+        "fajar"
+      ],
+      "last_activity_at": "2026-09-28T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-28",
+          "type": "development",
+          "summary": "Keranjang sudah bisa tambah topping"
+        },
+        {
+          "date": "2026-09-25",
+          "type": "development",
+          "summary": "Daftar menu dengan kategori dan foto"
+        }
+      ]
+    },
+    {
+      "key": "kopi:loyalty",
+      "project": "kopi",
+      "title": "Program Poin Loyalitas",
+      "status": "open",
+      "people": [],
+      "last_activity_at": "2026-09-25T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-25",
+          "type": "request",
+          "summary": "Owner minta poin tiap pembelian, tukar kopi gratis"
+        }
+      ]
+    },
+    {
+      "key": "kopi:publish",
+      "project": "kopi",
+      "title": "Rilis ke Play Store",
+      "status": "completed",
+      "people": [],
+      "completed_at": "2026-09-10T09:00:00+00:00",
+      "last_activity_at": "2026-09-10T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-10",
+          "type": "deployment",
+          "summary": "Versi 1.0 live di Play Store"
+        }
+      ]
+    },
+    {
+      "key": "cahaya:quiz",
+      "project": "cahaya",
+      "title": "Modul Kuis Online",
+      "status": "in_progress",
+      "people": [
+        "budi",
+        "tika"
+      ],
+      "last_activity_at": "2026-09-29T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-29",
+          "type": "testing",
+          "summary": "Uji coba kuis 30 soal, timer error di Safari"
+        },
+        {
+          "date": "2026-09-24",
+          "type": "development",
+          "summary": "Soal pilihan ganda dan acak urutan"
+        }
+      ]
+    },
+    {
+      "key": "cahaya:sertifikat",
+      "project": "cahaya",
+      "title": "Generate Sertifikat PDF",
+      "status": "open",
+      "people": [
+        "budi"
+      ],
+      "last_activity_at": "2026-09-23T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-23",
+          "type": "request",
+          "summary": "Pak Budi minta sertifikat otomatis setelah siswa lulus"
+        }
+      ]
+    },
+    {
+      "key": "cahaya:migrasi",
+      "project": "cahaya",
+      "title": "Migrasi Data Siswa Lama",
+      "status": "cancelled",
+      "people": [
+        "budi"
+      ],
+      "last_activity_at": "2026-09-08T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-08",
+          "type": "communication",
+          "summary": "Dibatalkan, data lama diinput manual oleh sekolah"
+        }
+      ]
+    },
+    {
+      "key": "cahaya:report",
+      "project": "cahaya",
+      "title": "Laporan Nilai per Kelas",
+      "status": "waiting",
+      "waiting_reason": "client",
+      "people": [
+        "budi"
+      ],
+      "last_activity_at": "2026-09-19T09:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-19",
+          "type": "communication",
+          "summary": "Kirim contoh laporan, menunggu feedback format dari Pak Budi"
+        }
+      ]
+    }
+  ]
+}

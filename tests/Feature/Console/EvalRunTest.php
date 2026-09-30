@@ -22,6 +22,12 @@ it('runs the sample dataset with the oracle and prints numbers and case ids only
         ->and($out)->not->toContain('Harbor:')->not->toContain('Kedai Senja:');   // no message text
 });
 
+it('runs the realistic dataset', function () {
+    [$code, $out] = evalOutput(['--dataset' => 'realistic']);
+
+    expect($code)->toBe(0)->and($out)->toContain('dataset realistic | 107 cases')->toContain('Pipeline failures: none');
+});
+
 it('prints a JSON report and writes it to a file, then compares with it as a baseline', function () {
     $file = sys_get_temp_dir().'/eval-report-'.uniqid().'.json';
 

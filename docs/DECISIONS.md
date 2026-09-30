@@ -480,3 +480,12 @@ secara deterministik dari `ai_interactions.output` + snapshot kandidat, jadi M4 
 
 ### Belum dan diserahkan ke milestone berikut
 Menerapkan proposal ke DB dan pesan konfirmasi sungguhan (M4); UX konfirmasi untuk `needs_confirmation`; deteksi task duplikat; penyetelan threshold dengan dataset nyata; level PHPStan 8 (M4).
+
+### Kebijakan data ke DeepSeek (keputusan user, 30 Sep 2026)
+Teks worklog (pasca-redaction) **boleh dikirim ke DeepSeek**. `DEEPSEEK_API_KEY` sudah diisi di `.env` lokal. Redaction tetap berjalan sebelum simpan dan sebelum kirim ke AI
+(CLAUDE.md aturan 6), dan `eval:run --provider=deepseek` tetap memerlukan `--send-to-deepseek`. Kebijakan retensi DeepSeek dan perjanjian kerahasiaan per klien tetap tanggung jawab user
+bila nanti ada klien yang melarang; `AIService` dapat diarahkan ke provider lain per project.
+
+### Dataset `realistic` (30 Sep 2026)
+`tests/Eval/data-realistic/`: 107 kasus sintetis bergaya catatan Telegram nyata (Indonesia kasual, singkatan, typo, campur Inggris, rujukan samar), lima klien fiktif, 20 task. Label ditulis dari aturan PRD;
+37 kasus ditandai `review`. Bukan pengganti dataset nyata user untuk menyetel threshold.

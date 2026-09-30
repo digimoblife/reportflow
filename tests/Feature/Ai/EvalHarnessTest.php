@@ -16,9 +16,9 @@ use App\Services\Ai\Fakes\FakeAiProvider;
 use App\Services\Redaction\RedactionService;
 use Carbon\CarbonImmutable;
 
-function sampleDataset(): EvalDataset
+function sampleDataset(string $name = 'sample'): EvalDataset
 {
-    return EvalDataset::load(base_path('tests/Eval/data-sample'), 'sample');
+    return EvalDataset::load(base_path($name === 'sample' ? 'tests/Eval/data-sample' : 'tests/Eval/data-'.$name), $name);
 }
 
 /** Run the sample dataset with a provider scripted per case by $respond(case, map, today) => json string. */
@@ -33,17 +33,17 @@ function runSample(?Closure $respond = null, ?FakeAiProvider $provider = null): 
     return app(EvalRunner::class)->run(sampleDataset(), $provider, 'worklog_extraction@v1', $hook);
 }
 
-describe('the sample dataset', function () {
-    it('is large enough and covers every hard case category of PRD §75', function () {
-        $dataset = sampleDataset();
+describe('the bundled datasets', function () {
+    it('are large enough and cover every hard case category of PRD §75', function (string $name) {
+        $dataset = sampleDataset($name);
         $categories = array_unique(array_merge(...array_column($dataset->cases, 'categories')));
 
         expect(count($dataset->cases))->toBeGreaterThanOrEqual(50)
             ->and($categories)->toContain('vague', 'multi_item', 'cross_project', 'backdated', 'mixed_language', 'reopen', 'ambiguous', 'chitchat', 'credential', 'future');
-    });
+    })->with(['sample', 'realistic']);
 
-    it('is internally consistent: labels point at real snapshot keys and valid enum values', function () {
-        $dataset = sampleDataset();
+    it('are internally consistent: labels point at real snapshot keys and valid enum values', function (string $name) {
+        $dataset = sampleDataset($name);
         $projects = array_column($dataset->snapshot['projects'], 'key');
         $tasks = array_column($dataset->snapshot['tasks'], 'key');
 
@@ -59,10 +59,10 @@ describe('the sample dataset', function () {
         foreach ($dataset->snapshot['tasks'] as $task) {
             expect($task['project'])->toBeIn($projects)->and(TaskStatus::tryFrom($task['status']))->not->toBeNull();
         }
-    });
+    })->with(['sample', 'realistic']);
 
-    it('contains no secret-shaped text: fake credentials are placeholders expanded at runtime', function () {
-        foreach (sampleDataset()->cases as $case) {
+    it('contain no secret-shaped text: fake credentials are placeholders expanded at runtime', function (string $name) {
+        foreach (sampleDataset($name)->cases as $case) {
             $result = RedactionService::forUser(null)->redact($case['message']);
 
             expect($result->text)->toBe($case['message'], "{$case['id']} holds a literal secret");
@@ -70,6 +70,16 @@ describe('the sample dataset', function () {
 
         expect(EvalSecrets::expand('a {{secret:github}} b'))->not->toContain('{{')
             ->and(RedactionService::forUser(null)->redact(EvalSecrets::expand('{{secret:github}} {{secret:openai}} {{secret:password}} {{secret:generic}}'))->secretCount())->toBe(4);
+    })->with(['sample', 'realistic']);
+
+    it('let the oracle score 100% on the realistic dataset too', function () {
+        $dataset = sampleDataset('realistic');
+        $provider = new FakeAiProvider;
+        $oracle = new OracleResponder;
+
+        $report = app(EvalRunner::class)->run($dataset, $provider, 'worklog_extraction@v1', fn ($case, $map, $today) => $provider->respondWith($oracle->respond($case, $map, $today)));
+
+        expect($report->problemIds()['failed'])->toBe([])->and($report->problemIds()['wrong'])->toBe([]);
     });
 });
 

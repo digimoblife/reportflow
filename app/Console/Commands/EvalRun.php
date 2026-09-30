@@ -21,7 +21,7 @@ use InvalidArgumentException;
  */
 #[Signature('eval:run
     {--prompt= : Prompt reference name@vN (default: config ai.extraction.prompt)}
-    {--dataset=sample : "sample" (tests/Eval/data-sample, synthetic) or "local" (tests/Eval/data, your real data)}
+    {--dataset=sample : "sample" (tests/Eval/data-sample, small synthetic), "realistic" (tests/Eval/data-realistic, larger synthetic, real-looking chat style) or "local" (tests/Eval/data, your real data)}
     {--provider=fake : "fake" (an oracle that answers from the labels: checks the harness) or "deepseek" (real model)}
     {--send-to-deepseek : Required with --provider=deepseek: confirms that the dataset messages may be sent to DeepSeek}
     {--json : Print the report as JSON}
@@ -106,8 +106,9 @@ class EvalRun extends Command
     {
         $dir = match ($name) {
             'sample' => base_path('tests/Eval/data-sample'),
+            'realistic' => base_path('tests/Eval/data-realistic'),
             'local' => base_path('tests/Eval/data'),
-            default => throw new InvalidArgumentException('--dataset must be "sample" or "local".'),
+            default => throw new InvalidArgumentException('--dataset must be "sample", "realistic" or "local".'),
         };
 
         return EvalDataset::load($dir, $name);

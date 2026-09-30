@@ -2,11 +2,12 @@
 
 PRD §73 (targets), §75 (dataset). Skill: `.claude/skills/prompt-eval`.
 
-## Two datasets
+## Datasets
 
 | Name | Path | In git | What it is |
 |---|---|---|---|
 | `sample` | `tests/Eval/data-sample/` | yes | 66 **synthetic** cases (fictional projects and people). Written by the assistant from the PRD rules, not from real usage. Proves the harness, the validator and the label format; gives a rough first baseline. |
+| `realistic` | `tests/Eval/data-realistic/` | yes | 107 **synthetic** cases written to look like real Telegram notes (casual Indonesian, abbreviations, typos, mixed languages, vague references, five fictional clients, 20 tasks). Same caveat: labels come from the PRD rules, 37 are flagged `review`. |
 | `local` | `tests/Eval/data/` | **no** (gitignored) | Your real, anonymised messages. This is the one that decides thresholds and prompt changes. |
 
 Both use the same format: `snapshot.json` + `cases.jsonl`.
@@ -47,6 +48,7 @@ Both use the same format: `snapshot.json` + `cases.jsonl`.
 
 ```bash
 docker compose exec app php artisan eval:run                       # sample dataset, oracle "fake" provider
+docker compose exec app php artisan eval:run --dataset=realistic   # larger, real-looking dataset
 docker compose exec app php artisan eval:run --json --out=/tmp/base.json
 docker compose exec app php artisan eval:run --prompt=worklog_extraction@v2 --baseline=/tmp/base.json
 ```
