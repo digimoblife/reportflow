@@ -59,6 +59,8 @@ PostgreSQL, Redis, Gotenberg hanya di network internal Docker.
 - Semua panggilan AI lewat `AIService`; catat ke `ai_interactions` (termasuk `prompt_version`).
 - Prompt disimpan sebagai file versi: `resources/prompts/<nama>/v<N>.md`. Ubah prompt = naikkan versi + jalankan eval
   (lihat skill `prompt-eval`).
+  Jangan mengedit versi yang sudah ada (test mengunci checksum v1). Dataset evaluasi nyata hanya di `tests/Eval/data/` (gitignored);
+  `eval:run --provider=deepseek` hanya dijalankan user, dengan `--send-to-deepseek`. Format: `docs/runbooks/evaluation-dataset.md`.
 - Test memakai `FakeAiProvider`; **tidak ada test yang memanggil DeepSeek atau Telegram sungguhan.**
 - Tulis test bersama fitur. Prioritas test: transition matrix, redaction, validator AI output, idempotency,
   undo, optimistic locking, pemilihan activity per periode laporan.

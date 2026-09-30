@@ -420,3 +420,63 @@ Prosedur: `docs/runbooks/telegram-live-test.md`.
   worker hidup. Pengguna tidak melihat petunjuk apa pun selama menunggu; relevan untuk pembersih pesan macet (M4/M7).
 - **Tindak lanjut kecil:** `telegram:set-webhook --dry-run` menampilkan 4 karakter pertama path webhook; sebaiknya hanya
   panjangnya.
+
+---
+
+## M3 — AI Extraction & Evaluation Harness (kerangka)
+
+PRD §12, §13, §50–§54, §73, §75, §79. Dibangun dan diuji dengan `FakeAiProvider`; tidak ada panggilan DeepSeek di test/CI.
+
+### Kontrak AI dan DeepSeek
+- `AiProvider::complete(AiRequest): AiResponse` (system + user, JSON mode, token dan latensi) menggantikan seam sementara M2. `AIService::extractWorklog`
+  satu-satunya jalan dari logika bisnis ke model; setiap percobaan dicatat ke `ai_interactions` (purpose `worklog_extraction`, `prompt_version`
+  `worklog_extraction@vN`, `input` = teks ter-redaksi + kandidat tanpa system prompt, `output` mentah, token, latensi, `success`, `error` = kode).
+- **Retry:** JSON tidak valid / schema gagal → satu percobaan ulang dengan daftar field yang gagal (`previous_reply_rejected`), lalu `AiExtractionFailed`
+  (pesan hanya berisi kode; job M2 menandai `failed`). Error provider (timeout, HTTP) **tidak** diulang di sini; itu tugas retry queue.
+- **DeepSeek (diverifikasi ke api-docs.deepseek.com, 30 Sep 2026):** model `deepseek-flash` (dan `deepseek-v4-pro`) ada, endpoint `/chat/completions`, JSON mode
+  `response_format: {"type":"json_object"}` **mengharuskan kata "json" dan contoh format di prompt** (prompt v1 memenuhinya) dan dapat sesekali mengembalikan
+  konten kosong (diperlakukan sebagai jawaban tidak valid → retry). Usage: `prompt_tokens`, `completion_tokens`. Parameter `thinking`/`reasoning_effort` tidak dipakai.
+  Model diambil dari `AI_MODEL`. **Kebijakan retensi data DeepSeek dan perjanjian klien tetap keputusan Anda (Keputusan Terbuka #7).**
+- `DeepSeekProvider` menangkap semua exception HTTP dan melempar `AiProviderException` tanpa `previous`/URL/header (header memuat kunci API), seperti klien Telegram.
+- **Guard boot:** `AI_PROVIDER` hanya `deepseek` atau `fake`; di production wajib `deepseek`. Kunci kosong ditolak saat dipakai. `TestIsolationTest` mengunci endpoint/kunci di test.
+
+### Prompt dan schema
+- `resources/prompts/worklog_extraction/v1.md`, instruksi Inggris, satu panggilan, multi-item, hanya `task_id` dari daftar kandidat. **v1 tidak boleh diubah:**
+  test mengunci checksum; perubahan = `v2.md` + `eval:run`.
+- `resources/schemas/worklog_extraction.v1.json` divalidasi oleh `JsonSchemaValidator` tulisan sendiri (tanpa dependency; keyword: type, enum, required, properties,
+  additionalProperties, items, min/maxItems, minimum/maximum, min/maxLength, pattern, oneOf). Error berisi path + keyword, tidak pernah nilai.
+
+### Candidate retrieval (§12)
+`CandidateBuilder`: project disebut lewat nama atau alias (kata utuh, tanpa memperhatikan huruf, ≥ 2 karakter) → semua task Open/In Progress/Waiting/Blocked di project itu
++ Completed dengan `completed_at` ≤ 30 hari, masing-masing dengan 3 activity terakhir (ringkasan dipotong 200 karakter) dan nama orang. Tanpa project terdeteksi → mode
+**compact**: task aktif semua project tanpa riwayat activity. Draft, Cancelled, soft-deleted, project arsip, dan data user lain tidak pernah masuk. `CandidateSet` dipakai dua kali:
+di prompt dan sebagai daftar putih validator.
+
+### Validator backend (§54 langkah 2–7)
+`ExtractionValidator` → `ValidatedProposal` (per item `accepted` / `needs_confirmation` / `rejected` + kode alasan). Ditolak: `task_ref_not_in_candidates`, `task_not_owned`,
+`intent_ref_mismatch`, `project_task_mismatch`, `project_unknown`, `date_in_future`, `date_invalid`. Butuh konfirmasi (walau confidence tinggi): `date_older_than_30_days`, `project_missing`,
+`status_from_mismatch`, `status_transition_invalid`, `status_initial_invalid`. Status memakai status **sebenarnya** task (bukan klaim model), lewat `TaskStatusTransition`;
+status yang sama = no-op (`status_unchanged`); Completed/Cancelled ditandai `explicitTerminal`. Task baru boleh mulai di open/in_progress/waiting/blocked/completed (pilihan final di M4).
+Tanggal dinilai di zona waktu user. `ConfidencePolicy`: ≥ 0.90 high, 0.70–0.89 medium, < 0.70 low (`config/ai.php`); high diturunkan ke medium bila ada sinyal yang bertentangan:
+`task_cancelled`, `stale_task` (aktif dan tanpa activity > 90 hari), `person_mismatch`. Low tetap `needs_confirmation` (M4 memutuskan: task baru atau klarifikasi).
+Ini satu class validator + satu `ConfidencePolicy` (bukan satu class per aturan seperti di rencana), agar urutan aturan terbaca di satu tempat; tiap aturan punya test tabel sendiri.
+
+### Integrasi
+`WorklogService::process` = candidates → AI → validasi → `WorklogResult(proposal)`. **Belum menulis ke tasks/activities** (M4); konfirmasi ke user tetap dummy. Proposal dapat dibangun ulang
+secara deterministik dari `ai_interactions.output` + snapshot kandidat, jadi M4 tidak perlu kolom baru untuk menyimpannya.
+
+### Evaluation harness
+- `eval:run` (`--dataset=sample|local`, `--provider=fake|deepseek`, `--prompt=name@vN`, `--json`, `--out`, `--baseline`). Menjalankan pipeline produksi yang sama (redaction → kandidat → AIService → validator)
+  di dalam transaksi database yang **selalu di-rollback**, untuk user sekali pakai; hanya boleh di luar production. Laporan berisi angka dan id kasus, tidak pernah teks pesan.
+- `--provider=fake` = oracle yang menjawab dari label: 100% hanya membuktikan harness dan validator sepakat dengan label. `--provider=deepseek` wajib `--send-to-deepseek` (konfirmasi eksplisit).
+- Metrik: extraction, project, matching (target §73: 90/95/90/95), date, status, dan backend rules; per kategori; akurasi per rentang confidence (bahan menyetel 0.90/0.70).
+  Catatan ambiguitas: kasus `ambiguous` benar bila tidak ada task yang diterima otomatis.
+- **Dataset sampel** (`tests/Eval/data-sample`, 66 kasus sintetis, 20 label bertanda `review`) ditulis dari aturan PRD, bukan dari pemakaian nyata; angkanya tidak dapat dipakai untuk menyetel threshold.
+  Dataset nyata Anda di `tests/Eval/data/` (gitignored). Format dan cara pakai: `docs/runbooks/evaluation-dataset.md`.
+
+### Temuan dari harness
+- Redaction melewatkan nama kunci huruf kecil/majemuk seperti `client_secret=…` (aturan env-style hanya huruf besar). Ditambah aturan untuk nama majemuk (`client_secret`, `api-key`, `access_token`, …)
+  dan `token=`/`secret=`/`apikey=` polos; kata biasa ("token expired", "secret santa") tidak terkena. Batasan: nilai tanpa tanda `:`/`=` tetap tidak terdeteksi.
+
+### Belum dan diserahkan ke milestone berikut
+Menerapkan proposal ke DB dan pesan konfirmasi sungguhan (M4); UX konfirmasi untuk `needs_confirmation`; deteksi task duplikat; penyetelan threshold dengan dataset nyata; level PHPStan 8 (M4).
