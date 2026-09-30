@@ -170,6 +170,13 @@ class ProposalApplier
         $created = $task === null;
         $statusFrom = $task?->status->value;
         $reopened = false;
+        $restore = $task === null ? null : [
+            'status' => $task->status->value,
+            'waiting_reason' => $task->waiting_reason?->value,
+            'started_at' => $task->started_at?->utc()->toIso8601String(),
+            'completed_at' => $task->completed_at?->utc()->toIso8601String(),
+            'last_activity_at' => $task->last_activity_at?->utc()->toIso8601String(),
+        ];
 
         if ($task === null) {
             $initial = $requested ?? ($isWork ? TaskStatus::InProgress : TaskStatus::Open);
@@ -207,7 +214,7 @@ class ProposalApplier
 
         return new OutcomeItem(
             $index, OutcomeState::Applied, $reasons, $task->project_id, $task->id, $created, $row->id,
-            $created ? null : $statusFrom, $statusTo, $reopened, $task->version, level: $level,
+            $created ? null : $statusFrom, $statusTo, $reopened, $task->version, pending: $data, pendingDate: $when->format('Y-m-d'), level: $level, restore: $restore,
         );
     }
 

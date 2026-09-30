@@ -35,6 +35,7 @@ return [
         'project' => '📁 Change project',
         'yes' => '✅ Yes',
         'new_task' => '🆕 New task',
+        'back' => '⬅️ Back',
         'cancel' => '✖️ Cancel',
         'keep_date' => '✅ Use :date',
         'today' => '📅 Today',

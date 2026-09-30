@@ -35,6 +35,7 @@ return [
         'project' => '📁 Ganti Project',
         'yes' => '✅ Ya',
         'new_task' => '🆕 Task baru',
+        'back' => '⬅️ Kembali',
         'cancel' => '✖️ Batal',
         'keep_date' => '✅ Pakai :date',
         'today' => '📅 Hari ini',

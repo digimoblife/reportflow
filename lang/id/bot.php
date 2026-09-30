@@ -135,6 +135,56 @@ return [
         ],
     ],
 
+    'undo' => [
+        'done' => [
+            'Siap, catatan tadi saya batalkan. Arsip kembali seperti semula.',
+            'Beres, catatan itu saya batalkan.',
+        ],
+        'some' => [
+            ':count catatan sudah saya batalkan.',
+            'Sudah saya batalkan :count catatan, nggih.',
+        ],
+        'partial' => [
+            'Catatannya saya hapus, tetapi task sudah berubah sejak itu, jadi statusnya tidak saya kembalikan.',
+            'Catatan dibatalkan. Status task tidak saya ubah karena task sudah berubah setelahnya.',
+        ],
+        'nothing' => [
+            'Belum ada catatan yang bisa dibatalkan.',
+            'Tidak ada catatan terakhir yang bisa saya batalkan.',
+        ],
+    ],
+
+    'correction' => [
+        'pick_task' => [
+            'Pindahkan catatan ini ke task yang mana?',
+            'Catatan ini mau dipindah ke task mana?',
+        ],
+        'pick_status' => [
+            'Ubah status task ":task" menjadi apa?',
+            'Status task ":task" mau diubah jadi apa?',
+        ],
+        'pick_project' => [
+            'Pindahkan task baru ini ke project yang mana?',
+            'Task baru ini mau dipindah ke project mana?',
+        ],
+        'done' => [
+            'Sudah saya ubah.',
+            'Beres, sudah diperbarui.',
+        ],
+        'stale' => [
+            'Task ini baru saja berubah. Silakan coba lagi.',
+            'Ada perubahan lain pada task ini. Coba sekali lagi.',
+        ],
+        'not_possible' => [
+            'Perubahan itu tidak bisa dilakukan.',
+            'Tidak bisa, perubahan itu tidak diizinkan.',
+        ],
+        'project_new_only' => [
+            'Ganti project hanya untuk task baru. Untuk task lama, pakai Pindah Task.',
+            'Task lama tidak bisa pindah project; pindahkan catatannya lewat Pindah Task.',
+        ],
+    ],
+
     'callback' => [
         'answered' => [
             'Pertanyaan ini sudah dijawab.',

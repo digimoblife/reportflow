@@ -13,7 +13,8 @@ final readonly class OutcomeItem
     /**
      * @param  list<string>  $reasons
      * @param  list<int>  $options  candidate task ids offered for a "match" question
-     * @param  array<string, mixed>|null  $pending  the schema-valid item, kept until the user answers
+     * @param  array<string, mixed>|null  $pending  the schema-valid item (kept until answered; kept after applying so a move can re-apply it)
+     * @param  array<string, mixed>|null  $restore  the task's fields before this message touched it (for exact undo)
      */
     public function __construct(
         public int $index,
@@ -33,6 +34,7 @@ final readonly class OutcomeItem
         public ?string $pendingDate = null,
         public ?string $level = null,
         public ?int $questionMessageId = null,
+        public ?array $restore = null,
     ) {}
 
     /**
@@ -58,6 +60,7 @@ final readonly class OutcomeItem
             'pending_date' => $this->pendingDate,
             'level' => $this->level,
             'question_message_id' => $this->questionMessageId,
+            'restore' => $this->restore,
         ];
     }
 
@@ -84,6 +87,7 @@ final readonly class OutcomeItem
             pendingDate: isset($data['pending_date']) ? (string) $data['pending_date'] : null,
             level: isset($data['level']) ? (string) $data['level'] : null,
             questionMessageId: isset($data['question_message_id']) ? (int) $data['question_message_id'] : null,
+            restore: isset($data['restore']) && is_array($data['restore']) ? $data['restore'] : null,
         );
     }
 

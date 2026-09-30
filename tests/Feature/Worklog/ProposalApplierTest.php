@@ -204,7 +204,7 @@ it('is idempotent: applying the same message twice writes once', function () {
 
     $second = app(ProposalApplier::class)->apply($message, $proposal, $set);
 
-    expect($second->toArray())->toBe($first->toArray())->and(counts())->toBe($before);
+    expect($second->toArray())->toEqual($first->toArray())->and(counts())->toBe($before);
 });
 
 it('rolls everything back when one item fails', function () {

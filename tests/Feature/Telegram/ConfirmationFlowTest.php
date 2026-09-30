@@ -5,12 +5,9 @@ use App\Enums\InboundMessageStatus;
 use App\Enums\OutcomeState;
 use App\Models\Activity;
 use App\Models\Correction;
-use App\Models\InboundMessage;
 use App\Models\Task;
 use App\Services\Telegram\CallbackData;
 use App\Services\Telegram\TelegramApiException;
-use App\Services\Worklog\Outcome;
-use App\Support\UserContext;
 use Illuminate\Support\Carbon;
 use Tests\Support\Extraction;
 
@@ -22,38 +19,6 @@ beforeEach(function () {
 });
 
 afterEach(fn () => Carbon::setTestNow());
-
-/** Run the worker, then restore the test's user context (the worker flushes scoped instances). */
-function settleWorker(): void
-{
-    runWorker();
-    app(UserContext::class)->set(test()->tg->id);
-}
-
-/** Send a note, let the worker process it, return the stored message. */
-function processNote(string $text, int $messageId = 100): InboundMessage
-{
-    send($text, $messageId);
-    settleWorker();
-
-    return storedMessages()->firstWhere('telegram_message_id', $messageId);
-}
-
-function outcomeOf(InboundMessage $message): Outcome
-{
-    return Outcome::fromArray(asSystem(fn () => InboundMessage::query()->findOrFail($message->id))->outcome);
-}
-
-/** Press a button (goes through the real webhook). */
-function press(InboundMessage $message, string $action, ?int $item = null, ?string $arg = null, string $callbackId = 'cb-1', int $bubble = 900): void
-{
-    postTelegram(callbackPayload((new CallbackData($message->id, $action, $item, $arg))->encode(), 555001, $callbackId, $bubble))->assertOk();
-}
-
-function callbacksIn(array $keyboard): array
-{
-    return collect($keyboard)->flatMap(fn ($row) => $row)->map(fn ($b) => CallbackData::parse($b['callback_data']))->all();
-}
 
 describe('confirmation message', function () {
     it('spells out project, task, activity and status, with the four correction buttons', function () {

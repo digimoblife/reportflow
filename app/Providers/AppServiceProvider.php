@@ -8,6 +8,7 @@ use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\Fakes\FakeAiProvider;
 use App\Services\Telegram\BotMessages;
 use App\Services\Telegram\CallbackRouter;
+use App\Services\Telegram\CorrectionHandler;
 use App\Services\Telegram\Fakes\FakeTelegramClient;
 use App\Services\Telegram\HttpTelegramClient;
 use App\Services\Telegram\PendingAnswerHandler;
@@ -68,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
         // Button handlers register themselves on the singleton router the first time it is resolved.
         $this->app->afterResolving(CallbackRouter::class, function (CallbackRouter $router): void {
             $this->app->make(PendingAnswerHandler::class)->register($router);
+            $this->app->make(CorrectionHandler::class)->register($router);
         });
 
         RateLimiter::for('telegram-webhook', fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip() ?? 'unknown'));

@@ -4,6 +4,7 @@ namespace App\Services\Telegram;
 
 use App\Enums\Language;
 use App\Enums\OutcomeState;
+use App\Enums\TaskStatus;
 use App\Models\Activity;
 use App\Models\InboundMessage;
 use App\Models\Project;
@@ -36,8 +37,11 @@ class ConfirmationComposer
         $applied = $outcome->applied();
         $rejected = $outcome->count(OutcomeState::Rejected);
         $pending = $outcome->count(OutcomeState::Pending);
+        $undone = $outcome->count(OutcomeState::Undone);
 
-        if ($applied === []) {
+        if ($applied === [] && $undone > 0) {
+            $lines = [$this->messages->get('undo.done', $language)];
+        } elseif ($applied === []) {
             $lines = [$this->messages->get($pending > 0 ? 'worklog.pending_notice' : 'worklog.nothing_recorded', $language, ['count' => $pending])];
         } else {
             $lines = [$this->messages->get('worklog.recorded', $language)];
@@ -46,6 +50,11 @@ class ConfirmationComposer
             foreach ($applied as $i => $item) {
                 $lines[] = '';
                 $lines[] = $this->block($item, $language, $timezone, $numbered ? $i + 1 : null);
+            }
+
+            if ($undone > 0) {
+                $lines[] = '';
+                $lines[] = '↩️ '.$this->messages->get('undo.some', $language, ['count' => $undone]);
             }
 
             if ($pending > 0) {
@@ -192,5 +201,94 @@ class ConfirmationComposer
         $parsed = CarbonImmutable::parse($date)->locale($lang);
 
         return $parsed->translatedFormat('j M Y');
+    }
+
+    /**
+     * What a message with buttons should currently show (used after a correction, "back", or an undo).
+     *
+     * @return array{text: string, keyboard: list<list<array{text: string, callback_data: string}>>}|null
+     */
+    public function view(InboundMessage $message, int $bubbleId, Language $language, string $timezone): ?array
+    {
+        $outcome = Outcome::fromArray($message->outcome);
+
+        if ($outcome === null) {
+            return null;
+        }
+
+        if ($bubbleId === $outcome->confirmationMessageId) {
+            $view = $this->confirmation($message, $outcome, $language, $timezone);
+
+            return ['text' => $view['text'], 'keyboard' => $view['keyboard'] ?? []];
+        }
+
+        foreach ($outcome->items as $item) {
+            if ($item->questionMessageId !== $bubbleId) {
+                continue;
+            }
+
+            return match ($item->state) {
+                OutcomeState::Applied => [
+                    'text' => $this->messages->get('worklog.recorded', $language)."\n\n".$this->block($item, $language, $timezone),
+                    'keyboard' => $this->correctionKeyboard($message, [$item], $language),
+                ],
+                OutcomeState::Undone => ['text' => $this->messages->get('undo.done', $language), 'keyboard' => []],
+                OutcomeState::Skipped => ['text' => $this->messages->get('question.cancelled', $language), 'keyboard' => []],
+                default => null,
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  list<Task>  $tasks
+     * @return array{text: string, keyboard: list<list<array{text: string, callback_data: string}>>}
+     */
+    public function pickTask(InboundMessage $message, OutcomeItem $item, Language $language, array $tasks): array
+    {
+        $lang = $language->value;
+        $rows = array_map(fn (Task $t): array => [Keyboard::button(mb_substr($t->title, 0, 40), new CallbackData($message->id, 'mvto', $item->index, (string) $t->id))], $tasks);
+        $rows[] = [Keyboard::button((string) Lang::get('ui.buttons.new_task', [], $lang), new CallbackData($message->id, 'mvto', $item->index, 'new')), $this->back($message, $lang)];
+
+        return ['text' => $this->messages->get('correction.pick_task', $language), 'keyboard' => $rows];
+    }
+
+    /**
+     * @param  list<TaskStatus>  $options
+     * @return array{text: string, keyboard: list<list<array{text: string, callback_data: string}>>}
+     */
+    public function pickStatus(InboundMessage $message, OutcomeItem $item, Language $language, Task $task, array $options): array
+    {
+        $lang = $language->value;
+        $buttons = array_map(fn ($s): array => Keyboard::button((string) Lang::get('ui.statuses.'.$s->value, [], $lang), new CallbackData($message->id, 'setst', $item->index, $s->value)), $options);
+
+        return [
+            'text' => $this->messages->get('correction.pick_status', $language, ['task' => $task->title]),
+            'keyboard' => [...Keyboard::rows($buttons, 2), [$this->back($message, $lang)]],
+        ];
+    }
+
+    /**
+     * @param  list<Project>  $projects
+     * @return array{text: string, keyboard: list<list<array{text: string, callback_data: string}>>}
+     */
+    public function pickProject(InboundMessage $message, OutcomeItem $item, Language $language, array $projects): array
+    {
+        $lang = $language->value;
+        $buttons = array_map(fn (Project $p): array => Keyboard::button(mb_substr($p->name, 0, 30), new CallbackData($message->id, 'setpr', $item->index, (string) $p->id)), $projects);
+
+        return [
+            'text' => $this->messages->get('correction.pick_project', $language),
+            'keyboard' => [...Keyboard::rows($buttons, 2), [$this->back($message, $lang)]],
+        ];
+    }
+
+    /**
+     * @return array{text: string, callback_data: string}
+     */
+    private function back(InboundMessage $message, string $lang): array
+    {
+        return Keyboard::button((string) Lang::get('ui.buttons.back', [], $lang), new CallbackData($message->id, 'back'));
     }
 }

@@ -126,4 +126,58 @@ class TaskLifecycle
             'inbound_message_id' => $inboundMessageId,
         ]);
     }
+
+    /**
+     * Puts a task back to a recorded snapshot (undo). Deliberately bypasses the transition matrix: undoing
+     * "open -> in_progress" is not itself a legal transition. Guarded by the version, and recorded as `undone`.
+     *
+     * @param  array<string, mixed>  $snapshot  status, waiting_reason, started_at, completed_at, last_activity_at
+     *
+     * @throws StaleTaskException
+     */
+    public function restore(Task $task, array $snapshot, EventActor $actor, ?int $inboundMessageId, ?int $undoneEventId, ?int $expectedVersion = null): void
+    {
+        $before = ['status' => $task->status->value, 'waiting_reason' => $task->waiting_reason?->value];
+        $status = TaskStatus::from((string) $snapshot['status']);
+
+        $this->save($task, [
+            'status' => $status,
+            'waiting_reason' => $snapshot['waiting_reason'] ?? null,
+            'started_at' => $snapshot['started_at'] ?? null,
+            'completed_at' => $snapshot['completed_at'] ?? null,
+            'last_activity_at' => $snapshot['last_activity_at'] ?? null,
+        ], $expectedVersion);
+
+        $this->event($task, TaskEventType::Undone, $before, ['status' => $status->value, 'waiting_reason' => $snapshot['waiting_reason'] ?? null, 'undone_event_id' => $undoneEventId], $actor, $inboundMessageId);
+    }
+
+    /**
+     * Soft-deletes a task that an undone message had created (history stays: events and activities remain).
+     */
+    public function discard(Task $task, EventActor $actor, ?int $inboundMessageId, ?int $undoneEventId): void
+    {
+        $before = ['project_id' => $task->project_id, 'title' => $task->title, 'status' => $task->status->value, 'waiting_reason' => $task->waiting_reason?->value];
+
+        $this->save($task, [], null);
+        $task->delete();
+
+        $this->event($task, TaskEventType::Undone, $before, ['deleted' => true, 'undone_event_id' => $undoneEventId], $actor, $inboundMessageId);
+    }
+
+    /**
+     * Moves a task (and, through the composite foreign key, its activities) to another project.
+     *
+     * @throws StaleTaskException
+     */
+    public function moveToProject(Task $task, Project $project, EventActor $actor, ?int $inboundMessageId = null, ?int $expectedVersion = null): void
+    {
+        if ($task->project_id === $project->id) {
+            return;
+        }
+
+        $from = $task->project_id;
+        $this->save($task, ['project_id' => $project->id], $expectedVersion);
+
+        $this->event($task, TaskEventType::Moved, ['project_id' => $from, 'task_id' => $task->id], ['project_id' => $project->id, 'task_id' => $task->id], $actor, $inboundMessageId);
+    }
 }

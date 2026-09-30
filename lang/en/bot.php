@@ -134,6 +134,56 @@ return [
         ],
     ],
 
+    'undo' => [
+        'done' => [
+            'Done, that note is cancelled. The archive is back as it was.',
+            'All set, I cancelled that note.',
+        ],
+        'some' => [
+            ':count note(s) cancelled.',
+            'I cancelled :count note(s).',
+        ],
+        'partial' => [
+            "The note is removed, but the task changed since, so I didn't restore its status.",
+            'Note cancelled. The task status is unchanged because the task changed after it.',
+        ],
+        'nothing' => [
+            'There is nothing to undo yet.',
+            'No recent note to undo.',
+        ],
+    ],
+
+    'correction' => [
+        'pick_task' => [
+            'Which task should this note move to?',
+            'Move this note to which task?',
+        ],
+        'pick_status' => [
+            'Change the status of ":task" to what?',
+            'What should the status of ":task" be?',
+        ],
+        'pick_project' => [
+            'Which project should this new task move to?',
+            'Move this new task to which project?',
+        ],
+        'done' => [
+            'Updated.',
+            'Done, changed.',
+        ],
+        'stale' => [
+            'This task just changed. Please try again.',
+            'The task was changed by something else. Try once more.',
+        ],
+        'not_possible' => [
+            "That change isn't possible.",
+            'That change is not allowed.',
+        ],
+        'project_new_only' => [
+            'Changing the project only works for new tasks. For an existing task use Move task.',
+            'Existing tasks cannot change project; move the note with Move task instead.',
+        ],
+    ],
+
     'callback' => [
         'answered' => [
             'This question was already answered.',

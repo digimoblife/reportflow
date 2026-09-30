@@ -7,7 +7,7 @@ use App\Enums\Concerns\EnumValues;
 /**
  * What became of one AI item after validation (stored in inbound_messages.outcome).
  * Applied: written to the database. Pending: waiting for the user's answer, nothing written.
- * Rejected: refused by the backend. Skipped: not attempted (e.g. more than 5 items in one message).
+ * Rejected: refused by the backend. Skipped: not attempted (e.g. more than 5 items in one message) or cancelled by the user. Undone: applied, then reverted by Undo or a correction.
  */
 enum OutcomeState: string
 {
@@ -17,4 +17,5 @@ enum OutcomeState: string
     case Pending = 'pending';
     case Rejected = 'rejected';
     case Skipped = 'skipped';
+    case Undone = 'undone';
 }

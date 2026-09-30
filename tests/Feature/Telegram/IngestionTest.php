@@ -385,7 +385,7 @@ describe('commands and onboarding (queue faked)', function () {
         expect(isVariantOf(fakeTelegram()->sent[0]['text'], 'commands.unavailable', 'id', ['command' => "/$command"]))->toBeTrue()
             ->and(storedMessages())->toHaveCount(0);
         Queue::assertNothingPushed();
-    })->with(['projects', 'project', 'tasks', 'task', 'undo', 'inbox', 'report', 'reports', 'review', 'generate', 'settings', 'reminder']);
+    })->with(['projects', 'project', 'tasks', 'task', 'inbox', 'report', 'reports', 'review', 'generate', 'settings', 'reminder']);
 
     it('does not know /update or other unknown commands', function (string $command) {
         postTelegram(TelegramPayload::message("/$command"))->assertOk();
