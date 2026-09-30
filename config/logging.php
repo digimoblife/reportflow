@@ -141,6 +141,14 @@ return [
             'handler' => NullHandler::class,
         ],
 
+        // Test suite: discards records after the processors ran (tests attach their own handler).
+        // Not named "null" because Laravel's env() turns the string "null" into PHP null.
+        'sink' => [
+            'tap' => [RedactLogs::class],
+            'driver' => 'monolog',
+            'handler' => NullHandler::class,
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

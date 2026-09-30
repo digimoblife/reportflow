@@ -374,3 +374,24 @@ PRD §7, §18–§20, §23, §48, §56, §58, §66–§69.
   Contoh onboarding PRD §19 (4 kata Jawa) dipendekkan. Daftar yang diizinkan: nggih, nuwun, sewu, rampung, monggo,
   sugeng, rawuh, njenengan, matur, waduh.
 - `/update` dihapus dari daftar command (PRD §18 vs §20; rencana implementasi, temuan #1).
+
+### Isolasi test dari layanan dev (penutupan M2)
+
+`tests/bootstrap.php` menulis nilai berikut ke `$_ENV`, `$_SERVER`, dan `putenv()` sebelum Laravel boot; `TestIsolationTest`
+menguncinya. Host `*.invalid` tidak pernah resolve, sehingga akses tak sengaja gagal keras.
+
+| Setting | Nilai di test | Risiko bila tidak dikunci |
+|---|---|---|
+| `DB_CONNECTION/DATABASE/USERNAME`, `DB_URL` | pgsql / `reportflow_test` / `reportflow_tester` / kosong | migrate:fresh menghapus data dev (dijaga juga guard `TestCase`) |
+| `CACHE_STORE`, `SESSION_DRIVER` | `array` | `Cache::flush()` dan kunci test menimpa cache/sesi Redis dev |
+| `QUEUE_CONNECTION` | `sync` (test antrean memakai koneksi `database` di DB test) | job test masuk antrean Redis dev dan diproses worker dev |
+| `REDIS_HOST/PORT/PASSWORD/URL` | `redis.invalid` / 1 / kosong | semua yang di atas lewat jalur Redis |
+| `MAIL_MAILER`, `BROADCAST_CONNECTION` | `array` / `log` | email/siaran sungguhan |
+| `LOG_CHANNEL`, `LOG_STACK` | `sink` (bukan `null`: `env()` mengubah string "null" menjadi PHP null lalu logger darurat menulis ke file) | log test menumpuk di `storage/logs/laravel.log` dev |
+| `FILESYSTEM_DISK` | `local` (test file wajib `Storage::fake`) | file test di storage bersama |
+| `GOTENBERG_URL` | `gotenberg.invalid` | PDF test lewat Chromium dev |
+| `TELEGRAM_CLIENT/BOT_TOKEN/BOT_SECRET_TOKEN/WEBHOOK_PATH` | `fake` / kosong / nilai test / nilai test | pesan sungguhan ke Telegram |
+| `AI_PROVIDER`, `DEEPSEEK_API_KEY`, `DEEPSEEK_BASE_URL` | `fake` / kosong / `deepseek.invalid` | biaya dan kebocoran data ke provider |
+| `AWS_*`, `POSTMARK_API_KEY`, `RESEND_API_KEY`, `SLACK_*`, `LOG_SLACK_WEBHOOK_URL` | kosong | kredensial layanan pihak ketiga terbaca |
+| `APP_KEY` | kunci test tetap | test memakai kunci enkripsi dev |
+| `TRUSTED_PROXIES`, `DEV_USER_*`, `APP_ENV` | kosong / kosong / `testing` | perilaku bergantung mesin |
