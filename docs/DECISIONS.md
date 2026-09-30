@@ -395,3 +395,28 @@ menguncinya. Host `*.invalid` tidak pernah resolve, sehingga akses tak sengaja g
 | `AWS_*`, `POSTMARK_API_KEY`, `RESEND_API_KEY`, `SLACK_*`, `LOG_SLACK_WEBHOOK_URL` | kosong | kredensial layanan pihak ketiga terbaca |
 | `APP_KEY` | kunci test tetap | test memakai kunci enkripsi dev |
 | `TRUSTED_PROXIES`, `DEV_USER_*`, `APP_ENV` | kosong / kosong / `testing` | perilaku bergantung mesin |
+
+### Uji langsung M2 dengan Telegram sungguhan (temuan)
+
+Uji manual 30 September 2026 lewat quick tunnel (skenario 1–8 dan 10 lulus; 9 dilewati karena tidak ada akun kedua).
+Prosedur: `docs/runbooks/telegram-live-test.md`.
+
+- **Worker harus punya egress.** `reportflow-internal` bersifat `internal: true`; worker yang hanya di sana tidak bisa resolve
+  `api.telegram.org`, sehingga konfirmasi tidak pernah mengedit "⏳" (job pengiriman mencoba ulang tiap ~12 dtk sampai
+  `retryUntil`, tanpa error di log aplikasi dan tanpa `failed_jobs`). Worker kini juga di `reportflow-public`; postgres dan
+  redis tetap internal saja. Dijaga `tests/Unit/Infra/NginxTunnelTest.php`. Suite tidak bisa menangkapnya karena memakai fake
+  Telegram; pemeriksaan jaringan hanya bisa statis atau manual. M3 (DeepSeek) memakai jalur egress yang sama.
+- **Bind mount file tunggal** (`docker/php/php.ini`, `docker/nginx/*.conf`) menunjuk inode lama setelah `git checkout`/`pull`;
+  container kehilangan file itu (mis. `memory_limit` kembali 128M). Setelah pindah branch, recreate container.
+- **`.env` dibaca berbeda per container:** Laravel membaca file yang di-mount saat proses mulai (worker/scheduler perlu
+  `restart`); nginx menerima `TELEGRAM_WEBHOOK_PATH` lewat interpolasi compose saat container dibuat (perlu
+  `up -d --force-recreate`).
+- **Quick tunnel tidak tahan Mac tidur.** Tunnel dan Docker berhenti bersamaan; Telegram menumpuk update dengan
+  `Wrong response from the webhook: 530` dan edit pesan tidak sampai. Pakai `caffeinate -w <pid cloudflared>`; setelah webhook
+  dihapus dengan `drop_pending_updates=true`, update yang tertahan tidak diputar ulang.
+- **Kunci palsu pendek tidak di-redaksi** (`sk-` + 17 karakter, batas 20): sesuai desain. Uji credential harus memakai contoh
+  yang cukup panjang.
+- **Perilaku saat worker mati:** pesan tetap `received` dengan "⏳" terkirim, suntingan tercatat, dan selesai otomatis setelah
+  worker hidup. Pengguna tidak melihat petunjuk apa pun selama menunggu; relevan untuk pembersih pesan macet (M4/M7).
+- **Tindak lanjut kecil:** `telegram:set-webhook --dry-run` menampilkan 4 karakter pertama path webhook; sebaiknya hanya
+  panjangnya.
