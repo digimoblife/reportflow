@@ -197,6 +197,6 @@ class EvalRunner
 
         $line = fn (array $r): string => "{$r['project']}|{$r['ref']}|{$r['type']}|{$r['status']}|{$r['date']}";
 
-        return [$scores, ['expected' => array_values(array_map($line, $exp)), 'predicted' => array_values(array_map($line, $got))]];
+        return [$scores, ['expected' => array_values(array_map($line, $exp)), 'predicted' => array_map($line, $got)]];
     }
 }
