@@ -14,8 +14,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property string $summary
+ * @property ActivityType $activity_type
+ * @property Carbon $activity_date
+ *
  * PRD §15, §16, §49 activities. project_id always equals the task's project_id
  * (enforced by a composite foreign key that cascades when the task moves).
  */

@@ -14,7 +14,6 @@ use App\Services\Telegram\TelegramApiException;
 use App\Support\UserContext;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -39,27 +38,6 @@ afterEach(function () {
     Carbon::setTestNow();
 });
 
-/** Run one worker until no job is currently available (delayed jobs are not picked up). */
-function runWorker(): void
-{
-    Artisan::call('queue:work', ['connection' => 'database', '--stop-when-empty' => true, '--sleep' => 0, '--queue' => 'default', '--memory' => 4096]);
-}
-
-function advance(int $seconds): void
-{
-    Carbon::setTestNow(Carbon::now()->addSeconds($seconds));
-}
-
-function pendingJobs(): int
-{
-    return DB::table('jobs')->count();
-}
-
-function send(string $text, int $messageId): void
-{
-    postTelegram(TelegramPayload::message($text, messageId: $messageId))->assertOk();
-}
-
 it('processes a message end to end: ⏳ becomes the confirmation on the same message', function () {
     send('Hari ini fix bug login 9Club, sudah selesai', 1);
 
@@ -75,7 +53,7 @@ it('processes a message end to end: ⏳ becomes the confirmation on the same mes
         ->and(fakeTelegram()->edits)->toHaveCount(1)
         ->and(fakeTelegram()->edits[0]['message_id'])->toBe($ack['message_id'])
         ->and(fakeTelegram()->edits[0]['chat_id'])->toBe(555001)
-        ->and(isVariantOf(fakeTelegram()->edits[0]['text'], 'worklog.recorded_dummy'))->toBeTrue()
+        ->and(isVariantOf(fakeTelegram()->edits[0]['text'], 'worklog.nothing_recorded'))->toBeTrue()
         ->and(fakeAi()->requests)->toHaveCount(1)
         ->and(json_decode(fakeAi()->requests[0]->user, true)['message'])->toBe('Hari ini fix bug login 9Club, sudah selesai')
         ->and(fakeAi()->requests[0]->purpose)->toBe('worklog_extraction');
@@ -92,7 +70,7 @@ it('sends the confirmation as a new message when the acknowledgement never went 
     expect($message->status)->toBe(InboundMessageStatus::Processed)
         ->and(fakeTelegram()->edits)->toBe([])
         ->and(fakeTelegram()->sent)->toHaveCount(1)
-        ->and(isVariantOf(fakeTelegram()->sent[0]['text'], 'worklog.recorded_dummy'))->toBeTrue()
+        ->and(isVariantOf(fakeTelegram()->sent[0]['text'], 'worklog.nothing_recorded'))->toBeTrue()
         ->and($message->reply_message_id)->toBe(fakeTelegram()->sent[0]['message_id']);
 });
 
@@ -161,7 +139,7 @@ it('recovers when a retry succeeds and does not send the error message', functio
 
     expect(storedMessages()->sole()->status)->toBe(InboundMessageStatus::Processed)
         ->and(fakeTelegram()->edits)->toHaveCount(1)
-        ->and(isVariantOf(fakeTelegram()->edits[0]['text'], 'worklog.recorded_dummy'))->toBeTrue();
+        ->and(isVariantOf(fakeTelegram()->edits[0]['text'], 'worklog.nothing_recorded'))->toBeTrue();
 });
 
 it('never turns a processed message into a failed one when Telegram is down', function () {
@@ -224,7 +202,7 @@ it('falls back to a new message when the acknowledgement can no longer be edited
 
     $message = storedMessages()->sole();
     expect(fakeTelegram()->sent)->toHaveCount(2)
-        ->and(isVariantOf(fakeTelegram()->sent[1]['text'], 'worklog.recorded_dummy'))->toBeTrue()
+        ->and(isVariantOf(fakeTelegram()->sent[1]['text'], 'worklog.nothing_recorded'))->toBeTrue()
         ->and($message->reply_message_id)->toBe(fakeTelegram()->sent[1]['message_id']);
 });
 
@@ -345,7 +323,9 @@ it('extracts and validates through the real queue, and logs the AI call for the 
         ->and(collect($logs->getRecords())->firstWhere('message', 'worklog.extracted')->context['items'])->toBe(['accepted' => 1])
         // M4: the accepted item was written as an activity of that task
         ->and(asSystem(fn () => Activity::query()->where('task_id', $this->taskId)->where('inbound_message_id', $message->id)->count()))->toBe(1)
-        ->and(isVariantOf(fakeTelegram()->edits[0]['text'], 'worklog.recorded_dummy'))->toBeTrue();
+        ->and(explode("\n", fakeTelegram()->edits[0]['text'])[0])->toBeIn(variants('worklog.recorded'))
+        ->and(fakeTelegram()->edits[0]['text'])->toContain('Harbor Portal → Shipment Tracking API')
+        ->and(fakeTelegram()->edits[0]['keyboard'])->not->toBeEmpty();
 });
 
 it('marks the message failed, with a code-only error, when the model never returns a valid extraction', function () {

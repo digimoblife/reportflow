@@ -19,11 +19,14 @@ use App\Support\UserContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Testing\TestResponse;
 use Monolog\Handler\TestHandler;
 use Monolog\LogRecord;
+use Tests\Support\TelegramPayload;
 use Tests\TestCase;
 
 /*
@@ -249,10 +252,10 @@ function asUser(int $userId, Closure $callback): mixed
  *
  * @return array<string, mixed>
  */
-function worklogWorld(): array
+function worklogWorld(?User $owner = null): array
 {
     $today = CarbonImmutable::parse('2026-09-30', 'Asia/Jakarta');
-    $user = actingAsUser(User::factory()->create(['timezone' => 'Asia/Jakarta']));
+    $user = actingAsUser($owner ?? User::factory()->create(['timezone' => 'Asia/Jakarta']));
 
     $harbor = Project::factory()->create(['name' => 'Harbor Portal', 'slug' => 'harbor-portal', 'aliases' => ['HP']]);
     $kedai = Project::factory()->create(['name' => 'Kedai App', 'slug' => 'kedai-app', 'aliases' => []]);
@@ -297,4 +300,33 @@ function worklogWorld(): array
     });
 
     return $world;
+}
+
+/** Run one worker until no job is currently available (delayed jobs are not picked up). */
+function runWorker(): void
+{
+    Artisan::call('queue:work', ['connection' => 'database', '--stop-when-empty' => true, '--sleep' => 0, '--queue' => 'default', '--memory' => 4096]);
+}
+
+function advance(int $seconds): void
+{
+    Carbon::setTestNow(Carbon::now()->addSeconds($seconds));
+}
+
+function pendingJobs(): int
+{
+    return DB::table('jobs')->count();
+}
+
+function send(string $text, int $messageId): void
+{
+    postTelegram(TelegramPayload::message($text, messageId: $messageId))->assertOk();
+}
+
+function callbackPayload(string $data, int $from = 555001, string $id = 'cb-1', int $messageId = 900): array
+{
+    return ['update_id' => random_int(1000, 999999), 'callback_query' => [
+        'id' => $id, 'from' => ['id' => $from, 'is_bot' => false], 'data' => $data,
+        'message' => ['message_id' => $messageId, 'chat' => ['id' => $from, 'type' => 'private']],
+    ]];
 }

@@ -6,14 +6,6 @@ use App\Services\Telegram\CallbackRouter;
 use App\Services\Telegram\TelegramMessenger;
 use Illuminate\Support\Facades\Queue;
 
-function callbackPayload(string $data, int $from = 555001, string $id = 'cb-1', int $messageId = 900): array
-{
-    return ['update_id' => random_int(1000, 999999), 'callback_query' => [
-        'id' => $id, 'from' => ['id' => $from, 'is_bot' => false], 'data' => $data,
-        'message' => ['message_id' => $messageId, 'chat' => ['id' => $from, 'type' => 'private']],
-    ]];
-}
-
 beforeEach(function () {
     Queue::fake();
     $this->user = registerTelegramUser(555001);

@@ -3,14 +3,19 @@
 namespace App\Jobs;
 
 use App\Enums\InboundMessageStatus;
+use App\Enums\Language;
 use App\Enums\MessageSource;
+use App\Enums\OutcomeState;
 use App\Jobs\Middleware\WithUserContext;
 use App\Models\InboundMessage;
+use App\Models\Project;
 use App\Models\User;
 use App\Services\Telegram\BotMessages;
+use App\Services\Telegram\ConfirmationComposer;
 use App\Services\Telegram\LanguageDetector;
 use App\Services\Telegram\TelegramApiException;
 use App\Services\Telegram\TelegramMessenger;
+use App\Services\Worklog\Outcome;
 use DateTimeInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,12 +26,13 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Turns the "⏳" acknowledgement into the confirmation (or error) message (PRD §7).
+ * Turns the "⏳" acknowledgement into the confirmation (or error) message and sends the clarification questions (PRD §7, §13, §21).
  *
  * Kept apart from processing: whatever happens here never changes the message status.
  * Error handling follows the Bot API: 400/403 are not retried (fall back to a new message once,
  * then give up and log without content), 429 waits `retry_after`, 5xx and timeouts retry.
- * A cache marker written after success prevents a second confirmation on retry.
+ * A cache marker written after success prevents a second confirmation on retry; each question message id is
+ * stored in the outcome before the job finishes, so a retry only sends the questions still missing.
  */
 class DeliverInboundConfirmation implements ShouldQueue
 {
@@ -59,7 +65,7 @@ class DeliverInboundConfirmation implements ShouldQueue
         return now()->addMinutes(10);
     }
 
-    public function handle(TelegramMessenger $messenger, BotMessages $messages, LanguageDetector $languages): void
+    public function handle(TelegramMessenger $messenger, BotMessages $messages, LanguageDetector $languages, ConfirmationComposer $composer): void
     {
         $deliveredKey = "inbound:{$this->inboundMessageId}:delivered:{$this->kind}";
 
@@ -74,11 +80,21 @@ class DeliverInboundConfirmation implements ShouldQueue
 
         $user = User::query()->findOrFail($this->userId);
         $language = $languages->detect($message->text, $user->default_language);
-        $text = $messages->get($this->kind === self::PROCESSED ? 'worklog.recorded_dummy' : 'worklog.failed', $language);
         $chatId = (int) $message->telegram_chat_id;
+        $outcome = $this->kind === self::PROCESSED ? (Outcome::fromArray($message->outcome) ?? new Outcome([])) : null;
+
+        if ($outcome === null) {
+            ['text' => $text, 'keyboard' => $keyboard] = ['text' => $messages->get('worklog.failed', $language), 'keyboard' => []];
+        } else {
+            ['text' => $text, 'keyboard' => $keyboard] = $composer->confirmation($message, $outcome, $language, $user->timezone);
+        }
 
         try {
-            $this->deliver($messenger, $message, $chatId, $text);
+            $confirmationId = $this->deliver($messenger, $message, $chatId, $text, $keyboard);
+
+            if ($outcome !== null) {
+                $outcome = $this->sendQuestions($messenger, $composer, $message, $outcome->withConfirmationMessage($confirmationId), $language, $chatId);
+            }
         } catch (TelegramApiException $e) {
             if ($e->isRetryable()) {
                 $this->release(max($e->retryAfter ?? 0, 10));
@@ -100,18 +116,21 @@ class DeliverInboundConfirmation implements ShouldQueue
     }
 
     /**
+     * @param  list<list<array{text: string, callback_data: string}>>  $keyboard
+     * @return int the id of the message that now shows the confirmation
+     *
      * @throws TelegramApiException
      */
-    private function deliver(TelegramMessenger $messenger, InboundMessage $message, int $chatId, string $text): void
+    private function deliver(TelegramMessenger $messenger, InboundMessage $message, int $chatId, string $text, array $keyboard): int
     {
         if ($message->reply_message_id !== null) {
             try {
-                $messenger->edit($chatId, $message->reply_message_id, $text);
+                $messenger->edit($chatId, $message->reply_message_id, $text, $keyboard);
 
-                return;
+                return $message->reply_message_id;
             } catch (TelegramApiException $e) {
                 if ($e->messageNotModified()) {
-                    return;
+                    return $message->reply_message_id;
                 }
 
                 if ($e->isRetryable()) {
@@ -121,8 +140,35 @@ class DeliverInboundConfirmation implements ShouldQueue
             }
         }
 
-        $newId = $messenger->send($chatId, $text);
+        $newId = $messenger->send($chatId, $text, null, $keyboard === [] ? null : $keyboard);
 
         InboundMessage::query()->whereKey($message->id)->update(['reply_message_id' => $newId]);
+
+        return $newId;
+    }
+
+    /**
+     * One question message per pending item that has none yet; the id is saved immediately.
+     *
+     * @throws TelegramApiException
+     */
+    private function sendQuestions(TelegramMessenger $messenger, ConfirmationComposer $composer, InboundMessage $message, Outcome $outcome, Language $language, int $chatId): Outcome
+    {
+        $projects = array_values(Project::query()->where('status', 'active')->orderBy('id')->get()->all());
+
+        foreach ($outcome->items as $item) {
+            if ($item->state !== OutcomeState::Pending || $item->questionMessageId !== null) {
+                continue;
+            }
+
+            ['text' => $text, 'keyboard' => $keyboard] = $composer->question($message, $item, $language, $projects);
+            $id = $messenger->send($chatId, $text, null, $keyboard);
+            $outcome = $outcome->replaceItem($item->with(['question_message_id' => $id]));
+            InboundMessage::query()->whereKey($message->id)->update(['outcome' => $outcome->toArray()]);
+        }
+
+        InboundMessage::query()->whereKey($message->id)->update(['outcome' => $outcome->toArray()]);
+
+        return $outcome;
     }
 }

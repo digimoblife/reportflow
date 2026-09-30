@@ -32,6 +32,7 @@ final readonly class OutcomeItem
         public ?array $pending = null,
         public ?string $pendingDate = null,
         public ?string $level = null,
+        public ?int $questionMessageId = null,
     ) {}
 
     /**
@@ -56,6 +57,7 @@ final readonly class OutcomeItem
             'pending' => $this->pending,
             'pending_date' => $this->pendingDate,
             'level' => $this->level,
+            'question_message_id' => $this->questionMessageId,
         ];
     }
 
@@ -81,6 +83,17 @@ final readonly class OutcomeItem
             pending: isset($data['pending']) && is_array($data['pending']) ? $data['pending'] : null,
             pendingDate: isset($data['pending_date']) ? (string) $data['pending_date'] : null,
             level: isset($data['level']) ? (string) $data['level'] : null,
+            questionMessageId: isset($data['question_message_id']) ? (int) $data['question_message_id'] : null,
         );
+    }
+
+    /**
+     * A copy with some fields replaced (readonly objects are rebuilt, never mutated).
+     *
+     * @param  array<string, mixed>  $changes  keys of toArray()
+     */
+    public function with(array $changes): self
+    {
+        return self::fromArray($changes + $this->toArray());
     }
 }

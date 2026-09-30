@@ -44,10 +44,26 @@ return [
             '⏳ Sebentar, saya catat…',
             '⏳ Saya tulis dulu…',
         ],
-        'recorded_dummy' => [
-            'Nggih, catatan sudah saya simpan di arsip. Penafsiran otomatis menyusul di versi berikutnya.',
-            'Sudah saya simpan, nggih. Untuk sementara belum saya kaitkan ke task.',
-            'Rampung, catatan tersimpan di arsip. Pemetaan ke task menyusul nanti.',
+        'recorded' => [
+            'Nggih, sudah saya catat.',
+            'Beres, sudah masuk arsip.',
+            'Sudah saya catat, ini rinciannya.',
+        ],
+        'nothing_recorded' => [
+            'Dari pesan ini belum ada pekerjaan yang perlu saya catat.',
+            'Pesan ini saya baca, tetapi tidak ada pekerjaan yang saya catat.',
+        ],
+        'pending_notice' => [
+            'Masih ada :count catatan yang menunggu jawaban Anda di bawah.',
+            'Ada :count catatan yang perlu Anda pastikan dulu, nggih.',
+        ],
+        'rejected_notice' => [
+            ':count catatan tidak bisa saya simpan karena tidak cocok dengan arsip.',
+            'Ada :count catatan yang saya tolak karena datanya tidak sesuai arsip.',
+        ],
+        'split_required' => [
+            'Pesan ini berisi lebih dari 5 catatan, jadi belum ada yang saya simpan. Tolong dipecah jadi beberapa pesan, nggih.',
+            'Terlalu banyak catatan dalam satu pesan (maksimal 5). Belum ada yang tersimpan; mohon kirim ulang dalam beberapa pesan.',
         ],
         'failed' => [
             'Waduh, catatan ini belum bisa saya proses. Tenang, pesannya sudah saya simpan dan bisa dicoba lagi nanti.',
@@ -100,7 +116,30 @@ return [
         ],
     ],
 
+    'question' => [
+        'match' => [
+            'Apakah catatan ini untuk task ":task"?',
+            'Sebentar, catatan ini untuk task ":task", betul?',
+        ],
+        'project' => [
+            'Catatan ini untuk project yang mana?',
+            'Saya belum yakin projectnya. Yang mana?',
+        ],
+        'date' => [
+            'Tanggalnya :date, lebih dari 30 hari lalu. Tetap dicatat pada tanggal itu?',
+            'Catatan ini bertanggal :date (sudah lebih dari 30 hari). Pakai tanggal itu?',
+        ],
+        'cancelled' => [
+            'Baik, catatan itu tidak jadi saya simpan.',
+            'Siap, catatan itu saya lewati.',
+        ],
+    ],
+
     'callback' => [
+        'answered' => [
+            'Pertanyaan ini sudah dijawab.',
+            'Sudah dijawab tadi, nggih.',
+        ],
         'expired' => [
             'Tombol ini sudah tidak berlaku.',
             'Tombol ini sudah kedaluwarsa, nggih.',

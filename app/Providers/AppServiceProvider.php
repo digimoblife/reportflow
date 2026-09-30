@@ -10,6 +10,7 @@ use App\Services\Telegram\BotMessages;
 use App\Services\Telegram\CallbackRouter;
 use App\Services\Telegram\Fakes\FakeTelegramClient;
 use App\Services\Telegram\HttpTelegramClient;
+use App\Services\Telegram\PendingAnswerHandler;
 use App\Services\Telegram\TelegramClient;
 use App\Services\Worklog\Extraction\ConfidencePolicy;
 use App\Support\UserContext;
@@ -64,6 +65,11 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Telegram delivers from a small set of addresses; the limit is generous but stops floods.
+        // Button handlers register themselves on the singleton router the first time it is resolved.
+        $this->app->afterResolving(CallbackRouter::class, function (CallbackRouter $router): void {
+            $this->app->make(PendingAnswerHandler::class)->register($router);
+        });
+
         RateLimiter::for('telegram-webhook', fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip() ?? 'unknown'));
     }
 }

@@ -43,10 +43,26 @@ return [
             '⏳ One moment, writing it up…',
             '⏳ Logging it…',
         ],
-        'recorded_dummy' => [
-            'Got it, your note is saved in the archive. Automatic interpretation comes in a later version.',
-            "Saved. I haven't linked it to a task yet, that comes later.",
-            'Done, your note is safely archived. Task matching is coming soon.',
+        'recorded' => [
+            'Got it, noted.',
+            'Done, it is in the archive.',
+            "Noted. Here's what I recorded.",
+        ],
+        'nothing_recorded' => [
+            "I read this, but there's no work in it to record.",
+            'Nothing to record from this message.',
+        ],
+        'pending_notice' => [
+            ':count note(s) are waiting for your answer below.',
+            'I need you to confirm :count note(s) below.',
+        ],
+        'rejected_notice' => [
+            "I couldn't save :count note(s) because they don't match the archive.",
+            ':count note(s) were rejected: the details do not fit the archive.',
+        ],
+        'split_required' => [
+            'This message has more than 5 notes, so nothing was saved yet. Please split it into several messages.',
+            'Too many notes in one message (maximum 5). Nothing was saved; please resend in smaller messages.',
         ],
         'failed' => [
             "Oops, I couldn't process this note. Don't worry, the message is saved and can be retried later.",
@@ -99,7 +115,30 @@ return [
         ],
     ],
 
+    'question' => [
+        'match' => [
+            'Is this note for the task ":task"?',
+            'Quick check: is this for the task ":task"?',
+        ],
+        'project' => [
+            'Which project is this note for?',
+            "I'm not sure about the project. Which one?",
+        ],
+        'date' => [
+            'The date is :date, more than 30 days ago. Record it on that date?',
+            'This note is dated :date (over 30 days back). Use that date?',
+        ],
+        'cancelled' => [
+            'Okay, I will not save that note.',
+            'Understood, I skipped that note.',
+        ],
+    ],
+
     'callback' => [
+        'answered' => [
+            'This question was already answered.',
+            'Already answered earlier.',
+        ],
         'expired' => [
             'This button is no longer valid.',
             'This button has expired.',
