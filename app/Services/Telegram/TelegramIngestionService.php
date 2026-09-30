@@ -67,6 +67,10 @@ class TelegramIngestionService
         }
 
         if ($content === null) {
+            if (! $update->hasAttachment()) {
+                return; // service messages and other events with nothing to record
+            }
+
             $this->once($update, fn () => $this->messenger->trySend(
                 $update->chatId,
                 $this->messages->get('unsupported.'.$update->unsupportedKind(), $default),

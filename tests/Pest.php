@@ -5,6 +5,9 @@ use App\Support\UserContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
+use App\Models\InboundMessage;
+use App\Services\Ai\Fakes\FakeAiProvider;
+use App\Services\Telegram\Fakes\FakeTelegramClient;
 
 /*
 |--------------------------------------------------------------------------
@@ -114,4 +117,86 @@ function withAppEnvironment(string $environment, array $variables, Closure $call
 function removeFromArray(array &$array, string $key): void
 {
     unset($array[$key]);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Telegram helpers
+|--------------------------------------------------------------------------
+*/
+
+function fakeTelegram(): FakeTelegramClient
+{
+    $client = app(\App\Services\Telegram\TelegramClient::class);
+    assert($client instanceof FakeTelegramClient);
+
+    return $client;
+}
+
+function fakeAi(): FakeAiProvider
+{
+    $ai = app(\App\Services\Ai\AiProvider::class);
+    assert($ai instanceof FakeAiProvider);
+
+    return $ai;
+}
+
+/** A registered bot user (whitelisted by telegram_user_id). */
+function registerTelegramUser(int $telegramId = 555001, array $attributes = []): User
+{
+    return User::factory()->create(['telegram_user_id' => $telegramId] + $attributes);
+}
+
+/**
+ * POST an update to the webhook with the correct secret unless overridden.
+ *
+ * @param  array<string, mixed>  $payload
+ * @param  array<string, string>  $headers
+ */
+function postTelegram(array $payload, ?array $headers = null): \Illuminate\Testing\TestResponse
+{
+    $headers ??= ['X-Telegram-Bot-Api-Secret-Token' => (string) config('telegram.secret_token')];
+
+    return test()->postJson('/'.config('telegram.webhook_path'), $payload, $headers);
+}
+
+/**
+ * Run a callback able to see every user's rows (assertions across users).
+ */
+function asSystem(Closure $callback): mixed
+{
+    return app(UserContext::class)->runAsSystem($callback);
+}
+
+/**
+ * @return \Illuminate\Database\Eloquent\Collection<int, InboundMessage>
+ */
+function storedMessages(): \Illuminate\Database\Eloquent\Collection
+{
+    return asSystem(fn () => InboundMessage::query()->orderBy('id')->get());
+}
+
+
+/**
+ * Attach an in-memory handler to the default log channel and return it.
+ * Records reach it AFTER the channel's processors, i.e. exactly what a log file would receive.
+ */
+function captureLogs(): \Monolog\Handler\TestHandler
+{
+    $handler = new \Monolog\Handler\TestHandler;
+    \Illuminate\Support\Facades\Log::driver()->getLogger()->pushHandler($handler);
+
+    return $handler;
+}
+
+/**
+ * Everything the handler saw, as one string (message, context, extra) for "does not contain" checks.
+ */
+function loggedText(\Monolog\Handler\TestHandler $handler): string
+{
+    return implode("\n", array_map(
+        fn (\Monolog\LogRecord $r) => $r->message.' '.json_encode($r->context).' '.json_encode($r->extra),
+        $handler->getRecords(),
+    ));
 }
