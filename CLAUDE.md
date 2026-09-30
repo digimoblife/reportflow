@@ -38,6 +38,9 @@ PostgreSQL, Redis, Gotenberg hanya di network internal Docker.
 
 - Kode, identifier, komentar, commit message: **bahasa Inggris**. String untuk user: lewat `lang/id` + `lang/en`.
 - Simpan waktu dalam UTC; tampilkan sesuai `users.timezone` (default `Asia/Jakarta`).
+- Ubah semua Carbon ke UTC di batas aplikasi (input request, payload webhook, argumen service) sebelum disimpan
+  atau dipakai dalam query. Tampilkan sesuai `users.timezone` hanya di lapisan tampilan (Filament, template pesan,
+  laporan). Koneksi `pgsql` mengikat nilai tanggal beserta offset sebagai pengaman, tetapi jangan bergantung padanya.
 - Status, tipe activity, dsb: PHP backed enum di `app/Enums`. Nilainya ikut PRD (§14, §15, §29, dst).
 - Struktur: `app/Services/{Worklog,Ai,Redaction,Report,Reminder,Telegram}`, `app/Jobs`, `app/Filament`.
   Controller/webhook tipis; logic di service.
