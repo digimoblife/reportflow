@@ -1,0 +1,16 @@
+# Salin file ini ke docker-compose.override.yml jika Anda ingin mengakses
+# PostgreSQL, Redis, atau Gotenberg langsung dari host machine saat development.
+# PERINGATAN: Jangan gunakan override ini di server produksi (PRD §56, §83).
+#
+# services:
+#   postgres:
+#     ports:
+#       - "127.0.0.1:5432:5432"
+#
+#   redis:
+#     ports:
+#       - "127.0.0.1:6379:6379"
+#
+#   gotenberg:
+#     ports:
+#       - "127.0.0.1:3000:3000"

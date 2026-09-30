@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  ci:
+    name: Lint, Static Analysis, Security & Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: reportflow_test
+          POSTGRES_USER: reportflow
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo, pdo_pgsql, pgsql, redis, gd, intl, bcmath, zip, pcntl
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Security audit
+        run: composer audit
+
+      - name: Code style (Pint)
+        run: ./vendor/bin/pint --test
+
+      - name: Static analysis (PHPStan / Larastan)
+        run: ./vendor/bin/phpstan analyse --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env.testing
+          sed -i 's/DB_HOST=postgres/DB_HOST=127.0.0.1/' .env.testing
+          sed -i 's/DB_DATABASE=reportflow/DB_DATABASE=reportflow_test/' .env.testing
+          sed -i 's/DB_USERNAME=reportflow/DB_USERNAME=reportflow_tester/' .env.testing
+          sed -i 's/DB_PASSWORD=/DB_PASSWORD=password/' .env.testing
+          sed -i 's/REDIS_HOST=redis/REDIS_HOST=127.0.0.1/' .env.testing
+
+      - name: Setup database role and extensions
+        env:
+          PGPASSWORD: password
+        run: |
+          psql -h 127.0.0.1 -U reportflow -d postgres -c "
+            DO \$\$
+            BEGIN
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'reportflow_tester') THEN
+                CREATE ROLE reportflow_tester WITH LOGIN PASSWORD 'password';
+              END IF;
+            END
+            \$\$;
+            GRANT ALL PRIVILEGES ON DATABASE reportflow_test TO reportflow_tester;
+            ALTER DATABASE reportflow_test OWNER TO reportflow_tester;
+          "
+          psql -h 127.0.0.1 -U reportflow -d reportflow_test -c "
+            CREATE EXTENSION IF NOT EXISTS pg_trgm;
+            GRANT ALL ON SCHEMA public TO reportflow_tester;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO reportflow_tester;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO reportflow_tester;
+          "
+
+      - name: Generate app key
+        run: php artisan key:generate --env=testing
+
+      - name: Run migrations
+        run: php artisan migrate --env=testing --force
+
+      - name: Run Pest tests
+        run: php artisan test --env=testing

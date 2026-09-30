@@ -1,0 +1,11 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+
+    # Level 5 is the starting baseline for Milestone M0.
+    # Plan: gradually increase to level 8 in subsequent milestones (M1-M4)
+    # as domain models, services, and strict types are implemented.
+    level: 5

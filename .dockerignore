@@ -1,0 +1,13 @@
+.git
+.github
+.claude
+docs
+tests/Eval/data
+node_modules
+vendor
+storage/framework/cache/data/*
+storage/framework/views/*
+storage/framework/sessions/*
+storage/logs/*
+.env
+.DS_Store
