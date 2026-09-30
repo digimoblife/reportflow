@@ -1,0 +1,30 @@
+# Tunnel-facing server block (M2 live test). Rendered by the nginx image's envsubst at container
+# start into /etc/nginx/conf.d/tunnel.conf; the webhook path never lives in git.
+#
+# Only this port is ever given to cloudflared. It forwards ONE exact path, POST only, and only when
+# the Telegram secret header is present. Everything else (admin, livewire, health, index.php, dotfiles)
+# is a bare 404 decided by nginx, before PHP is involved. Laravel still verifies the header value.
+#
+# Do not add error_log/access_log directives here: the request line contains the secret path.
+server {
+    listen 8081;
+    server_name _;
+    server_tokens off;
+    client_max_body_size 1m;
+    access_log off;
+
+    location = /${TELEGRAM_WEBHOOK_PATH} {
+        if ($request_method != POST) { return 404; }
+        if ($http_x_telegram_bot_api_secret_token = "") { return 404; }
+
+        include fastcgi_params;
+        fastcgi_pass app:9000;
+        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_read_timeout 30;
+    }
+
+    location / {
+        return 404;
+    }
+}

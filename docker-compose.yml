@@ -154,10 +154,18 @@ services:
     image: nginx:1.27-alpine
     restart: unless-stopped
     ports:
-      - "80:80"
+      # Loopback only: nothing is reachable from the LAN. 8081 is the only port a tunnel may point at
+      # (see docker/nginx/tunnel.conf.template and docs/runbooks/telegram-live-test.md).
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:8081:8081"
+    environment:
+      # Read by compose at container creation (not by `restart`). The default is a path that is never
+      # registered, so an unset variable can never turn the tunnel block into `location = /`.
+      - TELEGRAM_WEBHOOK_PATH=${TELEGRAM_WEBHOOK_PATH:-webhook-path-not-configured}
     volumes:
       - .:/var/www/html:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/tunnel.conf.template:/etc/nginx/templates/tunnel.conf.template:ro
     depends_on:
       app:
         condition: service_healthy
