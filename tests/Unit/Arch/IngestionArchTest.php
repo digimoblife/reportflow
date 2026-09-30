@@ -16,18 +16,22 @@ arch('redaction has no dependency on channels or the database')
     ->expect('App\Services\Redaction')
     ->not->toUse(['App\Services\Telegram', 'App\Models', 'Illuminate\Support\Facades\DB']);
 
-arch('the AI seam does not depend on Telegram or models')
+arch('the AI layer does not depend on Telegram or HTTP entry points')
     ->expect('App\Services\Ai')
-    ->not->toUse(['App\Services\Telegram', 'App\Models']);
+    ->not->toUse(['App\Services\Telegram', 'App\Http']);
+
+arch('AI providers and fakes never touch the database or models')
+    ->expect(['App\Services\Ai\DeepSeekProvider', 'App\Services\Ai\Fakes'])
+    ->not->toUse(['App\Models', 'Illuminate\\Support\\Facades\\DB']);
 
 arch('queued jobs are queueable and carry no Eloquent models or raw text')
     ->expect('App\Jobs')
     ->classes->toImplement(ShouldQueue::class)
     ->ignoring('App\Jobs\Middleware');
 
-arch('only the Telegram client talks to the Telegram HTTP API')
+arch('only the outgoing clients use the HTTP facade')
     ->expect('Illuminate\Support\Facades\Http')
-    ->toOnlyBeUsedIn('App\Services\Telegram\HttpTelegramClient');
+    ->toOnlyBeUsedIn(['App\Services\Telegram\HttpTelegramClient', 'App\Services\Ai\DeepSeekProvider']);
 
 arch('controllers stay thin: no models or redaction inside')
     ->expect('App\Http\Controllers')

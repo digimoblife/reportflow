@@ -16,8 +16,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $project_id
+ * @property string $title
+ * @property TaskStatus $status
+ * @property Carbon|null $completed_at
+ * @property Carbon|null $last_activity_at
+ *
  * PRD §14, §49 tasks. Status changes must go through TaskStatusTransition and be recorded
  * in task_events (M4). `version` is reserved for optimistic locking (PRD §23, mechanism in M4).
  */

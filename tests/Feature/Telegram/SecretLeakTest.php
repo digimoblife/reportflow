@@ -34,7 +34,7 @@ function everywhereText(?TestHandler $logs = null): array
     return [
         'database' => implode("\n", $dump),
         'logs' => $logs ? loggedText($logs) : '',
-        'ai' => json_encode(array_map(fn (AiRequest $r) => [$r->purpose, $r->promptVersion, $r->input], fakeAi()->requests)),
+        'ai' => json_encode(array_map(fn (AiRequest $r) => [$r->purpose, $r->promptVersion, $r->system, $r->user], fakeAi()->requests)),
         'telegram' => implode("\n", fakeTelegram()->allTexts()),
     ];
 }
@@ -63,7 +63,7 @@ it('does not leak credentials anywhere on the happy path', function () {
     }
 
     // The AI provider saw the redacted text only.
-    expect(fakeAi()->requests[0]->input)->toContain('[REDACTED_SECRET]');
+    expect(fakeAi()->requests[0]->user)->toContain('[REDACTED_SECRET]');
 });
 
 it('does not leak credentials on the failure path, in an edit, or via exceptions', function () {
@@ -108,7 +108,7 @@ it('marks every parameter that receives raw text as sensitive', function (string
 })->with([
     [TelegramUpdate::class, 'fromArray', 'payload'],
     [RedactionService::class, 'redact', 'text'],
-    [AiRequest::class, '__construct', 'input'],
+    [AiRequest::class, '__construct', 'user'],
     [TelegramUpdate::class, '__construct', 'text'],
     [TelegramUpdate::class, '__construct', 'caption'],
 ]);

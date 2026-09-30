@@ -70,7 +70,8 @@ it('processes a message end to end: ⏳ becomes the confirmation on the same mes
         ->and(fakeTelegram()->edits[0]['chat_id'])->toBe(555001)
         ->and(isVariantOf(fakeTelegram()->edits[0]['text'], 'worklog.recorded_dummy'))->toBeTrue()
         ->and(fakeAi()->requests)->toHaveCount(1)
-        ->and(fakeAi()->requests[0]->input)->toBe('Hari ini fix bug login 9Club, sudah selesai');
+        ->and(json_decode(fakeAi()->requests[0]->user, true)['message'])->toBe('Hari ini fix bug login 9Club, sudah selesai')
+        ->and(fakeAi()->requests[0]->purpose)->toBe('worklog_extraction');
     expect(pendingJobs())->toBe(0);
 });
 

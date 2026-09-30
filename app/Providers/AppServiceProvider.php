@@ -4,11 +4,13 @@ namespace App\Providers;
 
 use App\Database\PostgresConnection;
 use App\Services\Ai\AiProvider;
+use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\Fakes\FakeAiProvider;
 use App\Services\Telegram\BotMessages;
 use App\Services\Telegram\Fakes\FakeTelegramClient;
 use App\Services\Telegram\HttpTelegramClient;
 use App\Services\Telegram\TelegramClient;
+use App\Services\Worklog\Extraction\ConfidencePolicy;
 use App\Support\UserContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Connection;
@@ -32,13 +34,14 @@ class AppServiceProvider extends ServiceProvider
             default => throw new RuntimeException('TELEGRAM_CLIENT must be "http" or "fake".'),
         });
 
-        // TODO(M3): the DeepSeek provider; "fake" is the only provider until then.
         $this->app->singleton(AiProvider::class, fn (): AiProvider => match (config('ai.provider')) {
+            'deepseek' => new DeepSeekProvider,
             'fake' => new FakeAiProvider,
-            default => throw new RuntimeException('AI_PROVIDER must be "fake" until the DeepSeek provider exists (M3).'),
+            default => throw new RuntimeException('AI_PROVIDER must be "deepseek" or "fake".'),
         });
 
         $this->app->singleton(BotMessages::class);
+        $this->app->singleton(ConfidencePolicy::class, fn (): ConfidencePolicy => ConfidencePolicy::fromConfig());
 
         Connection::resolverFor('pgsql', fn ($connection, $database, $prefix, $config) => new PostgresConnection($connection, $database, $prefix, $config));
     }
@@ -51,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
         // A fake Telegram client in production would silently swallow every user-facing message.
         if ($this->app->isProduction() && config('telegram.client') !== 'http') {
             throw new RuntimeException('TELEGRAM_CLIENT must be "http" in production.');
+        }
+
+        // A fake AI provider in production would silently record nothing for every message.
+        if ($this->app->isProduction() && config('ai.provider') !== 'deepseek') {
+            throw new RuntimeException('AI_PROVIDER must be "deepseek" in production.');
         }
 
         // Telegram delivers from a small set of addresses; the limit is generous but stops floods.
