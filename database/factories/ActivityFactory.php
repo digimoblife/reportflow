@@ -20,7 +20,7 @@ class ActivityFactory extends Factory
             'task_id' => Task::factory(),
             // Must match the task's project (composite foreign key).
             'project_id' => fn (array $attributes) => Task::withoutGlobalScopes()->withTrashed()
-                ->findOrFail($attributes['task_id'])->project_id,
+                ->whereKey($attributes['task_id'])->value('project_id'),
             'inbound_message_id' => null,
             'activity_type' => ActivityType::Development,
             'summary' => fake()->sentence(),

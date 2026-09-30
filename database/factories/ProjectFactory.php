@@ -17,11 +17,11 @@ class ProjectFactory extends Factory
 
     public function definition(): array
     {
-        $name = fake()->unique()->words(2, true);
+        $name = fake()->unique()->company();
 
         return [
             'user_id' => $this->contextUser(),
-            'name' => Str::title($name),
+            'name' => $name,
             'slug' => Str::slug($name),
             'aliases' => [],
             'description' => fake()->sentence(),

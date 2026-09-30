@@ -224,7 +224,7 @@ class DemoSeeder extends Seeder
      * Create a task and replay its history: one activity per step, plus created /
      * status_changed events validated against the transition matrix.
      *
-     * @param  list<array{0: CarbonImmutable, 1: TaskStatus, 2: ?WaitingReason, 3: ActivityType, 4: string}>  $steps
+     * @param  non-empty-list<array{0: CarbonImmutable, 1: TaskStatus, 2: ?WaitingReason, 3: ActivityType, 4: string}>  $steps
      */
     private function seedTask(Project $project, string $title, array $steps, TaskPriority $priority = TaskPriority::Normal, ?string $type = null): Task
     {
@@ -265,7 +265,7 @@ class DemoSeeder extends Seeder
             $previous = [$status, $reason];
         }
 
-        $last = end($steps);
+        $last = $steps[array_key_last($steps)];
         $task->update([
             'status' => $last[1],
             'waiting_reason' => $last[2],
