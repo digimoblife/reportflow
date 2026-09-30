@@ -510,3 +510,24 @@ Prompt `worklog_extraction@v1`, model `deepseek-flash`, dataset `realistic` (107
   (2) mengisi perubahan status untuk bagian kecil ("retry api kurir selesai" → task completed; "etiket obat selesai dicetak" → completed) padahal hanya sebagian yang selesai (R063–R065);
   (3) pesan permintaan mencatat sandi ("pass db … tolong catat ya") tetap dibuat item (R105). Sisanya label yang meragukan (`review`).
 - Sesuai skill `prompt-eval`, v1 tidak diubah; perbaikan = `v2.md` lalu bandingkan dengan `--baseline`.
+
+### Prompt v2 vs v1 (DeepSeek, dataset `realistic`, 30 Sep 2026)
+v2 = definisi tipe activity, "hanya yang sudah terjadi" (rencana bukan pekerjaan), status konservatif (bagian tugas selesai ≠ task selesai), tanggal Senin/tanggal 1 untuk minggu/bulan.
+Dua run per versi (concurrency 8, satu run v1 sebelumnya berurutan memberi hasil yang sama):
+
+| Metrik | v1 (run 1 / 2) | v2 (run 1 / 2) |
+|---|---|---|
+| Extraction | 96,0% / 96,0% | 96,0% / 96,0% |
+| Project | 96,0% / 96,0% | 96,0% / 96,0% |
+| Task matching | 93,5% / 95,3% | 94,3% / 92,5% |
+| Date | 98,9% / 98,9% | 98,9% / 98,9% |
+| Status | 92,4% / 91,3% | 91,2% / 93,5% |
+| Tipe activity | 75,2% / 75,2% | 79,0% / 78,2% |
+
+- **Kebisingan run-ke-run besar:** dua run v1 yang sama berbeda pada 11 kasus (6 membaik, 5 memburuk) walau `temperature: 0`. Selisih beberapa kasus antar versi **bukan bukti**; bandingkan lewat beberapa run
+  atau dataset lebih besar/nyata sebelum menyimpulkan.
+- v2 konsisten lebih baik hanya pada **klasifikasi tipe** (+3 sampai +4 poin, dua run): definisi tipe membantu. Metrik bertarget PRD tidak berubah berarti.
+- Target v2 yang **tidak** tercapai lewat instruksi teks: rencana masa depan tetap dicatat sebagai pekerjaan (R085–R087), dan status "task selesai" tetap diisi untuk bagian tugas (R063–R065). Instruksi negatif
+  saja tidak cukup untuk model ini; perbaikan andal perlu struktur di output (mis. field `happened` per item yang dibuang backend bila false) atau konfirmasi di M4 untuk status terminal (sudah rencana: Completed/Cancelled dari AI selalu eksplisit dan bisa di-undo).
+- Default `ai.extraction.prompt` tetap `worklog_extraction@v1` sampai user memutuskan memakai v2.
+- `eval:run` kini punya `--concurrency` (prefetch paralel, hasil identik dengan berurutan), `--only`, `--ids`, `--limit`; 107 kasus ≈ 1 menit dengan concurrency 8 (sebelumnya ≈ 6 menit).
