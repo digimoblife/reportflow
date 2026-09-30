@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
@@ -23,6 +24,9 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->ensureRunningOnTestDatabase();
+
+        // No test may reach the network; tests that exercise the HTTP client add Http::fake().
+        Http::preventStrayRequests();
     }
 
     /**

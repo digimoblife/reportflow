@@ -14,6 +14,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
+ * @property int $id
+ * @property int $user_id
+ * @property MessageSource $source
+ * @property string $idempotency_key
+ * @property int|null $telegram_chat_id
+ * @property int|null $telegram_message_id
+ * @property int|null $reply_message_id
+ * @property string $text
+ * @property InboundMessageStatus $status
+ * @property string|null $error
+ *
  * PRD §23, §48, §49 inbound_messages. `text` is always the post-redaction text.
  * reply_message_id is the bot's reply (the "⏳" message) that gets edited into the confirmation.
  */

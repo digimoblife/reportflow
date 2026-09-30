@@ -5,7 +5,7 @@ use Database\Seeders\DatabaseSeeder;
 use Filament\Facades\Filament;
 
 it('does not serve login page or admin panel, and does not seed dev user when APP_ENV is production', function () {
-    withAppEnvironment('production', ['DEV_USER_EMAIL' => 'dev@example.test', 'DEV_USER_PASSWORD' => 'not-a-real-password'], function () {
+    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'DEV_USER_EMAIL' => 'dev@example.test', 'DEV_USER_PASSWORD' => 'not-a-real-password'], function () {
         expect(app()->environment())->toBe('production')
             ->and(config('app.dev_user.email'))->toBe('dev@example.test');
 

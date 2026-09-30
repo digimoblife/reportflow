@@ -21,6 +21,15 @@ foreach ([
     'DB_USERNAME' => 'reportflow_tester',
     'DEV_USER_EMAIL' => '',
     'DEV_USER_PASSWORD' => '',
+    // Nothing in the suite may reach Telegram or an AI provider, and no real secret is ever read.
+    'TELEGRAM_CLIENT' => 'fake',
+    'AI_PROVIDER' => 'fake',
+    'TELEGRAM_BOT_TOKEN' => '',
+    'DEEPSEEK_API_KEY' => '',
+    'TRUSTED_PROXIES' => '',
+    // Test-only values (not credentials): webhook path >= 32 chars and its secret header.
+    'TELEGRAM_WEBHOOK_PATH' => 'test-webhook-path-'.str_repeat('x7', 12),
+    'TELEGRAM_BOT_SECRET_TOKEN' => 'test-secret-'.str_repeat('k9', 8),
 ] as $name => $value) {
     $_ENV[$name] = $_SERVER[$name] = $value;
     putenv("{$name}={$value}");
