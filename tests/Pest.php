@@ -233,3 +233,59 @@ function asUser(int $userId, Closure $callback): mixed
 {
     return app(UserContext::class)->runAs($userId, $callback);
 }
+
+/**
+ * A small world for extraction tests: two active projects, an archived one, tasks in every status, and a
+ * second user's data that must never show up. Returns handles by key.
+ *
+ * @return array<string, mixed>
+ */
+function worklogWorld(): array
+{
+    $today = \Carbon\CarbonImmutable::parse('2026-09-30', 'Asia/Jakarta');
+    $user = actingAsUser(User::factory()->create(['timezone' => 'Asia/Jakarta']));
+
+    $harbor = \App\Models\Project::factory()->create(['name' => 'Harbor Portal', 'slug' => 'harbor-portal', 'aliases' => ['HP']]);
+    $kedai = \App\Models\Project::factory()->create(['name' => 'Kedai App', 'slug' => 'kedai-app', 'aliases' => []]);
+    $archived = \App\Models\Project::factory()->create(['name' => 'Old Thing', 'slug' => 'old-thing', 'status' => \App\Enums\ProjectStatus::Archived]);
+
+    $task = fn ($project, string $title, \App\Enums\TaskStatus $status, array $extra = []) => \App\Models\Task::factory()->for($project)->create(['title' => $title, 'status' => $status] + $extra);
+
+    $doni = \App\Models\Person::factory()->create(['name' => 'Doni']);
+    $rina = \App\Models\Person::factory()->create(['name' => 'Rina']);
+
+    $tracking = $task($harbor, 'Shipment Tracking API', \App\Enums\TaskStatus::InProgress, ['last_activity_at' => '2026-09-25 08:00:00+00']);
+    $tracking->people()->attach($doni, ['role' => \App\Enums\TaskPersonRole::Assignee]);
+    foreach ([['2026-09-20', 'research', 'Compared carrier rate limits'], ['2026-09-22', 'development', 'Built the webhook receiver'], ['2026-09-24', 'testing', 'Tested carrier callbacks'], ['2026-09-25', 'deployment', str_repeat('Deployed to staging. ', 20)]] as [$date, $type, $summary]) {
+        \App\Models\Activity::factory()->for($tracking)->create(['activity_date' => $date, 'activity_type' => $type, 'summary' => $summary]);
+    }
+
+    $invoice = $task($harbor, 'Invoice PDF Export Bug', \App\Enums\TaskStatus::Open, ['last_activity_at' => '2026-09-28 08:00:00+00']);
+    $invoice->people()->attach($rina, ['role' => \App\Enums\TaskPersonRole::Requester]);
+
+    $world = [
+        'today' => $today, 'user' => $user, 'harbor' => $harbor, 'kedai' => $kedai, 'archived' => $archived,
+        'tracking' => $tracking, 'invoice' => $invoice,
+        'sso' => $task($harbor, 'Customer SSO Login', \App\Enums\TaskStatus::Waiting, ['waiting_reason' => \App\Enums\WaitingReason::Client, 'last_activity_at' => '2026-09-20 08:00:00+00']),
+        'blocked' => $task($harbor, 'Dock Sensor Feed', \App\Enums\TaskStatus::Blocked, ['last_activity_at' => '2026-09-26 08:00:00+00']),
+        'dock' => $task($harbor, 'Dock Utilization Report', \App\Enums\TaskStatus::Completed, ['completed_at' => '2026-09-18 08:00:00+00', 'last_activity_at' => '2026-09-18 08:00:00+00']),
+        'oldmigration' => $task($harbor, 'Legacy Database Migration', \App\Enums\TaskStatus::Completed, ['completed_at' => '2026-07-20 08:00:00+00', 'last_activity_at' => '2026-07-20 08:00:00+00']),
+        'cancelled' => $task($harbor, 'QRIS Payment', \App\Enums\TaskStatus::Cancelled),
+        'draft' => $task($harbor, 'Unconfirmed Idea', \App\Enums\TaskStatus::Draft),
+        'menu' => $task($kedai, 'Menu Sync With POS', \App\Enums\TaskStatus::InProgress, ['last_activity_at' => '2026-09-27 08:00:00+00']),
+    ];
+
+    $deleted = $task($harbor, 'Deleted Task', \App\Enums\TaskStatus::Open);
+    $deleted->delete();
+
+    // Another user's project and task: must never be visible or acceptable.
+    $stranger = User::factory()->create();
+    $world['stranger'] = $stranger;
+    $world['strangerTask'] = app(\App\Support\UserContext::class)->runAs($stranger->id, function () {
+        $project = \App\Models\Project::factory()->create(['name' => 'Harbor Portal Clone', 'slug' => 'harbor-portal-clone']);
+
+        return \App\Models\Task::factory()->for($project)->create(['title' => 'Stranger Task', 'status' => \App\Enums\TaskStatus::InProgress]);
+    });
+
+    return $world;
+}
