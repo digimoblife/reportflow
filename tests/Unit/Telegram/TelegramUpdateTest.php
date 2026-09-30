@@ -63,3 +63,35 @@ it('fits text into the Telegram limit', function () {
         ->and(mb_strlen(TelegramText::fit(str_repeat('é', 5000), 4096)))->toBe(4096)
         ->and(TelegramText::fit(str_repeat('a', 50), 10))->toEndWith('…');
 });
+
+it('parses a button press', function () {
+    $update = TelegramUpdate::fromArray(['update_id' => 9, 'callback_query' => [
+        'id' => 'cb-1', 'from' => ['id' => 42, 'is_bot' => false], 'data' => 'a:5:undo',
+        'message' => ['message_id' => 77, 'chat' => ['id' => 42, 'type' => 'private']],
+    ]]);
+
+    expect($update->isCallback())->toBeTrue()
+        ->and($update->isPrivateUserChat())->toBeTrue()
+        ->and($update->callbackData)->toBe('a:5:undo')
+        ->and($update->callbackId)->toBe('cb-1')
+        ->and($update->messageId)->toBe(77)
+        ->and($update->content())->toBeNull()
+        ->and($update->command())->toBeNull()
+        ->and($update->versionKey())->toBe('callback:cb-1');
+});
+
+it('ignores malformed button presses', function (array $query) {
+    expect(TelegramUpdate::fromArray(['update_id' => 1, 'callback_query' => $query]))->toBeNull();
+})->with([
+    'no message (inline mode)' => [['id' => 'x', 'from' => ['id' => 1], 'data' => 'a']],
+    'no data (game)' => [['id' => 'x', 'from' => ['id' => 1], 'message' => ['message_id' => 1, 'chat' => ['id' => 1, 'type' => 'private']]]],
+    'data not a string' => [['id' => 'x', 'from' => ['id' => 1], 'data' => 5, 'message' => ['message_id' => 1, 'chat' => ['id' => 1, 'type' => 'private']]]],
+    'no from' => [['id' => 'x', 'data' => 'a', 'message' => ['message_id' => 1, 'chat' => ['id' => 1, 'type' => 'private']]]],
+]);
+
+it('reads which message a reply answers', function () {
+    $update = TelegramUpdate::fromArray(TelegramPayload::message('bukan itu', extra: ['reply_to_message' => ['message_id' => 55]]));
+
+    expect($update->replyToMessageId)->toBe(55)
+        ->and(TelegramUpdate::fromArray(TelegramPayload::message('halo'))->replyToMessageId)->toBeNull();
+});

@@ -25,7 +25,7 @@ return [
     'max_message_length' => 4096,
 
     // The only update types the bot subscribes to.
-    'allowed_updates' => ['message', 'edited_message'],
+    'allowed_updates' => ['message', 'edited_message', 'callback_query'],
 
     // Log an unregistered sender's numeric id at most once per this many seconds per id.
     'unregistered_log_ttl' => 3600,

@@ -18,6 +18,8 @@ final class TelegramUpdate
 
     public const EDITED_MESSAGE = 'edited_message';
 
+    public const CALLBACK_QUERY = 'callback_query';
+
     /**
      * @param  list<string>  $attachmentTypes  types only (photo, voice, ...), never file ids
      */
@@ -34,6 +36,9 @@ final class TelegramUpdate
         #[SensitiveParameter] private readonly ?string $text,
         #[SensitiveParameter] private readonly ?string $caption,
         public readonly array $attachmentTypes,
+        public readonly ?int $replyToMessageId = null,
+        public readonly ?string $callbackId = null,
+        public readonly ?string $callbackData = null,
     ) {}
 
     /**
@@ -43,6 +48,10 @@ final class TelegramUpdate
      */
     public static function fromArray(#[SensitiveParameter] array $payload): ?self
     {
+        if (isset($payload[self::CALLBACK_QUERY])) {
+            return self::fromCallback($payload);
+        }
+
         $kind = isset($payload[self::MESSAGE]) ? self::MESSAGE : (isset($payload[self::EDITED_MESSAGE]) ? self::EDITED_MESSAGE : null);
 
         if ($kind === null || ! is_array($payload[$kind])) {
@@ -73,7 +82,49 @@ final class TelegramUpdate
             text: is_string($message['text'] ?? null) ? $message['text'] : null,
             caption: is_string($message['caption'] ?? null) ? $message['caption'] : null,
             attachmentTypes: self::attachmentTypes($message),
+            replyToMessageId: is_int($message['reply_to_message']['message_id'] ?? null) ? $message['reply_to_message']['message_id'] : null,
         );
+    }
+
+    /**
+     * A button press. `messageId` is the message that carries the buttons.
+     *
+     * @param  array<mixed>  $payload
+     */
+    private static function fromCallback(array $payload): ?self
+    {
+        $query = $payload[self::CALLBACK_QUERY];
+        $message = is_array($query) ? ($query['message'] ?? null) : null;
+
+        if (! is_int($payload['update_id'] ?? null) || ! is_array($query)
+            || ! is_string($query['id'] ?? null) || ! is_string($query['data'] ?? null)
+            || ! is_array($query['from'] ?? null) || ! is_int($query['from']['id'] ?? null)
+            || ! is_array($message) || ! is_int($message['message_id'] ?? null)
+            || ! is_array($message['chat'] ?? null) || ! is_int($message['chat']['id'] ?? null) || ! is_string($message['chat']['type'] ?? null)) {
+            return null;
+        }
+
+        return new self(
+            updateId: $payload['update_id'],
+            kind: self::CALLBACK_QUERY,
+            chatId: $message['chat']['id'],
+            chatType: $message['chat']['type'],
+            messageId: $message['message_id'],
+            fromId: $query['from']['id'],
+            fromIsBot: (bool) ($query['from']['is_bot'] ?? false),
+            date: null,
+            editDate: null,
+            text: null,
+            caption: null,
+            attachmentTypes: [],
+            callbackId: $query['id'],
+            callbackData: $query['data'],
+        );
+    }
+
+    public function isCallback(): bool
+    {
+        return $this->kind === self::CALLBACK_QUERY;
     }
 
     /** Only one-to-one chats with a human are served; the chat id of a private chat equals the user id. */
@@ -95,6 +146,10 @@ final class TelegramUpdate
     /** Identifies one delivery of one version of a message (edits differ by edit_date). */
     public function versionKey(): string
     {
+        if ($this->isCallback()) {
+            return "callback:{$this->callbackId}";
+        }
+
         return "{$this->idempotencyKey()}:".($this->editDate ?? 0);
     }
 

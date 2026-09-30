@@ -12,9 +12,13 @@ use Illuminate\Support\Facades\Http;
  */
 final class HttpTelegramClient implements TelegramClient
 {
-    public function sendMessage(int $chatId, string $text, ?int $replyToMessageId = null): int
+    public function sendMessage(int $chatId, string $text, ?int $replyToMessageId = null, ?array $inlineKeyboard = null): int
     {
         $payload = ['chat_id' => $chatId, 'text' => $text, 'disable_web_page_preview' => true];
+
+        if ($inlineKeyboard !== null) {
+            $payload['reply_markup'] = ['inline_keyboard' => $inlineKeyboard];
+        }
 
         if ($replyToMessageId !== null) {
             $payload['reply_parameters'] = ['message_id' => $replyToMessageId, 'allow_sending_without_reply' => true];
@@ -23,14 +27,25 @@ final class HttpTelegramClient implements TelegramClient
         return (int) $this->call('sendMessage', $payload)['message_id'];
     }
 
-    public function editMessageText(int $chatId, int $messageId, string $text): void
+    public function editMessageText(int $chatId, int $messageId, string $text, ?array $inlineKeyboard = null): void
     {
-        $this->call('editMessageText', [
+        $payload = [
             'chat_id' => $chatId,
             'message_id' => $messageId,
             'text' => $text,
             'disable_web_page_preview' => true,
-        ]);
+        ];
+
+        if ($inlineKeyboard !== null) {
+            $payload['reply_markup'] = ['inline_keyboard' => $inlineKeyboard];
+        }
+
+        $this->call('editMessageText', $payload);
+    }
+
+    public function answerCallbackQuery(string $callbackQueryId, ?string $text = null): void
+    {
+        $this->call('answerCallbackQuery', array_filter(['callback_query_id' => $callbackQueryId, 'text' => $text], fn ($v) => $v !== null));
     }
 
     public function setWebhook(string $url, #[\SensitiveParameter] string $secretToken, array $allowedUpdates): void

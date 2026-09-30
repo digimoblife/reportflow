@@ -24,13 +24,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $text
  * @property InboundMessageStatus $status
  * @property string|null $error
+ * @property array<string, mixed>|null $outcome
  *
  * PRD §23, §48, §49 inbound_messages. `text` is always the post-redaction text.
  * reply_message_id is the bot's reply (the "⏳" message) that gets edited into the confirmation.
  */
 #[Fillable([
     'user_id', 'source', 'idempotency_key', 'telegram_chat_id', 'telegram_message_id', 'reply_message_id',
-    'text', 'attachments', 'received_at', 'edited_at', 'status', 'error', 'reprocess_count',
+    'text', 'attachments', 'received_at', 'edited_at', 'status', 'error', 'reprocess_count', 'outcome',
 ])]
 class InboundMessage extends Model implements UserScoped
 {
@@ -50,6 +51,7 @@ class InboundMessage extends Model implements UserScoped
             'telegram_message_id' => 'integer',
             'reply_message_id' => 'integer',
             'attachments' => 'array',
+            'outcome' => 'array',
             'received_at' => 'datetime',
             'edited_at' => 'datetime',
             'reprocess_count' => 'integer',

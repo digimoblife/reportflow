@@ -100,6 +100,13 @@ return [
         ],
     ],
 
+    'callback' => [
+        'expired' => [
+            'Tombol ini sudah tidak berlaku.',
+            'Tombol ini sudah kedaluwarsa, nggih.',
+        ],
+    ],
+
     'errors' => [
         'generic' => [
             'Waduh, ada yang tidak beres di pihak saya. Coba kirim lagi sebentar lagi.',

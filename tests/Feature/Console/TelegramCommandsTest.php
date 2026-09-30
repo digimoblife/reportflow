@@ -19,7 +19,7 @@ describe('telegram:set-webhook', function () {
         $output = Artisan::output();
 
         expect($output)->toContain('"method": "setWebhook"')
-            ->toContain('"message"')->toContain('"edited_message"')->not->toContain('callback_query')
+            ->toContain('"message"')->toContain('"edited_message"')->toContain('"callback_query"')->not->toContain('inline_query')
             ->not->toContain($path)->not->toContain($secret)
             ->toContain('[hidden');
 
@@ -32,7 +32,7 @@ describe('telegram:set-webhook', function () {
         $call = fakeTelegram()->webhooks[0];
         expect($call['url'])->toBe('https://reportflow.example.test/'.config('telegram.webhook_path'))
             ->and($call['secret_token'])->toBe(config('telegram.secret_token'))
-            ->and($call['allowed_updates'])->toBe(['message', 'edited_message']);
+            ->and($call['allowed_updates'])->toBe(['message', 'edited_message', 'callback_query']);
     });
 
     it('validates the configuration before doing anything', function (array $config, string $error) {
@@ -51,8 +51,8 @@ describe('telegram:set-webhook', function () {
         'secret with bad characters' => [['telegram.secret_token' => 'bad secret!'], 'TELEGRAM_BOT_SECRET_TOKEN'],
         'secret too long' => [['telegram.secret_token' => str_repeat('a', 257)], 'TELEGRAM_BOT_SECRET_TOKEN'],
         'http app url' => [['app.url' => 'http://reportflow.example.test'], 'APP_URL'],
-        'extra update types' => [['telegram.allowed_updates' => ['message', 'edited_message', 'callback_query']], 'allowed_updates'],
-        'missing update type' => [['telegram.allowed_updates' => ['message']], 'allowed_updates'],
+        'extra update types' => [['telegram.allowed_updates' => ['message', 'edited_message', 'callback_query', 'inline_query']], 'allowed_updates'],
+        'missing update type' => [['telegram.allowed_updates' => ['message', 'edited_message']], 'allowed_updates'],
     ]);
 });
 

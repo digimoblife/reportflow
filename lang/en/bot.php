@@ -99,6 +99,13 @@ return [
         ],
     ],
 
+    'callback' => [
+        'expired' => [
+            'This button is no longer valid.',
+            'This button has expired.',
+        ],
+    ],
+
     'errors' => [
         'generic' => [
             'Something went wrong on my side. Please try again in a moment.',

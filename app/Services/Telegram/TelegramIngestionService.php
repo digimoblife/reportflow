@@ -35,6 +35,7 @@ class TelegramIngestionService
         private readonly CommandRouter $commands,
         private readonly OnboardingState $onboarding,
         private readonly ProjectService $projects,
+        private readonly CallbackRouter $callbacks,
     ) {}
 
     public function handle(TelegramUpdate $update): void
@@ -59,6 +60,12 @@ class TelegramIngestionService
     {
         $default = $user->default_language;
         $content = $update->content();
+
+        if ($update->isCallback()) {
+            $this->once($update, fn () => $this->callbacks->handle($update, $user, $default));
+
+            return;
+        }
 
         if (! $update->isEdit() && $update->command() !== null) {
             $this->once($update, fn () => $this->commands->handle($update->command()['name'], $user, $update->chatId, $default));

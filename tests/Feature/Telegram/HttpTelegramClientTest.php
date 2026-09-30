@@ -112,3 +112,28 @@ it('sends setWebhook and setMyCommands to the API', function () {
     Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/setWebhook') && $r['allowed_updates'] === ['message', 'edited_message'] && $r['secret_token'] === 'secret_value-1');
     Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/setMyCommands') && $r['language_code'] === 'en');
 });
+
+it('sends inline keyboards on send and edit, and leaves them alone when none is given', function () {
+    Http::fake(['api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 5]])]);
+    $keyboard = [[['text' => 'Undo', 'callback_data' => 'a:1:undo']]];
+
+    $this->client->sendMessage(1, 'hai', null, $keyboard);
+    $this->client->editMessageText(1, 5, 'baru', $keyboard);
+    $this->client->editMessageText(1, 5, 'tanpa tombol dihapus', []);
+    $this->client->editMessageText(1, 5, 'tombol dibiarkan');
+
+    Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/sendMessage') && $r['reply_markup'] === ['inline_keyboard' => $keyboard]);
+    Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/editMessageText') && $r['text'] === 'baru' && $r['reply_markup'] === ['inline_keyboard' => $keyboard]);
+    Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/editMessageText') && $r['text'] === 'tanpa tombol dihapus' && $r['reply_markup'] === ['inline_keyboard' => []]);
+    Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/editMessageText') && $r['text'] === 'tombol dibiarkan' && ! isset($r['reply_markup']));
+});
+
+it('answers a callback query, with and without a toast', function () {
+    Http::fake(['api.telegram.org/*' => Http::response(['ok' => true, 'result' => true])]);
+
+    $this->client->answerCallbackQuery('cb-9', 'Siap');
+    $this->client->answerCallbackQuery('cb-10');
+
+    Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/answerCallbackQuery') && $r['callback_query_id'] === 'cb-9' && $r['text'] === 'Siap');
+    Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/answerCallbackQuery') && $r['callback_query_id'] === 'cb-10' && ! isset($r['text']));
+});

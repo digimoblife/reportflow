@@ -12,8 +12,8 @@ use Illuminate\Console\Command;
 #[Description('Register the Telegram webhook (URL from APP_URL + TELEGRAM_WEBHOOK_PATH, with the secret token)')]
 class TelegramSetWebhook extends Command
 {
-    /** PRD §56: the bot subscribes to nothing else. */
-    private const ALLOWED_UPDATES = ['message', 'edited_message'];
+    /** PRD §56: the bot subscribes to nothing else (callback_query = inline button presses, M4). */
+    private const ALLOWED_UPDATES = ['message', 'edited_message', 'callback_query'];
 
     public function handle(TelegramClient $client): int
     {
@@ -37,7 +37,7 @@ class TelegramSetWebhook extends Command
         }
 
         if ($allowed !== self::ALLOWED_UPDATES) {
-            $errors[] = 'allowed_updates must be exactly [message, edited_message].';
+            $errors[] = 'allowed_updates must be exactly [message, edited_message, callback_query].';
         }
 
         if ($errors !== []) {

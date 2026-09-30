@@ -7,6 +7,7 @@ use App\Services\Ai\AiProvider;
 use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\Fakes\FakeAiProvider;
 use App\Services\Telegram\BotMessages;
+use App\Services\Telegram\CallbackRouter;
 use App\Services\Telegram\Fakes\FakeTelegramClient;
 use App\Services\Telegram\HttpTelegramClient;
 use App\Services\Telegram\TelegramClient;
@@ -41,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(BotMessages::class);
+        $this->app->singleton(CallbackRouter::class);
         $this->app->singleton(ConfidencePolicy::class, fn (): ConfidencePolicy => ConfidencePolicy::fromConfig());
 
         Connection::resolverFor('pgsql', fn ($connection, $database, $prefix, $config) => new PostgresConnection($connection, $database, $prefix, $config));

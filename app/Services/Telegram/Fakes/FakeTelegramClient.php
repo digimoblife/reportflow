@@ -11,11 +11,14 @@ use App\Services\Telegram\TelegramClient;
  */
 final class FakeTelegramClient implements TelegramClient
 {
-    /** @var list<array{chat_id: int, message_id: int, text: string, reply_to: int|null}> */
+    /** @var list<array{chat_id: int, message_id: int, text: string, reply_to: int|null, keyboard: array<mixed>|null}> */
     public array $sent = [];
 
-    /** @var list<array{chat_id: int, message_id: int, text: string}> */
+    /** @var list<array{chat_id: int, message_id: int, text: string, keyboard: array<mixed>|null}> */
     public array $edits = [];
+
+    /** @var list<array{id: string, text: string|null}> */
+    public array $answers = [];
 
     /** @var list<array{url: string, secret_token: string, allowed_updates: list<string>}> */
     public array $webhooks = [];
@@ -45,7 +48,7 @@ final class FakeTelegramClient implements TelegramClient
         return $this;
     }
 
-    public function sendMessage(int $chatId, string $text, ?int $replyToMessageId = null): int
+    public function sendMessage(int $chatId, string $text, ?int $replyToMessageId = null, ?array $inlineKeyboard = null): int
     {
         if ($this->sendFailures !== []) {
             throw array_shift($this->sendFailures);
@@ -53,19 +56,24 @@ final class FakeTelegramClient implements TelegramClient
 
         $this->assertLength('sendMessage', $text);
         $id = $this->nextMessageId++;
-        $this->sent[] = ['chat_id' => $chatId, 'message_id' => $id, 'text' => $text, 'reply_to' => $replyToMessageId];
+        $this->sent[] = ['chat_id' => $chatId, 'message_id' => $id, 'text' => $text, 'reply_to' => $replyToMessageId, 'keyboard' => $inlineKeyboard];
 
         return $id;
     }
 
-    public function editMessageText(int $chatId, int $messageId, string $text): void
+    public function editMessageText(int $chatId, int $messageId, string $text, ?array $inlineKeyboard = null): void
     {
         if ($this->editFailures !== []) {
             throw array_shift($this->editFailures);
         }
 
         $this->assertLength('editMessageText', $text);
-        $this->edits[] = ['chat_id' => $chatId, 'message_id' => $messageId, 'text' => $text];
+        $this->edits[] = ['chat_id' => $chatId, 'message_id' => $messageId, 'text' => $text, 'keyboard' => $inlineKeyboard];
+    }
+
+    public function answerCallbackQuery(string $callbackQueryId, ?string $text = null): void
+    {
+        $this->answers[] = ['id' => $callbackQueryId, 'text' => $text];
     }
 
     public function setWebhook(string $url, #[\SensitiveParameter] string $secretToken, array $allowedUpdates): void
