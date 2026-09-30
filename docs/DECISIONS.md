@@ -489,3 +489,24 @@ bila nanti ada klien yang melarang; `AIService` dapat diarahkan ke provider lain
 ### Dataset `realistic` (30 Sep 2026)
 `tests/Eval/data-realistic/`: 107 kasus sintetis bergaya catatan Telegram nyata (Indonesia kasual, singkatan, typo, campur Inggris, rujukan samar), lima klien fiktif, 20 task. Label ditulis dari aturan PRD;
 37 kasus ditandai `review`. Bukan pengganti dataset nyata user untuk menyetel threshold.
+
+### Hasil `eval:run` pertama dengan DeepSeek (30 Sep 2026)
+Prompt `worklog_extraction@v1`, model `deepseek-flash`, dataset `realistic` (107 kasus sintetis), 108 panggilan, ≈ 3,2 dtk/panggilan (rata-rata), 193k token masuk / 59k keluar.
+
+| Metrik | Hasil | Target §73 |
+|---|---|---|
+| Worklog extraction (jumlah item ditemukan) | 97/101 = 96,0% | ≥ 90% ✓ |
+| Project identification | 97/101 = 96,0% | ≥ 95% ✓ |
+| Task matching | 100/107 = 93,5% | ≥ 90% ✓ |
+| Date extraction | 91/92 = 98,9% | ≥ 95% ✓ |
+| Status detection (tanpa target) | 85/92 = 92,4% | - |
+| Klasifikasi tipe activity (tanpa target) | 76/101 = 75,2% | - |
+
+- Metrik "extraction" dipecah dari "classification" (tipe activity): tipe sebagian besar subjektif (`development` vs `documentation`, `investigation` vs `bug_fix`, `follow_up` vs `communication`,
+  `deployment` vs `milestone`), jadi kesalahan tipe tidak lagi dihitung sebagai gagal menemukan pekerjaan. Kebanyakan selisih tipe adalah label yang bisa diperdebatkan.
+- Akurasi task matching per confidence: high (≥ 0,90) 53/54 = 98,1%, medium 31/36 = 86,1%, low 9/10 = 90,0%. Threshold 0,90/0,70 sementara dipertahankan; medium memang perlu konfirmasi.
+  Angka ini berasal dari dataset sintetis dan **tidak** cukup untuk menyetel threshold.
+- Kelemahan nyata model di v1 (kandidat isi v2): (1) rencana/niat masa depan ("besok mau deploy…", "nanti sore ada meeting…", "rencana minggu depan…") dicatat sebagai pekerjaan (R085–R087, 0/3);
+  (2) mengisi perubahan status untuk bagian kecil ("retry api kurir selesai" → task completed; "etiket obat selesai dicetak" → completed) padahal hanya sebagian yang selesai (R063–R065);
+  (3) pesan permintaan mencatat sandi ("pass db … tolong catat ya") tetap dibuat item (R105). Sisanya label yang meragukan (`review`).
+- Sesuai skill `prompt-eval`, v1 tidak diubah; perbaikan = `v2.md` lalu bandingkan dengan `--baseline`.
