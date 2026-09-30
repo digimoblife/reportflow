@@ -45,6 +45,17 @@ PostgreSQL, Redis, Gotenberg hanya di network internal Docker.
 - Struktur: `app/Services/{Worklog,Ai,Redaction,Report,Reminder,Telegram}`, `app/Jobs`, `app/Filament`.
   Controller/webhook tipis; logic di service.
 - Semua job idempotent dan aman di-retry.
+- **Teks pesan mentah (sebelum redaction) tidak boleh dicatat.** Ia hanya boleh hidup di `TelegramUpdate` dan
+  `RedactionService`; parameter yang menerimanya wajib `#[SensitiveParameter]`. Jangan memasukkan teks pesan ke log,
+  pesan exception, kolom `error`, atau payload job (job hanya membawa id). Kolom `error` hanya berisi kode + nama
+  kelas exception. Jangan memakai `dd/dump/var_dump/print_r/var_export` di `app/` (dijaga arch test).
+- **Test tidak boleh bergantung pada atau menulis ke layanan dev** (Redis, database `reportflow`, Gotenberg, log dev,
+  storage bersama). Setiap setting baru di `.env.example`/`config` yang menunjuk layanan eksternal atau penyimpanan
+  bersama WAJIB dikunci di `tests/bootstrap.php` (nilai `<env>` di `phpunit.xml` kalah dari `.env`) dan ditambahkan
+  ke `tests/Feature/TestIsolationTest.php`. Jangan mengisi nilai `"null"` lewat env: `env()` mengubahnya menjadi PHP null.
+- Panggilan keluar hanya lewat `TelegramClient` dan `AiProvider`. Di test keduanya dipaksa `fake`
+  (`tests/bootstrap.php`) dan `Http::preventStrayRequests()` aktif; `TELEGRAM_CLIENT=fake` ditolak saat boot di production.
+  Fixture credential palsu dirakit saat runtime (`Tests\Support\FakeSecrets`), jangan menulis literal utuh di repo.
 - Semua panggilan AI lewat `AIService`; catat ke `ai_interactions` (termasuk `prompt_version`).
 - Prompt disimpan sebagai file versi: `resources/prompts/<nama>/v<N>.md`. Ubah prompt = naikkan versi + jalankan eval
   (lihat skill `prompt-eval`).

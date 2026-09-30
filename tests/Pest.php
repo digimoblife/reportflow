@@ -1,9 +1,20 @@
 <?php
 
+use App\Models\InboundMessage;
 use App\Models\User;
+use App\Services\Ai\AiProvider;
+use App\Services\Ai\Fakes\FakeAiProvider;
+use App\Services\Telegram\BotMessages;
+use App\Services\Telegram\Fakes\FakeTelegramClient;
+use App\Services\Telegram\TelegramClient;
 use App\Support\UserContext;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Testing\TestResponse;
+use Monolog\Handler\TestHandler;
+use Monolog\LogRecord;
 use Tests\TestCase;
 
 /*
@@ -114,4 +125,111 @@ function withAppEnvironment(string $environment, array $variables, Closure $call
 function removeFromArray(array &$array, string $key): void
 {
     unset($array[$key]);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Telegram helpers
+|--------------------------------------------------------------------------
+*/
+
+function fakeTelegram(): FakeTelegramClient
+{
+    $client = app(TelegramClient::class);
+    assert($client instanceof FakeTelegramClient);
+
+    return $client;
+}
+
+function fakeAi(): FakeAiProvider
+{
+    $ai = app(AiProvider::class);
+    assert($ai instanceof FakeAiProvider);
+
+    return $ai;
+}
+
+/** A registered bot user (whitelisted by telegram_user_id). */
+function registerTelegramUser(int $telegramId = 555001, array $attributes = []): User
+{
+    return User::factory()->create(['telegram_user_id' => $telegramId] + $attributes);
+}
+
+/**
+ * POST an update to the webhook with the correct secret unless overridden.
+ *
+ * @param  array<string, mixed>  $payload
+ * @param  array<string, string>  $headers
+ */
+function postTelegram(array $payload, ?array $headers = null): TestResponse
+{
+    $headers ??= ['X-Telegram-Bot-Api-Secret-Token' => (string) config('telegram.secret_token')];
+
+    return test()->postJson('/'.config('telegram.webhook_path'), $payload, $headers);
+}
+
+/**
+ * Run a callback able to see every user's rows (assertions across users).
+ */
+function asSystem(Closure $callback): mixed
+{
+    return app(UserContext::class)->runAsSystem($callback);
+}
+
+/**
+ * @return Collection<int, InboundMessage>
+ */
+function storedMessages(): Collection
+{
+    return asSystem(fn () => InboundMessage::query()->orderBy('id')->get());
+}
+
+/**
+ * Attach an in-memory handler to the default log channel and return it.
+ * Records reach it AFTER the channel's processors, i.e. exactly what a log file would receive.
+ */
+function captureLogs(): TestHandler
+{
+    $handler = new TestHandler;
+    Log::driver()->getLogger()->pushHandler($handler);
+
+    return $handler;
+}
+
+/**
+ * Everything the handler saw, as one string (message, context, extra) for "does not contain" checks.
+ */
+function loggedText(TestHandler $handler): string
+{
+    return implode("\n", array_map(
+        fn (LogRecord $r) => $r->message.' '.json_encode($r->context).' '.json_encode($r->extra),
+        $handler->getRecords(),
+    ));
+}
+
+/** Every variant of a bot message key, in a language. */
+function variants(string $key, string $language = 'id'): array
+{
+    return app(BotMessages::class)->variants($key, $language);
+}
+
+/** Whether $text is one of the rendered variants of $key. */
+function isVariantOf(string $text, string $key, string $language = 'id', array $replace = []): bool
+{
+    foreach (variants($key, $language) as $template) {
+        foreach ($replace as $name => $value) {
+            $template = str_replace(':'.$name, (string) $value, $template);
+        }
+
+        if ($template === $text) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function asUser(int $userId, Closure $callback): mixed
+{
+    return app(UserContext::class)->runAs($userId, $callback);
 }

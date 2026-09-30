@@ -14,6 +14,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
+ * @property int $id
+ * @property Language $default_language
+ *
  * The account owner (PRD §49 users). Not user-scoped itself; it is the scope.
  * TODO(M5): email/password login is local-only until the Telegram Login Widget lands.
  */

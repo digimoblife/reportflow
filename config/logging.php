@@ -1,5 +1,6 @@
 <?php
 
+use App\Logging\RedactLogs;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -53,12 +54,14 @@ return [
     'channels' => [
 
         'stack' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),
             'ignore_exceptions' => false,
         ],
 
         'single' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
@@ -66,6 +69,7 @@ return [
         ],
 
         'daily' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
@@ -74,6 +78,7 @@ return [
         ],
 
         'monthly' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'monthly',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
@@ -82,6 +87,7 @@ return [
         ],
 
         'slack' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
             'username' => env('LOG_SLACK_USERNAME', env('APP_NAME', 'Laravel')),
@@ -91,6 +97,7 @@ return [
         ],
 
         'papertrail' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'monolog',
             'level' => env('LOG_LEVEL', 'debug'),
             'handler' => env('LOG_PAPERTRAIL_HANDLER', SyslogUdpHandler::class),
@@ -103,6 +110,7 @@ return [
         ],
 
         'stderr' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'monolog',
             'level' => env('LOG_LEVEL', 'debug'),
             'handler' => StreamHandler::class,
@@ -114,6 +122,7 @@ return [
         ],
 
         'syslog' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),
             'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
@@ -121,12 +130,21 @@ return [
         ],
 
         'errorlog' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'errorlog',
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
 
         'null' => [
+            'driver' => 'monolog',
+            'handler' => NullHandler::class,
+        ],
+
+        // Test suite: discards records after the processors ran (tests attach their own handler).
+        // Not named "null" because Laravel's env() turns the string "null" into PHP null.
+        'sink' => [
+            'tap' => [RedactLogs::class],
             'driver' => 'monolog',
             'handler' => NullHandler::class,
         ],
