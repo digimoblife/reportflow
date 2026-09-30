@@ -6,7 +6,9 @@
 | api-docs.deepseek.com (2026-09-30): deepseek-flash, deepseek-v4-pro; JSON mode = response_format json_object.
 */
 return [
-    'provider' => env('AI_PROVIDER', 'fake'),
+    // Default is the real provider so a deployment can never fall back to the fake by omission (production
+    // refuses "fake" at boot). Dev sets AI_PROVIDER=fake explicitly in .env; tests force it in tests/bootstrap.php.
+    'provider' => env('AI_PROVIDER', 'deepseek'),
 
     'deepseek' => [
         'api_key' => env('DEEPSEEK_API_KEY'),

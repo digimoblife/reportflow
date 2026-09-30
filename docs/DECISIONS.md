@@ -438,7 +438,7 @@ PRD §12, §13, §50–§54, §73, §75, §79. Dibangun dan diuji dengan `FakeAi
   konten kosong (diperlakukan sebagai jawaban tidak valid → retry). Usage: `prompt_tokens`, `completion_tokens`. Parameter `thinking`/`reasoning_effort` tidak dipakai.
   Model diambil dari `AI_MODEL`. **Kebijakan retensi data DeepSeek dan perjanjian klien tetap keputusan Anda (Keputusan Terbuka #7).**
 - `DeepSeekProvider` menangkap semua exception HTTP dan melempar `AiProviderException` tanpa `previous`/URL/header (header memuat kunci API), seperti klien Telegram.
-- **Guard boot:** `AI_PROVIDER` hanya `deepseek` atau `fake`; di production wajib `deepseek`. Kunci kosong ditolak saat dipakai. `TestIsolationTest` mengunci endpoint/kunci di test.
+- **Guard boot:** `AI_PROVIDER` hanya `deepseek` atau `fake`; di production wajib `deepseek`. Default config = `deepseek` (bukan `fake`): `composer install`/`package:discover` berjalan tanpa `.env` sebagai production dan tidak boleh gagal; dev menulis `AI_PROVIDER=fake` di `.env`. Kunci kosong ditolak saat dipakai. `TestIsolationTest` mengunci endpoint/kunci di test.
 
 ### Prompt dan schema
 - `resources/prompts/worklog_extraction/v1.md`, instruksi Inggris, satu panggilan, multi-item, hanya `task_id` dari daftar kandidat. **v1 tidak boleh diubah:**
