@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Middleware\RequireSecureInProduction;
-use App\Jobs\ProcessInboundMessage;
 use App\Models\User;
+use App\Services\Telegram\HttpTelegramClient;
+use App\Services\Telegram\TelegramClient;
+use App\Services\Telegram\TelegramIngestionService;
+use App\Services\Telegram\TelegramUpdate;
 use Illuminate\Support\Facades\Queue;
 use Tests\Support\TelegramPayload;
 
@@ -150,17 +153,17 @@ it('refuses to boot in production with the fake Telegram client', function () {
 it('boots in production with the real client selected', function () {
     withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http'], function () {
         expect(app()->isProduction())->toBeTrue()
-            ->and(app(App\Services\Telegram\TelegramClient::class))->toBeInstanceOf(App\Services\Telegram\HttpTelegramClient::class);
+            ->and(app(TelegramClient::class))->toBeInstanceOf(HttpTelegramClient::class);
     });
 });
 
 it('gives up after three failures of the same update so Telegram stops retrying', function () {
     registerTelegramUser();
-    app()->bind(App\Services\Telegram\TelegramIngestionService::class, fn () => new class extends App\Services\Telegram\TelegramIngestionService
+    app()->bind(TelegramIngestionService::class, fn () => new class extends TelegramIngestionService
     {
         public function __construct() {}
 
-        public function handle(App\Services\Telegram\TelegramUpdate $update): void
+        public function handle(TelegramUpdate $update): void
         {
             throw new RuntimeException('database is down: insert into inbound_messages values (\'jangan bocor\')');
         }

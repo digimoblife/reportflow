@@ -2,43 +2,17 @@
 
 use App\Enums\InboundMessageStatus;
 use App\Enums\Language;
-use App\Jobs\DeliverInboundConfirmation;
 use App\Jobs\ProcessInboundMessage;
 use App\Models\InboundMessage;
 use App\Models\Project;
-use App\Services\Telegram\BotMessages;
+use App\Services\Telegram\OnboardingState;
+use App\Services\Telegram\TelegramApiException;
+use App\Support\UserContext;
 use Illuminate\Support\Facades\Queue;
 use Tests\Support\FakeSecrets;
 use Tests\Support\TelegramPayload;
 
 const USER_TG = 555001;
-
-/** Every variant of a bot message key, in a language. */
-function variants(string $key, string $language = 'id'): array
-{
-    return app(BotMessages::class)->variants($key, $language);
-}
-
-/** Whether $text is one of the rendered variants of $key. */
-function isVariantOf(string $text, string $key, string $language = 'id', array $replace = []): bool
-{
-    foreach (variants($key, $language) as $template) {
-        foreach ($replace as $name => $value) {
-            $template = str_replace(':'.$name, (string) $value, $template);
-        }
-
-        if ($template === $text) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-function asUser(int $userId, Closure $callback): mixed
-{
-    return app(App\Support\UserContext::class)->runAs($userId, $callback);
-}
 
 describe('worklog messages (queue faked)', function () {
     beforeEach(function () {
@@ -92,7 +66,7 @@ describe('worklog messages (queue faked)', function () {
         postTelegram($payload)->assertOk();
 
         expect(storedMessages())->toHaveCount(1)
-            ->and(fakeTelegram()->sent)->toHaveCount(2 - 1);
+            ->and(fakeTelegram()->sent)->toHaveCount(1);
         // The row is still `received` (jobs are faked), so the second delivery re-dispatches once. That is safe
         // because the job claims the row atomically (see ProcessInboundMessageTest).
         Queue::assertPushed(ProcessInboundMessage::class, 2);
@@ -131,7 +105,7 @@ describe('worklog messages (queue faked)', function () {
     });
 
     it('keeps the message and dispatches even when the acknowledgement cannot be sent', function () {
-        fakeTelegram()->failNextSend(App\Services\Telegram\TelegramApiException::transport('sendMessage'));
+        fakeTelegram()->failNextSend(TelegramApiException::transport('sendMessage'));
 
         postTelegram(TelegramPayload::message('tetap tersimpan'))->assertOk();
 
@@ -247,7 +221,7 @@ describe('worklog messages (queue faked)', function () {
             ->and($rows->firstWhere('telegram_chat_id', USER_TG)->user_id)->toBe($this->user->id)
             ->and($rows->firstWhere('telegram_chat_id', 555002)->user_id)->toBe($other->id);
         // No context leaks out of the request.
-        expect(app(App\Support\UserContext::class)->userId())->toBeNull();
+        expect(app(UserContext::class)->userId())->toBeNull();
     });
 });
 
@@ -355,7 +329,7 @@ describe('commands and onboarding (queue faked)', function () {
     it('reuses an existing project of the same name', function () {
         asUser($this->user->id, fn () => Project::factory()->create(['name' => '9Club', 'slug' => '9club']));
         // The user has a project, so /start is not onboarding; put the state there by hand.
-        app(App\Services\Telegram\OnboardingState::class)->awaitProjectName($this->user->id);
+        app(OnboardingState::class)->awaitProjectName($this->user->id);
 
         postTelegram(TelegramPayload::message('9club'))->assertOk();
 

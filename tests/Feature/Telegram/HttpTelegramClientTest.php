@@ -3,6 +3,9 @@
 use App\Services\Telegram\HttpTelegramClient;
 use App\Services\Telegram\TelegramApiException;
 use App\Services\Telegram\TelegramMessenger;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Psr7\Response;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\RequestException;
@@ -64,8 +67,8 @@ function transportException(string $kind, string $url): Throwable
 {
     return match ($kind) {
         'connection' => new ConnectionException("cURL error 6: Could not resolve host: api.telegram.org for $url"),
-        'request' => new RequestException(new Illuminate\Http\Client\Response(new GuzzleHttp\Psr7\Response(500, [], "upstream failed for $url"))),
-        'guzzle' => new GuzzleHttp\Exception\ConnectException("Connection refused for $url", new GuzzleHttp\Psr7\Request('POST', $url)),
+        'request' => new RequestException(new Illuminate\Http\Client\Response(new Response(500, [], "upstream failed for $url"))),
+        'guzzle' => new ConnectException("Connection refused for $url", new GuzzleHttp\Psr7\Request('POST', $url)),
     };
 }
 
@@ -93,7 +96,7 @@ it('never lets the bot token escape through transport failures', function (strin
     // Through the app's own error paths: logged by the messenger, reported, and rendered with debug on.
     (new TelegramMessenger($this->client))->trySend(555001, 'halo');
     report($caught);
-    $rendered = app(Illuminate\Contracts\Debug\ExceptionHandler::class)->render(request(), $caught)->getContent();
+    $rendered = app(ExceptionHandler::class)->render(request(), $caught)->getContent();
 
     expect(loggedText($logs))->not->toContain($token)
         ->and($rendered)->not->toContain($token)

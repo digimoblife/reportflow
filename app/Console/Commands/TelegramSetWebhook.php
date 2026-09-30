@@ -58,7 +58,7 @@ class TelegramSetWebhook extends Command
                 'url' => $base.'/'.substr($path, 0, 4).'…[hidden, '.strlen($path).' chars]',
                 'secret_token' => '[hidden, '.strlen($secret).' chars]',
                 'allowed_updates' => self::ALLOWED_UPDATES,
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
             $this->components->info('Dry run: nothing was sent to Telegram.');
 
             return self::SUCCESS;

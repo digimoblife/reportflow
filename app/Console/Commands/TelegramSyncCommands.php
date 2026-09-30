@@ -26,7 +26,7 @@ class TelegramSyncCommands extends Command
             $this->line(json_encode(array_map(
                 static fn (array $set): array => ['method' => 'setMyCommands'] + $set,
                 $sets,
-            ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
             $this->components->info('Dry run: nothing was sent to Telegram.');
 
             return self::SUCCESS;

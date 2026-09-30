@@ -1,13 +1,21 @@
 <?php
 
+use App\Models\InboundMessage;
 use App\Models\User;
+use App\Services\Ai\AiProvider;
+use App\Services\Ai\Fakes\FakeAiProvider;
+use App\Services\Telegram\BotMessages;
+use App\Services\Telegram\Fakes\FakeTelegramClient;
+use App\Services\Telegram\TelegramClient;
 use App\Support\UserContext;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Testing\TestResponse;
+use Monolog\Handler\TestHandler;
+use Monolog\LogRecord;
 use Tests\TestCase;
-use App\Models\InboundMessage;
-use App\Services\Ai\Fakes\FakeAiProvider;
-use App\Services\Telegram\Fakes\FakeTelegramClient;
 
 /*
 |--------------------------------------------------------------------------
@@ -119,7 +127,6 @@ function removeFromArray(array &$array, string $key): void
     unset($array[$key]);
 }
 
-
 /*
 |--------------------------------------------------------------------------
 | Telegram helpers
@@ -128,7 +135,7 @@ function removeFromArray(array &$array, string $key): void
 
 function fakeTelegram(): FakeTelegramClient
 {
-    $client = app(\App\Services\Telegram\TelegramClient::class);
+    $client = app(TelegramClient::class);
     assert($client instanceof FakeTelegramClient);
 
     return $client;
@@ -136,7 +143,7 @@ function fakeTelegram(): FakeTelegramClient
 
 function fakeAi(): FakeAiProvider
 {
-    $ai = app(\App\Services\Ai\AiProvider::class);
+    $ai = app(AiProvider::class);
     assert($ai instanceof FakeAiProvider);
 
     return $ai;
@@ -154,7 +161,7 @@ function registerTelegramUser(int $telegramId = 555001, array $attributes = []):
  * @param  array<string, mixed>  $payload
  * @param  array<string, string>  $headers
  */
-function postTelegram(array $payload, ?array $headers = null): \Illuminate\Testing\TestResponse
+function postTelegram(array $payload, ?array $headers = null): TestResponse
 {
     $headers ??= ['X-Telegram-Bot-Api-Secret-Token' => (string) config('telegram.secret_token')];
 
@@ -170,22 +177,21 @@ function asSystem(Closure $callback): mixed
 }
 
 /**
- * @return \Illuminate\Database\Eloquent\Collection<int, InboundMessage>
+ * @return Collection<int, InboundMessage>
  */
-function storedMessages(): \Illuminate\Database\Eloquent\Collection
+function storedMessages(): Collection
 {
     return asSystem(fn () => InboundMessage::query()->orderBy('id')->get());
 }
-
 
 /**
  * Attach an in-memory handler to the default log channel and return it.
  * Records reach it AFTER the channel's processors, i.e. exactly what a log file would receive.
  */
-function captureLogs(): \Monolog\Handler\TestHandler
+function captureLogs(): TestHandler
 {
-    $handler = new \Monolog\Handler\TestHandler;
-    \Illuminate\Support\Facades\Log::driver()->getLogger()->pushHandler($handler);
+    $handler = new TestHandler;
+    Log::driver()->getLogger()->pushHandler($handler);
 
     return $handler;
 }
@@ -193,10 +199,37 @@ function captureLogs(): \Monolog\Handler\TestHandler
 /**
  * Everything the handler saw, as one string (message, context, extra) for "does not contain" checks.
  */
-function loggedText(\Monolog\Handler\TestHandler $handler): string
+function loggedText(TestHandler $handler): string
 {
     return implode("\n", array_map(
-        fn (\Monolog\LogRecord $r) => $r->message.' '.json_encode($r->context).' '.json_encode($r->extra),
+        fn (LogRecord $r) => $r->message.' '.json_encode($r->context).' '.json_encode($r->extra),
         $handler->getRecords(),
     ));
+}
+
+/** Every variant of a bot message key, in a language. */
+function variants(string $key, string $language = 'id'): array
+{
+    return app(BotMessages::class)->variants($key, $language);
+}
+
+/** Whether $text is one of the rendered variants of $key. */
+function isVariantOf(string $text, string $key, string $language = 'id', array $replace = []): bool
+{
+    foreach (variants($key, $language) as $template) {
+        foreach ($replace as $name => $value) {
+            $template = str_replace(':'.$name, (string) $value, $template);
+        }
+
+        if ($template === $text) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function asUser(int $userId, Closure $callback): mixed
+{
+    return app(UserContext::class)->runAs($userId, $callback);
 }

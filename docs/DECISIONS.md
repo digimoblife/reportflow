@@ -242,3 +242,135 @@ Tambahan beserta alasannya:
   di-cache.
 - **TODO(M5):** login email/password lokal dan user dev dihapus saat Telegram Login Widget
   diimplementasikan.
+
+---
+
+## M2 — Ingestion Telegram & Redaction
+
+PRD §7, §18–§20, §23, §48, §56, §58, §66–§69.
+
+### Akses dan whitelist (PRD §56)
+
+- **Satu sumber whitelist: `users.telegram_user_id`.** `TELEGRAM_ALLOWED_USER_IDS` dihapus dari `.env.example`
+  (dua sumber akan menyimpang). User dibuat lewat `php artisan reportflow:user:create {telegram_id}`
+  (`--name --email --language --timezone`); `--email` yang menunjuk user yang belum punya Telegram ID menautkan ID
+  itu (untuk user dev lokal). Password acak, tidak pernah dicetak, tidak bisa dipakai login.
+- `users.email` dan `users.password` masih NOT NULL: user Telegram mendapat email sintetis
+  `tg<id>@telegram.invalid` dan password acak. **Sementara sampai M5** (Telegram Login Widget).
+- **Pengirim tak terdaftar:** tidak diproses, tidak disimpan, **tanpa balasan** (balasan membuktikan bot hidup dan
+  memungkinkan enumerasi). ID numeriknya dicatat di log (level info, tanpa teks) paling sering sekali per ID per jam
+  (`Cache::add`), supaya pemilik tahu ID yang perlu didaftarkan.
+- Hanya chat privat antara manusia dan bot yang dilayani (`chat.type = private`, `chat.id = from.id`, `from.is_bot = false`);
+  grup, kanal, dan pesan dari bot diabaikan diam-diam. Update selain `message` dan `edited_message` juga diabaikan.
+
+### Webhook
+
+- Route dari `TELEGRAM_WEBHOOK_PATH` (`routes/telegram.php`, tanpa grup `web`: tanpa sesi/CSRF). Route **tidak didaftarkan**
+  bila path kosong, < 32 karakter, atau berisi karakter di luar `A-Za-z0-9_-`.
+- Urutan middleware: `RequireSecureInProduction` → `VerifyTelegramSecret` → `throttle:telegram-webhook` (120/menit per IP).
+  Secret diperiksa **sebelum** rate limit agar lalu lintas tak terautentikasi tidak menghabiskan jatah Telegram.
+  Secret dibandingkan dengan `hash_equals`; secret tidak dikonfigurasi = tolak semua (fail closed). Semua penolakan
+  berupa 404 polos. Pembatasan lalu lintas tak terautentikasi (flood) adalah tugas nginx/firewall.
+- **HTTPS-only di production:** request non-secure → 404. TLS dihentikan di luar container, jadi `isSecure()` mengandalkan
+  `X-Forwarded-Proto` **hanya dari proxy di `TRUSTED_PROXIES`** (daftar IP/CIDR dipisah koma, default kosong = tidak ada
+  yang dipercaya; wildcard `*`, `0.0.0.0/0`, `::/0` membuat aplikasi gagal boot). IP untuk rate limit juga hanya
+  memercayai proxy itu. **Konfigurasi deploy:** isi `TRUSTED_PROXIES` dengan alamat proxy TLS (M9).
+- `TELEGRAM_CLIENT=fake` di production membuat aplikasi gagal boot (jika tidak, semua balasan akan hilang diam-diam).
+  `AI_PROVIDER` hanya mengenal `fake` sampai M3 (TODO(M3): provider DeepSeek).
+- **Perlakuan error (Telegram mengirim ulang sampai menerima 2xx):**
+  - Tidak bisa diperbaiki dengan retry (tipe update tak didukung, payload cacat, pengirim tak terdaftar, chat non-privat): **200**.
+  - Gagal sebelum pesan tersimpan (mis. database mati): **500** agar Telegram mengulang, tetapi paling banyak 3 kali per
+    `update_id` (`Cache::increment`), setelah itu **200** supaya update beracun tidak berulang tanpa akhir. Log hanya
+    berisi `update_id` dan nama kelas exception.
+  - Setelah pesan tersimpan, kegagalan ack/notifikasi/dispatch tidak menghasilkan 5xx.
+
+### Alur pesan
+
+- Urutan: identifikasi user → redaction → `INSERT ... ON CONFLICT DO NOTHING` (`insertOrIgnore`, tanpa jalur exception
+  unique violation sehingga aman di dalam transaksi) → ack "⏳" (`reply_message_id`) → dispatch job. `text` yang
+  tersimpan selalu pasca-redaction; teks asli tidak pernah disimpan. Laravel `TrimStrings` memangkas spasi di tepi
+  dan `ConvertEmptyStringsToNull` menjadikan teks kosong `null` (diabaikan).
+- **Duplikat:** baris sudah ada → 200 tanpa ack baru. Bila baris masih `received` (percobaan pertama mati sebelum
+  dispatch), job **dikirim ulang**; job mengklaim baris secara atomik sehingga tidak ada pemrosesan ganda.
+- **Ack gagal:** pesan tetap tersimpan dan diproses; `reply_message_id` null. Konfirmasi lalu dikirim sebagai pesan baru
+  dan id-nya disimpan.
+- **Kunci "sudah dikerjakan"** untuk hal yang bukan baris `inbound_messages` (command, balasan non-teks, suntingan) ditulis
+  di cache **setelah** aksi berhasil, bukan sebelumnya, sehingga kegagalan tetap bisa diulang oleh Telegram.
+- **`edited_message`:** kunci idempotency sama; baris diperbarui (`text` pasca-redaction, `edited_at`), tidak diproses ulang.
+  - Baris `received`: diam-diam. Baris `processing`: diam-diam; **M3 harus menangani balapan suntingan vs pemrosesan**
+    (job bisa sudah membaca teks lama).
+  - Baris `processed`/`failed`/`needs_clarification`: teks diperbarui dan satu pesan `worklog.edit_saved_notice` dikirim
+    ("suntingan tersimpan di arsip, catatan yang sudah dibuat tidak ikut berubah"). Pemrosesan ulang menunggu tombol
+    callback (M4). Suntingan yang sama dikirim ulang tidak menggandakan pesan (kunci per `edit_date`).
+  - Baris tidak ada (pesan asli tak pernah kita simpan): diperlakukan sebagai pesan baru dengan `edited_at` terisi.
+  - Secret baru di hasil suntingan → peringatan credential.
+- **Non-teks:** pesan hanya-media dijawab template `unsupported.{voice,image,other}` dan tidak disimpan (voice/screenshot
+  adalah Phase 3). **Caption diproses sebagai teks**; `attachments` hanya menyimpan tipe (`[{"type":"photo"}]`), tanpa
+  `file_id`; pengguna diberi `worklog.attachment_ignored`.
+- **Bahasa balasan:** deterministik. Hitung kata fungsi Indonesia vs Inggris pada teks tersimpan; menang bila skor ≥ 2 dan
+  unggul; selain itu `users.default_language`. Command selalu memakai `default_language`. Karena hanya bergantung pada teks
+  tersimpan, ack dan konfirmasi (di job) konsisten tanpa kolom tambahan.
+- **`/start`:** state "menunggu nama project" disimpan di cache (`tg:state:{user_id}`, 24 jam), bukan tabel. Hilang = user
+  cukup `/start` lagi. Pesan berikutnya menjadi nama project (redaction dulu; berisi secret = ditolak; 1–80 karakter; slug
+  yang sudah ada dipakai ulang) lewat `ProjectService` dan **tidak** disimpan sebagai `inbound_messages` (bukan worklog).
+  Project baru `default_language = null` (ikut user). Pilihan bahasa laporan lewat tombol (PRD §66) ditunda: butuh
+  callback_query (M4+).
+- **Command:** 14 command PRD §20 persis, satu sumber di `BotCommandRegistry`, deskripsi di `lang/*/bot_commands.php`.
+  `/update` dihapus. Hanya `/start` dan `/help` berfungsi; sisanya dijawab `commands.unavailable`, command tak dikenal
+  `commands.unknown`. `telegram:sync-commands` mengirim daftar default (id) dan `language_code=en`.
+- **Batas 4096 karakter:** semua pesan keluar dipotong ke 4096 (`TelegramText::fit`), tanpa `parse_mode` (teks polos).
+
+### Pemrosesan (PRD §7, §48, §58)
+
+- `ProcessInboundMessage`: klaim atomik `received → processing` (retry boleh mengklaim ulang `processing`), `WorklogService`,
+  `processed`. **Bukan** `tries` tetap: `retryUntil` 10 menit + `maxExceptions = 3`, backoff 5/30/120 detik.
+  `WithoutOverlapping("inbound-user:{id}")->releaseAfter(5)->expireAfter(120)` menyerialkan pesan satu user; job yang
+  bertemu kunci di-*release* (tidak dihitung gagal). Urutan FIFO ketat antar-job tidak dijamin bila > 1 worker; M4 perlu
+  "klaim pesan tertua dulu per user" karena di sana urutan berpengaruh.
+- Gagal permanen (`failed()`): status `failed`, `error = worklog_failed:<NamaKelas>` (tanpa isi pesan/exception message),
+  ⏳ diedit menjadi `worklog.failed`, teks asli tetap tersimpan.
+- **Pengiriman konfirmasi adalah job terpisah** (`DeliverInboundConfirmation`): kegagalan Telegram tidak pernah mengubah
+  `processed` menjadi `failed` dan tidak mengulang pemrosesan. Klasifikasi: 400/403 tidak di-retry (edit gagal → coba kirim
+  pesan baru sekali; lalu log tanpa isi); 429 menunggu `retry_after`; 5xx/timeout retry sampai `retryUntil`;
+  "message is not modified" dianggap sukses. Penanda cache setelah sukses mencegah konfirmasi ganda.
+- Panggilan `AiProvider` di `WorklogService` M2 (fake) belum dicatat ke `ai_interactions`; pencatatan lewat `AIService` di M3.
+- **Kewajiban M4/M7:** pembersih pesan yang macet di `processing` (worker mati di tengah) dan `received` yang tak pernah
+  di-dispatch; M2 hanya menutup kasus `received` lewat pengiriman ulang webhook.
+
+### Redaction (PRD §56; CLAUDE.md aturan 6 dan 7)
+
+- Pengganti `[REDACTED_SECRET]`; hasil = teks bersih + hitungan per kategori (`api_key`, `password`, `private_key`,
+  `connection_string`, `custom`, `redaction_error`); nilai tidak pernah disimpan. Idempotent.
+- Pola: token (`sk-`, `sk_live_`, `ghp_`…, `github_pat_`, `glpat-`, `AKIA/ASIA`, `AIza`, `xox*`, token bot Telegram, JWT,
+  `Bearer`), blok PEM (termasuk tanpa penutup), URI database/broker berkredensial dan password di URL, env-style
+  `*_SECRET/TOKEN/PASSWORD/API_KEY=…`, kata kunci password (`password`, `passwd`, `passphrase`, `kata sandi`, `sandi`,
+  varian `passwordnya`) dengan `:`/`=`/`->`, bentuk kata ("password is X", "passwordnya X") hanya untuk nilai yang
+  tampak seperti secret, dan `pass/pwd/pw` hanya dengan `:`/`=` dan nilai yang tampak seperti secret (≥ 6 karakter,
+  huruf + angka/simbol). Kata biasa ("password reset", "pass" sebagai kata, hash git, UUID, "task-…") tidak terkena.
+- **Tanpa deteksi entropi umum** (false positive tinggi pada hash/UUID). Konsekuensi: secret berbentuk tak dikenal yang
+  ditulis tanpa kata kunci lolos. Batasan yang diketahui: `password: <kalimat biasa>` menghapus kata pertama setelahnya.
+- **Fail closed:** PCRE error, UTF-8 tidak valid, atau input > 50.000 karakter → seluruh teks diganti placeholder,
+  kategori `redaction_error`. Untuk kasus ini pesan **tidak disimpan dan tidak diproses**, dan pengguna menerima
+  `security.redaction_error` (bukan "credential terdeteksi": ini kegagalan pemeriksaan, bukan temuan). Batas: semua
+  quantifier berbatas atas, `pcre.backtrack_limit` = 200.000 selama redaction (dipulihkan sesudahnya); input adversarial
+  50.000 karakter selesai ≈ 1 ms (JIT), test mensyaratkan < 1,5 dtk.
+- Pola tambahan: `config/redaction.php` (`extra_patterns` global, `user_patterns[user_id]`), divalidasi saat dimuat
+  (pola rusak = exception). Kolom per user menunggu UI pengaturan (M5).
+- **Batasan:** redaction tidak menghapus pesan asli di riwayat chat Telegram; pesan berisi credential tetap ada di sana.
+  Bot memberi tahu bagian itu tidak disimpan; menghapus pesan di chat adalah tindakan user (bot tidak bisa menghapus
+  pesan user di chat privat setelah 48 jam, dan tidak kita coba). Kredensial yang terlanjur dikirim sebaiknya dianggap
+  bocor dan diganti.
+- **Jalur log:** teks mentah hanya di `TelegramUpdate` → `RedactionService::redact`; parameter penerimanya
+  `#[SensitiveParameter]`; `zend.exception_ignore_args=On` di `docker/php/php.ini`; tidak ada `Log::` yang menyertakan teks;
+  `RedactingLogProcessor` (tap semua channel) menyaring message, context, extra, dan meratakan Throwable menjadi string
+  ter-redaksi; objek dicatat hanya nama kelasnya. Kolom `error` hanya kode + nama kelas. Payload job hanya id.
+- **Token bot:** `HttpTelegramClient` menangkap semua exception HTTP/koneksi (Laravel `HttpClientException`, Guzzle) dan
+  melempar `TelegramApiException` tanpa `previous` dan tanpa URL (URL memuat token). Diuji dengan token palsu yang
+  dirakit saat runtime di log, exception, render handler, dan pesan keluar.
+
+### Penyimpangan dari contoh PRD
+
+- **Kata Jawa** dihitung per kata (tanpa pengecualian frasa), maksimal 2 per variasi, sesuai skill `pak-carik-messages`.
+  Contoh onboarding PRD §19 (4 kata Jawa) dipendekkan. Daftar yang diizinkan: nggih, nuwun, sewu, rampung, monggo,
+  sugeng, rawuh, njenengan, matur, waduh.
+- `/update` dihapus dari daftar command (PRD §18 vs §20; rencana implementasi, temuan #1).

@@ -45,6 +45,13 @@ PostgreSQL, Redis, Gotenberg hanya di network internal Docker.
 - Struktur: `app/Services/{Worklog,Ai,Redaction,Report,Reminder,Telegram}`, `app/Jobs`, `app/Filament`.
   Controller/webhook tipis; logic di service.
 - Semua job idempotent dan aman di-retry.
+- **Teks pesan mentah (sebelum redaction) tidak boleh dicatat.** Ia hanya boleh hidup di `TelegramUpdate` dan
+  `RedactionService`; parameter yang menerimanya wajib `#[SensitiveParameter]`. Jangan memasukkan teks pesan ke log,
+  pesan exception, kolom `error`, atau payload job (job hanya membawa id). Kolom `error` hanya berisi kode + nama
+  kelas exception. Jangan memakai `dd/dump/var_dump/print_r/var_export` di `app/` (dijaga arch test).
+- Panggilan keluar hanya lewat `TelegramClient` dan `AiProvider`. Di test keduanya dipaksa `fake`
+  (`tests/bootstrap.php`) dan `Http::preventStrayRequests()` aktif; `TELEGRAM_CLIENT=fake` ditolak saat boot di production.
+  Fixture credential palsu dirakit saat runtime (`Tests\Support\FakeSecrets`), jangan menulis literal utuh di repo.
 - Semua panggilan AI lewat `AIService`; catat ke `ai_interactions` (termasuk `prompt_version`).
 - Prompt disimpan sebagai file versi: `resources/prompts/<nama>/v<N>.md`. Ubah prompt = naikkan versi + jalankan eval
   (lihat skill `prompt-eval`).

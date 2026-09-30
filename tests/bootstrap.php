@@ -21,6 +21,15 @@ foreach ([
     'DB_USERNAME' => 'reportflow_tester',
     'DEV_USER_EMAIL' => '',
     'DEV_USER_PASSWORD' => '',
+    // phpunit.xml's non-forced <env> values lose to the process/.env values on Laravel's read path
+    // (same $_SERVER issue as above), so the stores that must never be the real ones are pinned here too:
+    // a test that flushes the cache or dispatches a job must not touch the developer's Redis/queue.
+    'CACHE_STORE' => 'array',
+    'SESSION_DRIVER' => 'array',
+    'QUEUE_CONNECTION' => 'sync',
+    'MAIL_MAILER' => 'array',
+    'BROADCAST_CONNECTION' => 'null',
+    'BCRYPT_ROUNDS' => '4',
     // Nothing in the suite may reach Telegram or an AI provider, and no real secret is ever read.
     'TELEGRAM_CLIENT' => 'fake',
     'AI_PROVIDER' => 'fake',
