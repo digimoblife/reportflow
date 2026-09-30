@@ -30,7 +30,7 @@ it('prints a JSON report and writes it to a file, then compares with it as a bas
 
     expect($code)->toBe(0)
         ->and($json['case_count'])->toBe(66)
-        ->and($json['metrics']['matching']['rate'])->toBe(1.0)
+        ->and($json['metrics']['matching']['rate'])->toEqual(1)
         ->and(json_decode((string) file_get_contents($file), true)['prompt'])->toBe('worklog_extraction@v1');
 
     [, $compared] = evalOutput(['--baseline' => $file]);
