@@ -82,6 +82,9 @@ secret di diff, dan PRD section terkait sudah dicek ulang.
 
 - Mulai milestone baru dengan **Plan Mode**; tunjukkan rencana sebelum menulis kode.
 - Satu sesi = satu milestone atau satu kelompok task kecil. Commit kecil dan sering.
+- **Kerja langsung di `master`** (tanpa branch dan PR; keputusan user 30 Sep 2026). Karena tidak ada gerbang PR, sebelum setiap push
+  jalankan lokal: pint, phpstan, seluruh test. CI tetap berjalan setelah push; bila merah, perbaiki segera dengan commit baru.
+  Tidak pernah force push atau menulis ulang riwayat di `master`. Push hanya bila user memintanya atau tugasnya jelas menyertakan push.
 - Jangan mengubah file di luar scope task. Jangan menambah dependency besar tanpa bertanya.
 - Jangan pernah commit `.env`, token bot, API key, atau dataset evaluasi berisi data klien asli
   (`tests/Eval/data/` masuk `.gitignore`; gunakan versi anonim untuk contoh).
