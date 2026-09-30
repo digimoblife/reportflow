@@ -19,7 +19,12 @@ class TaskEventFactory extends Factory
             'task_id' => Task::factory(),
             'event_type' => TaskEventType::Created,
             'from_value' => null,
-            'to_value' => ['status' => 'open', 'waiting_reason' => null],
+            'to_value' => fn (array $attributes) => [
+                ...Task::withoutGlobalScopes()->withTrashed()->whereKey($attributes['task_id'])->firstOrFail()
+                    ->only(['project_id', 'title']),
+                'status' => 'open',
+                'waiting_reason' => null,
+            ],
             'actor' => EventActor::Ai,
             'inbound_message_id' => null,
         ];

@@ -246,7 +246,8 @@ class DemoSeeder extends Seeder
             $message = $this->message($summary, $at, InboundMessageStatus::Processed);
 
             if ($previous === null) {
-                $this->event($task, TaskEventType::Created, null, $this->state($status, $reason), $message, $at);
+                $created = ['project_id' => $project->id, 'title' => $title, ...$this->state($status, $reason)];
+                $this->event($task, TaskEventType::Created, null, $created, $message, $at);
             } else {
                 TaskStatusTransition::assertCanTransition($previous[0], $status);
                 $this->event($task, TaskEventType::StatusChanged, $this->state(...$previous), $this->state($status, $reason), $message, $at);
