@@ -155,10 +155,10 @@ class EvalRun extends Command
         $rows = [];
         foreach ($report->categories() as $category) {
             $m = $report->metrics($category);
-            $rows[] = [$category, ...array_map(fn (string $n): string => $percent($m[$n]['rate']).' ('.$m[$n]['total'].')', ['extraction', 'project', 'matching', 'date', 'status'])];
+            $rows[] = [$category, ...array_map(fn (string $n): string => $percent($m[$n]['rate']).' ('.$m[$n]['total'].')', ['extraction', 'classification', 'project', 'matching', 'date', 'status'])];
         }
         $this->line('By case category (n in brackets):');
-        $this->table(['Category', 'Extraction', 'Project', 'Matching', 'Date', 'Status'], $rows);
+        $this->table(['Category', 'Extraction', 'Type', 'Project', 'Matching', 'Date', 'Status'], $rows);
 
         $this->line(sprintf('Task matching by model confidence (thresholds %.2f / %.2f):', $report->thresholds['high'], $report->thresholds['medium']));
         $this->table(['Bucket', 'Correct', 'Rate'], array_map(

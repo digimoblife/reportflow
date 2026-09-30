@@ -110,6 +110,22 @@ describe('scoring', function () {
             ->and($metrics['extraction']['met'])->toBeFalse();
     });
 
+    it('reports a different activity type as a classification miss, not as a missed item', function () {
+        $report = runSample(function (array $case, $map, $today, $oracle) {
+            $json = json_decode($oracle->respond($case, $map, $today), true);
+            foreach ($json['items'] as &$item) {
+                $item['activity']['type'] = 'other';
+            }
+
+            return json_encode($json);
+        });
+        $metrics = $report->metrics();
+
+        expect($metrics['extraction']['rate'])->toEqual(1)
+            ->and($metrics['classification']['rate'])->toBeLessThan(0.5)
+            ->and($report->cases[0]['detail']['predicted'][0])->toContain('|other|');
+    });
+
     it('catches wrong task matches, and shows them in the confidence buckets', function () {
         $report = runSample(function (array $case, $map, $today, $oracle) {
             $json = json_decode($oracle->respond($case, $map, $today), true);

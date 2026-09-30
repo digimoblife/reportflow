@@ -91,7 +91,7 @@ class EvalRunner
 
     /**
      * @param  array<string, mixed>  $case
-     * @return array{id: string, categories: list<string>, review: bool, failed: bool, scores: array<string, bool|null>, min_confidence: float|null, reasons: list<string>}
+     * @return array{id: string, categories: list<string>, review: bool, failed: bool, scores: array<string, bool|null>, min_confidence: float|null, reasons: list<string>, detail: array{expected: list<string>, predicted: list<string>}}
      */
     private function runCase(array $case, EvalDataset $dataset, SnapshotMap $map, AIService $ai, ?Closure $beforeCase): array
     {
@@ -116,18 +116,21 @@ class EvalRunner
             $outcome = $ai->extractWorklog($message, $set, $today);
             $proposal = $this->validator->validate($outcome->data, $set, $today);
         } catch (AiExtractionFailed|AiProviderException $e) {
-            return $base + ['failed' => true, 'scores' => [], 'min_confidence' => null, 'reasons' => [$e instanceof AiExtractionFailed ? 'extraction_failed' : 'provider_error']];
+            return $base + ['failed' => true, 'scores' => [], 'min_confidence' => null, 'reasons' => [$e instanceof AiExtractionFailed ? 'extraction_failed' : 'provider_error'], 'detail' => ['expected' => [], 'predicted' => []]];
         }
 
         $predicted = array_values(array_filter($proposal->items, fn (ValidatedItem $i): bool => $i->decision !== ItemDecision::Rejected));
         $confidences = array_map(fn (ValidatedItem $i): float => (float) $i->data['confidence'], $predicted);
         $reasons = array_values(array_unique(array_merge(...array_map(fn (ValidatedItem $i): array => $i->reasons, $proposal->items) ?: [[]])));
 
+        [$scores, $detail] = $this->score($case, $predicted, $proposal->clarification !== null, $proposal->items, $map, $today);
+
         return $base + [
             'failed' => false,
-            'scores' => $this->score($case, $predicted, $proposal->clarification !== null, $proposal->items, $map, $today),
+            'scores' => $scores,
             'min_confidence' => $confidences === [] ? null : min($confidences),
             'reasons' => $reasons,
+            'detail' => $detail,
         ];
     }
 
@@ -135,20 +138,20 @@ class EvalRunner
      * @param  array<string, mixed>  $case
      * @param  list<ValidatedItem>  $predicted  items the backend did not reject
      * @param  list<ValidatedItem>  $all
-     * @return array<string, bool|null>
+     * @return array{0: array<string, bool|null>, 1: array{expected: list<string>, predicted: list<string>}}
      */
     private function score(array $case, array $predicted, bool $hasClarification, array $all, SnapshotMap $map, CarbonImmutable $today): array
     {
         $expected = $case['expected'];
         $oracle = new OracleResponder;
-        $scores = ['extraction' => null, 'project' => null, 'matching' => null, 'date' => null, 'status' => null, 'rules' => null];
+        $scores = ['extraction' => null, 'classification' => null, 'project' => null, 'matching' => null, 'date' => null, 'status' => null, 'rules' => null];
 
         if ($expected['ambiguous'] ?? false) {
             // Correct = the system did not silently pick a task: it asks, or nothing was accepted.
             $accepted = array_filter($predicted, fn (ValidatedItem $i): bool => $i->decision === ItemDecision::Accepted);
             $scores['matching'] = $hasClarification || $accepted === [];
 
-            return $scores;
+            return [$scores, ['expected' => ['ambiguous'], 'predicted' => array_map(fn (ValidatedItem $i): string => $i->decision->value, $predicted)]];
         }
 
         $exp = array_map(fn (array $i): array => [
@@ -176,7 +179,10 @@ class EvalRunner
         };
 
         $scores['project'] = $same($column($exp, 'project'), $column($got, 'project'));
-        $scores['extraction'] = count($exp) === count($got) && $same($column($exp, 'type'), $column($got, 'type'));
+        // Extraction = it found the right number of separate pieces of work; classification = it typed them the same way
+        // as the label (activity types are partly subjective, so the two are reported apart).
+        $scores['extraction'] = count($exp) === count($got);
+        $scores['classification'] = count($exp) === count($got) && $same($column($exp, 'type'), $column($got, 'type'));
         $scores['matching'] = $same($column($exp, 'ref'), $column($got, 'ref'));
 
         if ($exp !== []) {
@@ -189,6 +195,8 @@ class EvalRunner
             $scores['rules'] = (bool) array_filter($all, fn (ValidatedItem $i): bool => $i->decision->value === $decision && ($reason === null || $i->has($reason)));
         }
 
-        return $scores;
+        $line = fn (array $r): string => "{$r['project']}|{$r['ref']}|{$r['type']}|{$r['status']}|{$r['date']}";
+
+        return [$scores, ['expected' => array_values(array_map($line, $exp)), 'predicted' => array_values(array_map($line, $got))]];
     }
 }

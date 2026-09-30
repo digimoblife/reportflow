@@ -9,10 +9,11 @@ namespace App\Services\Ai\Eval;
 final class EvalReport
 {
     /** PRD §73 engineering targets. Null = reported, no target. */
-    public const TARGETS = ['extraction' => 0.90, 'project' => 0.95, 'matching' => 0.90, 'date' => 0.95, 'status' => null, 'rules' => null];
+    public const TARGETS = ['extraction' => 0.90, 'classification' => null, 'project' => 0.95, 'matching' => 0.90, 'date' => 0.95, 'status' => null, 'rules' => null];
 
     public const LABELS = [
-        'extraction' => 'Worklog extraction',
+        'extraction' => 'Worklog extraction (items found)',
+        'classification' => 'Activity type (classification)',
         'project' => 'Project identification',
         'matching' => 'Task matching',
         'date' => 'Date extraction',
@@ -21,7 +22,7 @@ final class EvalReport
     ];
 
     /**
-     * @param  list<array{id: string, categories: list<string>, review: bool, failed: bool, scores: array<string, bool|null>, min_confidence: float|null, reasons: list<string>}>  $cases
+     * @param  list<array{id: string, categories: list<string>, review: bool, failed: bool, scores: array<string, bool|null>, min_confidence: float|null, reasons: list<string>, detail?: array{expected: list<string>, predicted: list<string>}}>  $cases
      * @param  array{calls: int, tokens_input: int, tokens_output: int, avg_latency_ms: int|null}  $usage
      * @param  array{high: float, medium: float}  $thresholds
      */
