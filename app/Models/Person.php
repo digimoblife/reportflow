@@ -12,6 +12,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
+ * @property int $id
+ * @property string $name
+ * @property array<int, mixed>|null $aliases
+ *
  * PRD §49 people: requesters, assignees and stakeholders mentioned in worklogs.
  */
 #[Fillable(['user_id', 'name', 'aliases', 'notes'])]

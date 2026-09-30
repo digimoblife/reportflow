@@ -2,6 +2,7 @@
 
 namespace App\Services\Worklog;
 
+use App\Enums\OutcomeState;
 use App\Models\InboundMessage;
 use App\Models\User;
 use App\Services\Ai\AIService;
@@ -13,9 +14,8 @@ use Illuminate\Support\Facades\Log;
  * The single processing path for inbound messages from every channel (CLAUDE.md rule 2, PRD §23).
  * Knows nothing about Telegram or the dashboard; confirmations are delivered by the caller.
  *
- * M3: candidates -> AI extraction -> backend validation -> a ValidatedProposal. Nothing is written to
- * tasks/activities yet, so the user still receives the placeholder confirmation; M4 applies the proposal
- * (it can be rebuilt deterministically from the ai_interactions output of this run).
+ * candidates -> AI extraction -> backend validation -> ProposalApplier (M4): accepted items are written to
+ * tasks/activities in one transaction, unsure ones wait for the user's answer (see Outcome).
  */
 class WorklogService
 {
@@ -23,6 +23,7 @@ class WorklogService
         private readonly CandidateBuilder $candidates,
         private readonly AIService $ai,
         private readonly ExtractionValidator $validator,
+        private readonly ProposalApplier $applier,
     ) {}
 
     public function process(InboundMessage $message): WorklogResult
@@ -32,16 +33,20 @@ class WorklogService
 
         // inbound_messages.text is post-redaction by construction (PRD §48).
         $set = $this->candidates->build($message->text, $today);
-        $outcome = $this->ai->extractWorklog($message->text, $set, $today, $message->id);
-        $proposal = $this->validator->validate($outcome->data, $set, $today);
+        $extraction = $this->ai->extractWorklog($message->text, $set, $today, $message->id);
+        $proposal = $this->validator->validate($extraction->data, $set, $today);
+
+        $outcome = $this->applier->apply($message, $proposal, $set);
 
         Log::info('worklog.extracted', [
             'inbound_message_id' => $message->id,
-            'prompt' => $outcome->promptVersion,
-            'attempts' => $outcome->attempts,
+            'prompt' => $extraction->promptVersion,
+            'attempts' => $extraction->attempts,
             'items' => $proposal->summary(),
+            'applied' => $outcome->count(OutcomeState::Applied),
+            'pending' => $outcome->count(OutcomeState::Pending),
         ]);
 
-        return new WorklogResult(proposal: $proposal);
+        return new WorklogResult(proposal: $proposal, outcome: $outcome);
     }
 }

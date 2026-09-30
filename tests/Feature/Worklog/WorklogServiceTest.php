@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\InboundMessageStatus;
+use App\Enums\OutcomeState;
 use App\Models\Activity;
 use App\Models\AiInteraction;
 use App\Models\InboundMessage;
@@ -15,7 +16,7 @@ function storeMessage(array $w, string $text): InboundMessage
     return InboundMessage::factory()->create(['text' => $text, 'user_id' => $w['user']->id]);
 }
 
-it('turns a note into a validated proposal and writes nothing to tasks or activities', function () {
+it('turns a note into a validated proposal and applies only what was accepted', function () {
     $w = worklogWorld();
     $message = storeMessage($w, 'Harbor Portal: webhook tracking sudah selesai');
     fakeAi()->respondWith(Extraction::json([
@@ -31,8 +32,10 @@ it('turns a note into a validated proposal and writes nothing to tasks or activi
         ->and($result->proposal->items[0]->statusChange)->toBe(['from' => 'in_progress', 'to' => 'completed'])
         ->and($result->proposal->items[0]->explicitTerminal)->toBeTrue()
         ->and($result->proposal->items[1]->decision)->toBe(ItemDecision::NeedsConfirmation)
-        ->and(Task::query()->count())->toBe($tasksBefore)
-        ->and(Activity::query()->count())->toBe($activitiesBefore)
+        ->and($result->outcome->count(OutcomeState::Applied))->toBe(2)     // the low-confidence NEW task is safe and undoable: applied too
+        ->and($result->outcome->count(OutcomeState::Pending))->toBe(0)
+        ->and(Task::query()->count())->toBe($tasksBefore + 1)
+        ->and(Activity::query()->count())->toBe($activitiesBefore + 2)
         ->and($message->fresh()->status)->toBe(InboundMessageStatus::Received)   // status handling stays in the job
         ->and(AiInteraction::query()->where('inbound_message_id', $message->id)->count())->toBe(1);
 });

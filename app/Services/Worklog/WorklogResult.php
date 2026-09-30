@@ -5,13 +5,14 @@ namespace App\Services\Worklog;
 use App\Services\Worklog\Extraction\ValidatedProposal;
 
 /**
- * What processing an inbound message produced. M3: a validated proposal (nothing is written yet).
- * M4 applies accepted items to tasks/activities and asks about the rest.
+ * What processing an inbound message produced: the validated proposal and what was done with it (M4: accepted
+ * items are written to tasks/activities, the rest waits for the user's answer).
  */
 final readonly class WorklogResult
 {
     public function __construct(
         public bool $placeholder = true,
         public ?ValidatedProposal $proposal = null,
+        public ?Outcome $outcome = null,
     ) {}
 }

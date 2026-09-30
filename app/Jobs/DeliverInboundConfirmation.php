@@ -68,7 +68,7 @@ class DeliverInboundConfirmation implements ShouldQueue
         if ($message === null
             || $message->source !== MessageSource::Telegram
             || Cache::has($deliveredKey)
-            || $message->status !== ($this->kind === self::PROCESSED ? InboundMessageStatus::Processed : InboundMessageStatus::Failed)) {
+            || ! in_array($message->status, $this->kind === self::PROCESSED ? [InboundMessageStatus::Processed, InboundMessageStatus::NeedsClarification] : [InboundMessageStatus::Failed], true)) {
             return;
         }
 

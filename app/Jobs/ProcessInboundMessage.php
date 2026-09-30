@@ -86,10 +86,10 @@ class ProcessInboundMessage implements ShouldQueue
 
         $message = InboundMessage::query()->findOrFail($this->inboundMessageId);
 
-        $worklog->process($message);
+        $result = $worklog->process($message);
 
         InboundMessage::query()->whereKey($message->id)->update([
-            'status' => InboundMessageStatus::Processed->value,
+            'status' => ($result->outcome?->hasPending() ?? false) ? InboundMessageStatus::NeedsClarification->value : InboundMessageStatus::Processed->value,
             'error' => null,
         ]);
 

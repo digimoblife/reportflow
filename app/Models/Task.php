@@ -23,6 +23,9 @@ use Illuminate\Support\Carbon;
  * @property int $project_id
  * @property string $title
  * @property TaskStatus $status
+ * @property WaitingReason|null $waiting_reason
+ * @property Carbon|null $started_at
+ * @property int $version
  * @property Carbon|null $completed_at
  * @property Carbon|null $last_activity_at
  *

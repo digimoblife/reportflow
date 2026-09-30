@@ -343,8 +343,8 @@ it('extracts and validates through the real queue, and logs the AI call for the 
         ->and($interaction->purpose)->toBe('worklog_extraction')
         ->and($interaction->prompt_version)->toBe('worklog_extraction@v2')
         ->and(collect($logs->getRecords())->firstWhere('message', 'worklog.extracted')->context['items'])->toBe(['accepted' => 1])
-        // nothing was written to tasks/activities yet (M4)
-        ->and(asSystem(fn () => Activity::query()->count()))->toBe(0)
+        // M4: the accepted item was written as an activity of that task
+        ->and(asSystem(fn () => Activity::query()->where('task_id', $this->taskId)->where('inbound_message_id', $message->id)->count()))->toBe(1)
         ->and(isVariantOf(fakeTelegram()->edits[0]['text'], 'worklog.recorded_dummy'))->toBeTrue();
 });
 
