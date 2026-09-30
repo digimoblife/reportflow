@@ -3,16 +3,15 @@
 namespace App\Services\Ai;
 
 /**
- * The seam to an AI backend. PROVISIONAL (M2): only enough for WorklogService to be wired;
- * M3 replaces it with the real AIService contract (schema-validated output, ai_interactions logging).
- * Input must already be redacted (CLAUDE.md rule 6).
+ * The seam to an AI backend (CLAUDE.md: outgoing calls only through interfaces). Implementations:
+ * DeepSeekProvider (real) and Fakes\FakeAiProvider (tests, eval). Input must already be redacted.
  */
 interface AiProvider
 {
     public function name(): string;
 
     /**
-     * @throws AiProviderException
+     * @throws AiProviderException on transport errors, HTTP errors and timeouts (never carries the input)
      */
     public function complete(AiRequest $request): AiResponse;
 }

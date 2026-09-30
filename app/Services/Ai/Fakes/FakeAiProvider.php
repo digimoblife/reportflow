@@ -6,17 +6,29 @@ use App\Services\Ai\AiProvider;
 use App\Services\Ai\AiProviderException;
 use App\Services\Ai\AiRequest;
 use App\Services\Ai\AiResponse;
+use Closure;
 use Throwable;
 
 /**
- * Deterministic AI stand-in. Records every request so tests can assert that only redacted text arrives.
+ * Deterministic AI stand-in for tests and the eval harness. Records every request.
+ *
+ * Answer order: queued outputs first, then the responder closure, then the default (a valid
+ * "nothing to record" extraction, so pipelines that do not care about the AI stay green).
  */
 final class FakeAiProvider implements AiProvider
 {
+    public const EMPTY_EXTRACTION = '{"items":[],"clarification_needed":null}';
+
     /** @var list<AiRequest> */
     public array $requests = [];
 
-    private string $output = '{}';
+    private string $output = self::EMPTY_EXTRACTION;
+
+    /** @var list<string> */
+    private array $queue = [];
+
+    /** @var (Closure(AiRequest): string)|null */
+    private ?Closure $responder = null;
 
     private ?Throwable $failure = null;
 
@@ -35,7 +47,27 @@ final class FakeAiProvider implements AiProvider
     }
 
     /**
-     * Fail the next $times calls (default: every call from now on until reset).
+     * Outputs returned one per call, before any other answer.
+     */
+    public function queue(string ...$outputs): self
+    {
+        array_push($this->queue, ...$outputs);
+
+        return $this;
+    }
+
+    /**
+     * @param  Closure(AiRequest): string  $responder
+     */
+    public function using(Closure $responder): self
+    {
+        $this->responder = $responder;
+
+        return $this;
+    }
+
+    /**
+     * Fail the next $times calls (default: every call from now on).
      */
     public function failWith(?Throwable $failure = null, int $times = PHP_INT_MAX): self
     {
@@ -55,6 +87,10 @@ final class FakeAiProvider implements AiProvider
             throw $this->failure;
         }
 
-        return new AiResponse($this->output, 'fake-model');
+        $content = $this->queue !== []
+            ? array_shift($this->queue)
+            : ($this->responder !== null ? ($this->responder)($request) : $this->output);
+
+        return new AiResponse($content, 'fake-model', tokensInput: 100, tokensOutput: 50, latencyMs: 1);
     }
 }

@@ -15,6 +15,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
+ * @property int $id
+ * @property string $name
+ * @property array<int, mixed>|null $aliases
+ *
  * PRD §17, §49 projects.
  */
 #[Fillable(['user_id', 'name', 'slug', 'aliases', 'description', 'default_language', 'report_template_id', 'status'])]

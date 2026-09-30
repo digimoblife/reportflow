@@ -1,0 +1,268 @@
+{
+  "today": "2026-09-30",
+  "timezone": "Asia/Jakarta",
+  "projects": [
+    {
+      "key": "harbor",
+      "name": "Harbor Logistics Portal",
+      "aliases": [
+        "Harbor",
+        "HLP"
+      ]
+    },
+    {
+      "key": "kedai",
+      "name": "Kedai Senja App",
+      "aliases": [
+        "Kedai Senja",
+        "KS"
+      ]
+    },
+    {
+      "key": "nusa",
+      "name": "Nusa Klinik Dashboard",
+      "aliases": [
+        "Nusa Klinik",
+        "NKD"
+      ]
+    }
+  ],
+  "people": [
+    {
+      "key": "rina",
+      "name": "Rina"
+    },
+    {
+      "key": "doni",
+      "name": "Doni"
+    },
+    {
+      "key": "maya",
+      "name": "Maya"
+    },
+    {
+      "key": "arif",
+      "name": "Arif"
+    },
+    {
+      "key": "bima",
+      "name": "Bima"
+    }
+  ],
+  "tasks": [
+    {
+      "key": "harbor:tracking",
+      "project": "harbor",
+      "title": "Shipment Tracking API Integration",
+      "status": "in_progress",
+      "people": [
+        "doni"
+      ],
+      "last_activity_at": "2026-09-25T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-25",
+          "type": "development",
+          "summary": "Built the webhook receiver for carrier status"
+        },
+        {
+          "date": "2026-09-22",
+          "type": "research",
+          "summary": "Compared carrier API rate limits"
+        }
+      ]
+    },
+    {
+      "key": "harbor:invoice",
+      "project": "harbor",
+      "title": "Invoice PDF Export Bug",
+      "status": "open",
+      "people": [
+        "rina"
+      ],
+      "last_activity_at": "2026-09-28T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-28",
+          "type": "request",
+          "summary": "Rina reported the total is wrong on multi-page invoices"
+        }
+      ]
+    },
+    {
+      "key": "harbor:sso",
+      "project": "harbor",
+      "title": "Customer SSO Login",
+      "status": "waiting",
+      "waiting_reason": "client",
+      "people": [
+        "rina"
+      ],
+      "last_activity_at": "2026-09-20T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-20",
+          "type": "communication",
+          "summary": "Sent SSO metadata to Rina, waiting for their IdP settings"
+        }
+      ]
+    },
+    {
+      "key": "harbor:dock",
+      "project": "harbor",
+      "title": "Dock Utilization Report",
+      "status": "completed",
+      "people": [
+        "rina"
+      ],
+      "completed_at": "2026-09-18T08:00:00+00:00",
+      "last_activity_at": "2026-09-18T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-18",
+          "type": "milestone",
+          "summary": "Report signed off by Rina"
+        }
+      ]
+    },
+    {
+      "key": "harbor:legacy",
+      "project": "harbor",
+      "title": "Legacy Database Migration",
+      "status": "completed",
+      "people": [
+        "doni"
+      ],
+      "completed_at": "2026-07-20T08:00:00+00:00",
+      "last_activity_at": "2026-07-20T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-07-20",
+          "type": "milestone",
+          "summary": "Migration finished and verified"
+        }
+      ]
+    },
+    {
+      "key": "kedai:menu",
+      "project": "kedai",
+      "title": "Menu Sync With POS",
+      "status": "in_progress",
+      "people": [
+        "maya",
+        "arif"
+      ],
+      "last_activity_at": "2026-09-27T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-27",
+          "type": "configuration",
+          "summary": "Mapped POS categories to the app menu"
+        }
+      ]
+    },
+    {
+      "key": "kedai:banner",
+      "project": "kedai",
+      "title": "Promo Banner Redesign",
+      "status": "blocked",
+      "people": [
+        "arif"
+      ],
+      "last_activity_at": "2026-09-24T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-24",
+          "type": "blocker",
+          "summary": "Waiting for the final brand assets from Maya"
+        }
+      ]
+    },
+    {
+      "key": "kedai:push",
+      "project": "kedai",
+      "title": "Push Notification Setup",
+      "status": "open",
+      "people": [
+        "maya"
+      ],
+      "last_activity_at": "2026-09-26T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-26",
+          "type": "request",
+          "summary": "Maya asked for push notifications for promos"
+        }
+      ]
+    },
+    {
+      "key": "kedai:qris",
+      "project": "kedai",
+      "title": "QRIS Payment Integration",
+      "status": "cancelled",
+      "people": [
+        "maya"
+      ],
+      "last_activity_at": "2026-09-10T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-10",
+          "type": "communication",
+          "summary": "Client cancelled QRIS, cash only for now"
+        }
+      ]
+    },
+    {
+      "key": "nusa:export",
+      "project": "nusa",
+      "title": "Appointment Export to Excel",
+      "status": "in_progress",
+      "people": [
+        "bima"
+      ],
+      "last_activity_at": "2026-09-29T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-29",
+          "type": "development",
+          "summary": "Added the export button and the first version of the sheet"
+        }
+      ]
+    },
+    {
+      "key": "nusa:search",
+      "project": "nusa",
+      "title": "Patient Search Is Slow",
+      "status": "waiting",
+      "waiting_reason": "vendor",
+      "people": [
+        "bima"
+      ],
+      "last_activity_at": "2026-09-15T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-15",
+          "type": "investigation",
+          "summary": "Profiled the query: needs an index, waiting for the DBA"
+        }
+      ]
+    },
+    {
+      "key": "nusa:roles",
+      "project": "nusa",
+      "title": "User Roles Cleanup",
+      "status": "open",
+      "people": [
+        "bima"
+      ],
+      "last_activity_at": "2026-09-21T08:00:00+00:00",
+      "activities": [
+        {
+          "date": "2026-09-21",
+          "type": "request",
+          "summary": "Bima asked to remove unused roles"
+        }
+      ]
+    }
+  ]
+}

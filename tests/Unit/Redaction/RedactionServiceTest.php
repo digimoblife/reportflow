@@ -44,6 +44,11 @@ dataset('secrets that must be removed', function () {
         'env style token' => fn () => ['GITHUB_TOKEN=abc123def456', 'GITHUB_TOKEN='.PH, ['password' => 1]],
         'env style with export and quotes' => fn () => ['export STRIPE_API_KEY="x9y8z7w6"', 'export STRIPE_API_KEY='.PH, ['password' => 1]],
         'env db password' => fn () => ["DB_PASSWORD=$pw\nDB_HOST=localhost", 'DB_PASSWORD='.PH."\nDB_HOST=localhost", ['password' => 1]],
+        'lower-case client secret' => fn () => ['client_secret=evalfake'.'0123456789abcdef dipakai', 'client_secret='.PH.' dipakai', ['password' => 1]],
+        'hyphenated api key with colon' => fn () => ['api-key: '.'Ab12Cd34Ef56', 'api-key: '.PH, ['password' => 1]],
+        'access token in a query string' => fn () => ['GET /cb?access_token='.'abc.def-123', 'GET /cb?access_token='.PH, ['password' => 1]],
+        'bare token assignment' => fn () => ['token='.'a1b2c3d4e5', 'token='.PH, ['password' => 1]],
+        'quoted secret_key' => fn () => ['secret_key = "'.'s3cr3t-value'.'"', 'secret_key = '.PH, ['password' => 1]],
         'multiple secrets, multiple lines' => fn () => ['a '.FakeSecrets::openAiKey()."\nb password: $pw\nc ".FakeSecrets::dbUri(), 'a '.PH."\nb password: ".PH."\nc ".PH, ['api_key' => 1, 'password' => 1, 'connection_string' => 1]],
         'secret at start and end of text' => fn () => [FakeSecrets::githubToken(), PH, ['api_key' => 1]],
         'unicode around the secret' => fn () => ['Kunci baru → '.FakeSecrets::openAiKey().' ✅', 'Kunci baru → '.PH.' ✅', ['api_key' => 1]],
@@ -95,6 +100,11 @@ dataset('text that must stay untouched', [
     'env var without secret name' => 'APP_NAME=ReportFlow dan APP_ENV=local',
     'aws-like lowercase' => 'akia1234567890abcdef tidak dianggap key',
     'long ordinary sentence' => 'Hari ini saya mengerjakan integrasi payment gateway, menulis test, lalu deploy ke staging.',
+    'prose about a token' => 'the token: sudah dipasang di server, tinggal test',
+    'token as a plain word' => 'token expired jadi user harus login ulang',
+    'secret santa' => 'acara secret santa kantor minggu depan',
+    'compound name without a value' => 'refresh_token rotation sudah aktif',
+    'id assignment' => 'user_id=42&page=3',
     'empty' => '',
 ]);
 
