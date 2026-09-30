@@ -5,38 +5,22 @@ use Database\Seeders\DatabaseSeeder;
 use Filament\Facades\Filament;
 
 it('does not serve login page or admin panel, and does not seed dev user when APP_ENV is production', function () {
-    $originalEnv = env('APP_ENV', 'testing');
-
-    try {
-        putenv('APP_ENV=production');
-        $_ENV['APP_ENV'] = 'production';
-        $_SERVER['APP_ENV'] = 'production';
-        $this->refreshApplication();
-
-        // Ensure test database remains reportflow_test under refreshed app
-        config(['database.connections.pgsql.database' => 'reportflow_test']);
-        $this->ensureRunningOnTestDatabase();
-
-        expect(app()->environment())->toBe('production');
+    withAppEnvironment('production', ['DEV_USER_EMAIL' => 'dev@example.test', 'DEV_USER_PASSWORD' => 'not-a-real-password'], function () {
+        expect(app()->environment())->toBe('production')
+            ->and(config('app.dev_user.email'))->toBe('dev@example.test');
 
         // 1. /admin/login is not registered (returns clean 404, panel has no login)
         expect(Filament::getPanel('admin')->hasLogin())->toBeFalse();
 
-        $loginResponse = $this->get('/admin/login');
-        $loginResponse->assertNotFound();
+        $this->get('/admin/login')->assertNotFound();
 
         // 2. /admin returns clean 404 instead of 500 Route [login] not defined
-        $adminResponse = $this->get('/admin');
-        $adminResponse->assertNotFound();
+        $this->get('/admin')->assertNotFound();
 
-        // 3. DatabaseSeeder does not create dev user in production
+        // 3. DatabaseSeeder does not create the dev user in production, even when DEV_USER_* is set.
+        // --force is what a deploy passes; the guard must hold without the confirmation prompt.
         $userCountBefore = User::count();
-        $this->seed(DatabaseSeeder::class);
+        $this->artisan('db:seed', ['--class' => DatabaseSeeder::class, '--force' => true])->assertSuccessful();
         expect(User::count())->toBe($userCountBefore);
-    } finally {
-        putenv("APP_ENV={$originalEnv}");
-        $_ENV['APP_ENV'] = $originalEnv;
-        $_SERVER['APP_ENV'] = $originalEnv;
-        $this->refreshApplication();
-    }
+    });
 });

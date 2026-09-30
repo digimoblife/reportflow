@@ -12,10 +12,11 @@ use App\Support\UserContext;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoSeeder;
 
-function runAsLocal(Closure $callback): mixed
+// Pin the environment explicitly: the container/CI process may export APP_ENV=local, which wins over phpunit.xml.
+function runAsEnvironment(string $environment, Closure $callback): mixed
 {
     $original = app()->environment();
-    app()->instance('env', 'local');
+    app()->instance('env', $environment);
 
     try {
         return $callback();
@@ -24,8 +25,20 @@ function runAsLocal(Closure $callback): mixed
     }
 }
 
+function runAsLocal(Closure $callback): mixed
+{
+    return runAsEnvironment('local', $callback);
+}
+
+// A developer's DEV_USER_* variables would make the dev user the demo owner; these tests expect the default owner.
+beforeEach(function () {
+    config(['app.dev_user.email' => null, 'app.dev_user.password' => null]);
+});
+
 it('refuses to run outside the local environment', function () {
-    expect(fn () => $this->seed(DemoSeeder::class))->toThrow(RuntimeException::class, 'APP_ENV=local');
+    // Called directly: an exception thrown inside `db:seed` leaves the mocked console output bound and breaks later tests.
+    expect(fn () => runAsEnvironment('testing', fn () => (new DemoSeeder)->run()))
+        ->toThrow(RuntimeException::class, 'APP_ENV=local');
     expect(User::count())->toBe(0);
 });
 
