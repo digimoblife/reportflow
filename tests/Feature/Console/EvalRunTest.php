@@ -79,6 +79,25 @@ it('calls DeepSeek once per case when confirmed, sending redacted text only', fu
     Http::assertSent(fn (Request $r) => ! str_contains(json_encode($r->data()), 'EVALFAKE') && ! str_contains(json_encode($r->data()), '{{secret'));
 });
 
+it('runs only the selected cases', function () {
+    [$code, $out] = evalOutput(['--only' => 'future,chitchat']);
+
+    expect($code)->toBe(0)->and($out)->toContain('5 cases');
+
+    [, $ids] = evalOutput(['--ids' => 'C001,C002,C003', '--limit' => 2]);
+    expect($ids)->toContain('2 cases');
+});
+
+it('uses several concurrent requests to DeepSeek when asked to', function () {
+    config(['ai.deepseek.api_key' => 'k'.str_repeat('e', 20), 'ai.deepseek.base_url' => 'https://api.deepseek.test']);
+    Http::fake(['api.deepseek.test/*' => Http::response(['choices' => [['message' => ['content' => '{"items":[],"clarification_needed":null}']]], 'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 2]])]);
+
+    [$code, $out] = evalOutput(['--provider' => 'deepseek', '--send-to-deepseek' => true, '--only' => 'chitchat', '--concurrency' => 4]);
+
+    expect($code)->toBe(0)->and($out)->toContain('3 cases');
+    Http::assertSentCount(3);
+});
+
 it('validates its options', function (array $options, string $message) {
     [$code, $out] = evalOutput($options);
 
@@ -88,6 +107,8 @@ it('validates its options', function (array $options, string $message) {
     'unknown provider' => [['--provider' => 'gpt'], '--provider must be'],
     'unknown prompt version' => [['--prompt' => 'worklog_extraction@v9'], 'does not exist'],
     'missing local dataset' => [['--dataset' => 'local'], 'not found'],
+    'too much concurrency' => [['--concurrency' => 99], '--concurrency must be'],
+    'no matching case' => [['--only' => 'nothing-like-this'], 'No dataset case matches'],
 ]);
 
 it('is refused in production', function () {

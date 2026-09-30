@@ -2,10 +2,10 @@
 
 namespace App\Services\Ai\Fakes;
 
-use App\Services\Ai\AiProvider;
 use App\Services\Ai\AiProviderException;
 use App\Services\Ai\AiRequest;
 use App\Services\Ai\AiResponse;
+use App\Services\Ai\BatchAiProvider;
 use Closure;
 use Throwable;
 
@@ -15,7 +15,7 @@ use Throwable;
  * Answer order: queued outputs first, then the responder closure, then the default (a valid
  * "nothing to record" extraction, so pipelines that do not care about the AI stay green).
  */
-final class FakeAiProvider implements AiProvider
+final class FakeAiProvider implements BatchAiProvider
 {
     public const EMPTY_EXTRACTION = '{"items":[],"clarification_needed":null}';
 
@@ -75,6 +75,25 @@ final class FakeAiProvider implements AiProvider
         $this->failuresLeft = $times;
 
         return $this;
+    }
+
+    /** Number of prefetch-style batch calls served (tests assert that concurrency was used). */
+    public int $batchCalls = 0;
+
+    public function completeMany(array $requests, int $concurrency): array
+    {
+        $this->batchCalls++;
+        $results = [];
+
+        foreach ($requests as $request) {
+            try {
+                $results[] = $this->complete($request);
+            } catch (AiProviderException $e) {
+                $results[] = $e;
+            }
+        }
+
+        return $results;
     }
 
     public function complete(AiRequest $request): AiResponse

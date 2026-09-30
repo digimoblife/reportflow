@@ -9,7 +9,9 @@ use App\Services\Ai\AiInteractionRecorder;
 use App\Services\Ai\AiProvider;
 use App\Services\Ai\AiProviderException;
 use App\Services\Ai\AIService;
+use App\Services\Ai\BatchAiProvider;
 use App\Services\Ai\ExtractionSchema;
+use App\Services\Ai\PrefetchingProvider;
 use App\Services\Ai\PromptRepository;
 use App\Services\Redaction\RedactionService;
 use App\Services\Worklog\CandidateBuilder;
@@ -42,11 +44,12 @@ class EvalRunner
     /**
      * @param  (Closure(array<string, mixed> $case, SnapshotMap $map, CarbonImmutable $today): void)|null  $beforeCase  hook used to script a fake provider per case
      */
-    public function run(EvalDataset $dataset, AiProvider $provider, string $promptReference, ?Closure $beforeCase = null): EvalReport
+    public function run(EvalDataset $dataset, AiProvider $provider, string $promptReference, ?Closure $beforeCase = null, int $concurrency = 1): EvalReport
     {
         $this->prompts->load($promptReference); // fail fast on an unknown version
 
-        $ai = new AIService($provider, $this->prompts, $this->schema, $this->recorder);
+        $prefetcher = $concurrency > 1 && $provider instanceof BatchAiProvider ? new PrefetchingProvider($provider) : null;
+        $ai = new AIService($prefetcher ?? $provider, $this->prompts, $this->schema, $this->recorder);
         $results = [];
         $usage = ['calls' => 0, 'tokens_input' => 0, 'tokens_output' => 0, 'avg_latency_ms' => null];
 
@@ -60,8 +63,12 @@ class EvalRunner
                 'timezone' => (string) ($dataset->snapshot['timezone'] ?? 'Asia/Jakarta'),
             ]);
 
-            $this->context->runAs($user->id, function () use ($dataset, $ai, $beforeCase, &$results, &$usage): void {
+            $this->context->runAs($user->id, function () use ($dataset, $ai, $beforeCase, $prefetcher, $concurrency, $promptReference, &$results, &$usage): void {
                 $map = $this->loader->load($dataset->snapshot);
+
+                if ($prefetcher !== null) {
+                    $this->prefetch($dataset, $ai, $prefetcher, $concurrency, $promptReference);
+                }
 
                 foreach ($dataset->cases as $case) {
                     $results[] = $this->runCase($case, $dataset, $map, $ai, $beforeCase);
@@ -90,13 +97,39 @@ class EvalRunner
     }
 
     /**
+     * Build every case's first request (same redaction and candidates as the real run) and fetch them
+     * concurrently; the sequential pass afterwards then reads each answer from the prefetcher.
+     */
+    private function prefetch(EvalDataset $dataset, AIService $ai, PrefetchingProvider $prefetcher, int $concurrency, string $promptReference): void
+    {
+        $requests = [];
+
+        foreach ($dataset->cases as $case) {
+            $today = $this->today($case, $dataset);
+            $message = RedactionService::forUser(null)->redact(EvalSecrets::expand((string) $case['message']))->text;
+            $requests[] = $ai->buildRequest($message, $this->candidates->build($message, $today), $today, $promptReference);
+        }
+
+        $prefetcher->prefetch($requests, min(16, $concurrency));
+    }
+
+    /**
+     * @param  array<string, mixed>  $case
+     */
+    private function today(array $case, EvalDataset $dataset): CarbonImmutable
+    {
+        $timezone = (string) ($dataset->snapshot['timezone'] ?? 'Asia/Jakarta');
+
+        return CarbonImmutable::parse((string) ($case['today'] ?? $dataset->snapshot['today'] ?? '2026-09-30'), $timezone)->startOfDay();
+    }
+
+    /**
      * @param  array<string, mixed>  $case
      * @return array{id: string, categories: list<string>, review: bool, failed: bool, scores: array<string, bool|null>, min_confidence: float|null, reasons: list<string>, detail: array{expected: list<string>, predicted: list<string>}}
      */
     private function runCase(array $case, EvalDataset $dataset, SnapshotMap $map, AIService $ai, ?Closure $beforeCase): array
     {
-        $timezone = (string) ($dataset->snapshot['timezone'] ?? 'Asia/Jakarta');
-        $today = CarbonImmutable::parse((string) ($case['today'] ?? $dataset->snapshot['today'] ?? '2026-09-30'), $timezone)->startOfDay();
+        $today = $this->today($case, $dataset);
 
         if ($beforeCase !== null) {
             $beforeCase($case, $map, $today);

@@ -42,12 +42,7 @@ class AIService
         ?string $promptReference = null,
     ): ExtractionOutcome {
         $prompt = $this->prompts->load($promptReference ?? (string) config('ai.extraction.prompt'));
-
-        $input = [
-            'today' => $today->format('Y-m-d'),
-            'timezone' => $today->getTimezone()->getName(),
-            'message' => $message,
-        ] + $candidates->toPrompt();
+        $input = $this->input($message, $candidates, $today);
 
         $projectId = $candidates->detectedProjectIds[0] ?? null;
         $retryCodes = [];
@@ -55,8 +50,7 @@ class AIService
         $tokensOut = 0;
 
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
-            $payload = $retryCodes === [] ? $input : $input + ['previous_reply_rejected' => array_slice($retryCodes, 0, 10)];
-            $request = new AiRequest(self::PURPOSE_EXTRACTION, $prompt['version'], $prompt['text'], json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+            $request = $this->buildRequest($message, $candidates, $today, $promptReference, $retryCodes);
 
             try {
                 $response = $this->provider->complete($request);
@@ -97,5 +91,37 @@ class AIService
         }
 
         throw new AiExtractionFailed($retryCodes);
+    }
+
+    /**
+     * The exact request extractWorklog sends on its first attempt (or on a retry, with the rejected field
+     * paths). Public so eval:run can prefetch requests concurrently and hit them by identity.
+     *
+     * @param  list<string>  $retryCodes
+     */
+    public function buildRequest(
+        #[\SensitiveParameter] string $message,
+        CandidateSet $candidates,
+        CarbonImmutable $today,
+        ?string $promptReference = null,
+        array $retryCodes = [],
+    ): AiRequest {
+        $prompt = $this->prompts->load($promptReference ?? (string) config('ai.extraction.prompt'));
+        $input = $this->input($message, $candidates, $today);
+        $payload = $retryCodes === [] ? $input : $input + ['previous_reply_rejected' => array_slice($retryCodes, 0, 10)];
+
+        return new AiRequest(self::PURPOSE_EXTRACTION, $prompt['version'], $prompt['text'], json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function input(string $message, CandidateSet $candidates, CarbonImmutable $today): array
+    {
+        return [
+            'today' => $today->format('Y-m-d'),
+            'timezone' => $today->getTimezone()->getName(),
+            'message' => $message,
+        ] + $candidates->toPrompt();
     }
 }

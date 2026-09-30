@@ -24,6 +24,10 @@ use InvalidArgumentException;
     {--dataset=sample : "sample" (tests/Eval/data-sample, small synthetic), "realistic" (tests/Eval/data-realistic, larger synthetic, real-looking chat style) or "local" (tests/Eval/data, your real data)}
     {--provider=fake : "fake" (an oracle that answers from the labels: checks the harness) or "deepseek" (real model)}
     {--send-to-deepseek : Required with --provider=deepseek: confirms that the dataset messages may be sent to DeepSeek}
+    {--only= : Comma-separated categories: run only cases having any of them (e.g. future,status)}
+    {--ids= : Comma-separated case ids to run (e.g. R085,R086)}
+    {--limit= : Run at most this many cases (after --only/--ids)}
+    {--concurrency=1 : Concurrent requests to the real provider (1-16); the pipeline and scoring stay sequential}
     {--json : Print the report as JSON}
     {--out= : Also write the JSON report to this file}
     {--baseline= : JSON report of an earlier run: list improved and regressed case ids}')]
@@ -44,6 +48,27 @@ class EvalRun extends Command
             $this->components->error($e->getMessage());
 
             return self::FAILURE;
+        }
+
+        $only = array_values(array_filter(array_map('trim', explode(',', (string) $this->option('only')))));
+        $ids = array_values(array_filter(array_map('trim', explode(',', (string) $this->option('ids')))));
+        $limit = $this->option('limit') === null || $this->option('limit') === '' ? null : (int) $this->option('limit');
+        $concurrency = (int) $this->option('concurrency');
+
+        if ($concurrency < 1 || $concurrency > 16) {
+            $this->components->error('--concurrency must be between 1 and 16.');
+
+            return self::FAILURE;
+        }
+
+        if ($only !== [] || $ids !== [] || $limit !== null) {
+            $dataset = $dataset->filter($only, $ids, $limit);
+
+            if ($dataset->cases === []) {
+                $this->components->error('No dataset case matches --only/--ids/--limit.');
+
+                return self::FAILURE;
+            }
         }
 
         $promptReference = (string) ($this->option('prompt') ?: config('ai.extraction.prompt'));
@@ -78,7 +103,7 @@ class EvalRun extends Command
         }
 
         try {
-            $report = $runner->run($dataset, $ai, $promptReference, $beforeCase);
+            $report = $runner->run($dataset, $ai, $promptReference, $beforeCase, $concurrency);
         } catch (InvalidArgumentException $e) {
             $this->components->error($e->getMessage());
 

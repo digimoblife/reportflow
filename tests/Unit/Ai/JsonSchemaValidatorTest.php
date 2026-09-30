@@ -75,7 +75,16 @@ it('loads versioned prompts and keeps v1 unchanged', function () {
     expect($v1['version'])->toBe('worklog_extraction@v1')
         ->and($v1['checksum'])->toBe('b363b8e9dd60e930fd99c41ec813e9e70226c3d2c5cdc2349198369d5f761017')
         ->and($v1['text'])->toContain('json')->toContain('candidates')->toContain('[REDACTED_SECRET]')
-        ->and($repo->versions('worklog_extraction'))->toBe(['worklog_extraction@v1']);
+        ->and($repo->versions('worklog_extraction'))->toBe(['worklog_extraction@v1', 'worklog_extraction@v2']);
+});
+
+it('keeps v2 unchanged too, and v2 keeps the format requirements of DeepSeek JSON mode', function () {
+    $repo = new PromptRepository(dirname(__DIR__, 3).'/resources/prompts');
+    $v2 = $repo->load('worklog_extraction@v2');
+
+    expect($v2['checksum'])->toBe('b7df052ec44d8f91ee62033936be2e7341042cc46a9feef04b2d52c77e925236')
+        ->and($v2['text'])->toContain('json')->toContain('"items"')->toContain('candidates')
+        ->and($v2['text'])->toContain('PLANS')->toContain('WHOLE TASK');
 });
 
 it('rejects malformed or unknown prompt references', function (string $reference) {

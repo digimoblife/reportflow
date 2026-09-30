@@ -124,11 +124,18 @@ it('does not retry provider errors: it logs them and lets the queue retry', func
     expect($row->success)->toBeFalse()->and($row->error)->toBe('provider_error')->and($row->output)->toBeNull();
 });
 
-it('accepts another prompt version by reference', function () {
+it('uses the prompt version it is given, and rejects one that does not exist', function () {
     $w = worklogWorld();
+    $set = app(CandidateBuilder::class)->build('x', $w['today']);
 
-    expect(fn () => app(AIService::class)->extractWorklog('x', app(CandidateBuilder::class)->build('x', $w['today']), $w['today'], null, 'worklog_extraction@v2'))
-        ->toThrow(InvalidArgumentException::class);
+    $outcome = app(AIService::class)->extractWorklog('x', $set, $w['today'], null, 'worklog_extraction@v2');
+
+    expect($outcome->promptVersion)->toBe('worklog_extraction@v2')
+        ->and(fakeAi()->requests[0]->promptVersion)->toBe('worklog_extraction@v2')
+        ->and(fakeAi()->requests[0]->system)->toBe(file_get_contents(resource_path('prompts/worklog_extraction/v2.md')))
+        ->and(AiInteraction::query()->sole()->prompt_version)->toBe('worklog_extraction@v2');
+
+    expect(fn () => app(AIService::class)->extractWorklog('x', $set, $w['today'], null, 'worklog_extraction@v9'))->toThrow(InvalidArgumentException::class);
 });
 
 it('keeps secrets out of everything it sends and stores, given redacted input', function () {

@@ -23,6 +23,28 @@ final readonly class EvalDataset
         public array $cases,
     ) {}
 
+    /**
+     * A subset for quick runs: cases having ANY of the categories and/or listed ids, then the first $limit.
+     *
+     * @param  list<string>  $categories
+     * @param  list<string>  $ids
+     */
+    public function filter(array $categories = [], array $ids = [], ?int $limit = null): self
+    {
+        $cases = array_values(array_filter($this->cases, function (array $case) use ($categories, $ids): bool {
+            $byCategory = $categories === [] || array_intersect($categories, $case['categories']) !== [];
+            $byId = $ids === [] || in_array($case['id'], $ids, true);
+
+            return $byCategory && $byId;
+        }));
+
+        if ($limit !== null) {
+            $cases = array_slice($cases, 0, max(0, $limit));
+        }
+
+        return new self($this->name, $this->snapshot, $cases);
+    }
+
     public static function load(string $directory, string $name): self
     {
         $snapshotFile = $directory.'/snapshot.json';
