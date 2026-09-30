@@ -529,5 +529,5 @@ Dua run per versi (concurrency 8, satu run v1 sebelumnya berurutan memberi hasil
 - v2 konsisten lebih baik hanya pada **klasifikasi tipe** (+3 sampai +4 poin, dua run): definisi tipe membantu. Metrik bertarget PRD tidak berubah berarti.
 - Target v2 yang **tidak** tercapai lewat instruksi teks: rencana masa depan tetap dicatat sebagai pekerjaan (R085–R087), dan status "task selesai" tetap diisi untuk bagian tugas (R063–R065). Instruksi negatif
   saja tidak cukup untuk model ini; perbaikan andal perlu struktur di output (mis. field `happened` per item yang dibuang backend bila false) atau konfirmasi di M4 untuk status terminal (sudah rencana: Completed/Cancelled dari AI selalu eksplisit dan bisa di-undo).
-- Default `ai.extraction.prompt` tetap `worklog_extraction@v1` sampai user memutuskan memakai v2.
+- **Keputusan user (30 Sep 2026): v2 menjadi default** (`ai.extraction.prompt = worklog_extraction@v2`). Masalah rencana masa depan dan status untuk bagian tugas diselesaikan di M4 lewat konfirmasi dan Undo, bukan lewat prompt.
 - `eval:run` kini punya `--concurrency` (prefetch paralel, hasil identik dengan berurutan), `--only`, `--ids`, `--limit`; 107 kasus ≈ 1 menit dengan concurrency 8 (sebelumnya ≈ 6 menit).

@@ -71,7 +71,7 @@ class EvalRunner
                 }
 
                 foreach ($dataset->cases as $case) {
-                    $results[] = $this->runCase($case, $dataset, $map, $ai, $beforeCase);
+                    $results[] = $this->runCase($case, $dataset, $map, $ai, $beforeCase, $promptReference);
                 }
 
                 $rows = AiInteraction::query()->get(['tokens_input', 'tokens_output', 'latency_ms']);
@@ -127,7 +127,7 @@ class EvalRunner
      * @param  array<string, mixed>  $case
      * @return array{id: string, categories: list<string>, review: bool, failed: bool, scores: array<string, bool|null>, min_confidence: float|null, reasons: list<string>, detail: array{expected: list<string>, predicted: list<string>}}
      */
-    private function runCase(array $case, EvalDataset $dataset, SnapshotMap $map, AIService $ai, ?Closure $beforeCase): array
+    private function runCase(array $case, EvalDataset $dataset, SnapshotMap $map, AIService $ai, ?Closure $beforeCase, string $promptReference): array
     {
         $today = $this->today($case, $dataset);
 
@@ -146,7 +146,7 @@ class EvalRunner
 
         try {
             $set = $this->candidates->build($message, $today);
-            $outcome = $ai->extractWorklog($message, $set, $today);
+            $outcome = $ai->extractWorklog($message, $set, $today, null, $promptReference);
             $proposal = $this->validator->validate($outcome->data, $set, $today);
         } catch (AiExtractionFailed|AiProviderException $e) {
             return $base + ['failed' => true, 'scores' => [], 'min_confidence' => null, 'reasons' => [$e instanceof AiExtractionFailed ? 'extraction_failed' : 'provider_error'], 'detail' => ['expected' => [], 'predicted' => []]];

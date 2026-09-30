@@ -26,7 +26,7 @@ return [
     ],
 
     'extraction' => [
-        'prompt' => 'worklog_extraction@v1',
+        'prompt' => 'worklog_extraction@v2',
         // Task lookback for Completed tasks in the candidate list (PRD §12).
         'completed_lookback_days' => 30,
         // A date older than this needs confirmation (PRD §54 step 6).

@@ -24,14 +24,14 @@ it('returns the parsed extraction and logs one interaction with tokens, latency 
     $outcome = runExtraction($w);
 
     expect($outcome->attempts)->toBe(1)
-        ->and($outcome->promptVersion)->toBe('worklog_extraction@v1')
+        ->and($outcome->promptVersion)->toBe('worklog_extraction@v2')
         ->and($outcome->data['items'])->toHaveCount(1)
         ->and($outcome->tokensInput)->toBe(100)->and($outcome->tokensOutput)->toBe(50);
 
     $row = AiInteraction::query()->sole();
     expect($row->purpose)->toBe('worklog_extraction')
         ->and($row->model)->toBe('fake-model')
-        ->and($row->prompt_version)->toBe('worklog_extraction@v1')
+        ->and($row->prompt_version)->toBe('worklog_extraction@v2')
         ->and($row->success)->toBeTrue()
         ->and($row->error)->toBeNull()
         ->and($row->tokens_input)->toBe(100)->and($row->tokens_output)->toBe(50)->and($row->latency_ms)->toBe(1)
@@ -52,9 +52,9 @@ it('sends the versioned prompt as system message and the candidates as JSON in t
     $user = json_decode($request->user, true);
 
     expect($request->purpose)->toBe('worklog_extraction')
-        ->and($request->promptVersion)->toBe('worklog_extraction@v1')
+        ->and($request->promptVersion)->toBe('worklog_extraction@v2')
         ->and($request->jsonMode)->toBeTrue()
-        ->and($request->system)->toBe(file_get_contents(resource_path('prompts/worklog_extraction/v1.md')))
+        ->and($request->system)->toBe(file_get_contents(resource_path('prompts/worklog_extraction/v2.md')))
         ->and($user)->toHaveKeys(['today', 'timezone', 'message', 'projects', 'candidates_mode', 'candidates'])
         ->and($user['timezone'])->toBe('Asia/Jakarta')
         ->and($user['candidates_mode'])->toBe('focused')
@@ -128,12 +128,12 @@ it('uses the prompt version it is given, and rejects one that does not exist', f
     $w = worklogWorld();
     $set = app(CandidateBuilder::class)->build('x', $w['today']);
 
-    $outcome = app(AIService::class)->extractWorklog('x', $set, $w['today'], null, 'worklog_extraction@v2');
+    $outcome = app(AIService::class)->extractWorklog('x', $set, $w['today'], null, 'worklog_extraction@v1');
 
-    expect($outcome->promptVersion)->toBe('worklog_extraction@v2')
-        ->and(fakeAi()->requests[0]->promptVersion)->toBe('worklog_extraction@v2')
-        ->and(fakeAi()->requests[0]->system)->toBe(file_get_contents(resource_path('prompts/worklog_extraction/v2.md')))
-        ->and(AiInteraction::query()->sole()->prompt_version)->toBe('worklog_extraction@v2');
+    expect($outcome->promptVersion)->toBe('worklog_extraction@v1')
+        ->and(fakeAi()->requests[0]->promptVersion)->toBe('worklog_extraction@v1')
+        ->and(fakeAi()->requests[0]->system)->toBe(file_get_contents(resource_path('prompts/worklog_extraction/v1.md')))
+        ->and(AiInteraction::query()->sole()->prompt_version)->toBe('worklog_extraction@v1');
 
     expect(fn () => app(AIService::class)->extractWorklog('x', $set, $w['today'], null, 'worklog_extraction@v9'))->toThrow(InvalidArgumentException::class);
 });

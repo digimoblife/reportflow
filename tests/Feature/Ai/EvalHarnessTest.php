@@ -248,6 +248,19 @@ describe('safety', function () {
             ->and(array_column($payload['candidates'], 'title'))->not->toContain('Dock Utilization Report');
     });
 
+    it('runs the prompt version it was asked for, in the request and in the report', function (string $version, string $other) {
+        $provider = new FakeAiProvider;
+        $dataset = sampleDataset()->filter(ids: ['C001', 'C002']);
+
+        $report = app(EvalRunner::class)->run($dataset, $provider, $version);
+        $prompt = file_get_contents(resource_path('prompts/worklog_extraction/'.substr($version, -2).'.md'));
+
+        expect($report->prompt)->toBe($version)
+            ->and(array_unique(array_map(fn ($r) => $r->promptVersion, $provider->requests)))->toBe([$version])
+            ->and(array_unique(array_map(fn ($r) => $r->system, $provider->requests)))->toBe([$prompt])
+            ->and($version)->not->toBe($other);
+    })->with([['worklog_extraction@v1', 'worklog_extraction@v2'], ['worklog_extraction@v2', 'worklog_extraction@v1']]);
+
     it('fails fast on an unknown prompt version', function () {
         expect(fn () => app(EvalRunner::class)->run(sampleDataset(), new FakeAiProvider, 'worklog_extraction@v9'))->toThrow(InvalidArgumentException::class);
     });

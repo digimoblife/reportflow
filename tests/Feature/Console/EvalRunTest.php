@@ -15,7 +15,7 @@ it('runs the sample dataset with the oracle and prints numbers and case ids only
     [$code, $out] = evalOutput();
 
     expect($code)->toBe(0)
-        ->and($out)->toContain('Prompt worklog_extraction@v1 | provider fake | dataset sample | 66 cases')
+        ->and($out)->toContain('Prompt worklog_extraction@v2 | provider fake | dataset sample | 66 cases')
         ->and($out)->toContain('Worklog extraction')->toContain('Project identification')->toContain('Task matching')->toContain('Date extraction')
         ->and($out)->toContain('100.0%')->toContain('Pipeline failures: none')->toContain('Labels flagged for human review: C004')
         ->and($out)->toContain('oracle')
@@ -37,7 +37,7 @@ it('prints a JSON report and writes it to a file, then compares with it as a bas
     expect($code)->toBe(0)
         ->and($json['case_count'])->toBe(66)
         ->and($json['metrics']['matching']['rate'])->toEqual(1)
-        ->and(json_decode((string) file_get_contents($file), true)['prompt'])->toBe('worklog_extraction@v1');
+        ->and(json_decode((string) file_get_contents($file), true)['prompt'])->toBe('worklog_extraction@v2');
 
     [, $compared] = evalOutput(['--baseline' => $file]);
     expect($compared)->toContain('Improved vs baseline: none')->toContain('Regressed vs baseline: none');

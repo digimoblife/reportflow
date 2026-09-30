@@ -341,7 +341,7 @@ it('extracts and validates through the real queue, and logs the AI call for the 
     expect($message->status)->toBe(InboundMessageStatus::Processed)
         ->and($interaction->success)->toBeTrue()
         ->and($interaction->purpose)->toBe('worklog_extraction')
-        ->and($interaction->prompt_version)->toBe('worklog_extraction@v1')
+        ->and($interaction->prompt_version)->toBe('worklog_extraction@v2')
         ->and(collect($logs->getRecords())->firstWhere('message', 'worklog.extracted')->context['items'])->toBe(['accepted' => 1])
         // nothing was written to tasks/activities yet (M4)
         ->and(asSystem(fn () => Activity::query()->count()))->toBe(0)
