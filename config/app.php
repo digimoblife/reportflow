@@ -123,4 +123,19 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Local Dev Login
+    |--------------------------------------------------------------------------
+    |
+    | Credentials for the local-only dev user created by DatabaseSeeder.
+    | Only read when APP_ENV=local. TODO(M5): remove with the email/password login.
+    |
+    */
+
+    'dev_user' => [
+        'email' => env('DEV_USER_EMAIL'),
+        'password' => env('DEV_USER_PASSWORD'),
+    ],
+
 ];

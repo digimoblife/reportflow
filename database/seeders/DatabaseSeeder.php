@@ -3,32 +3,37 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
+// Model events stay enabled: user-scoped models fill and guard user_id in `creating`.
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
-     * Seed the application's database.
+     * Seed the application's database. Local environment only.
      *
      * TODO: hapus di M5 saat Telegram Login Widget diimplementasikan
      */
     public function run(): void
     {
         if (! app()->environment('local')) {
-            $this->command?->warn('Dev seeder is only allowed in local environment. Skipping.');
+            $this->command->warn('Dev seeder is only allowed in local environment. Skipping.');
 
             return;
         }
 
-        $email = env('DEV_USER_EMAIL');
-        $password = env('DEV_USER_PASSWORD');
+        $this->seedDevUser();
 
-        if (empty($email) || empty($password)) {
-            $this->command?->info('DEV_USER_EMAIL or DEV_USER_PASSWORD not set. Skipping dev user creation.');
+        $this->call(DemoSeeder::class);
+    }
+
+    private function seedDevUser(): void
+    {
+        $email = config('app.dev_user.email');
+        $password = config('app.dev_user.password');
+
+        if (! is_string($email) || $email === '' || ! is_string($password) || $password === '') {
+            $this->command->info('DEV_USER_EMAIL or DEV_USER_PASSWORD not set. Skipping dev user creation.');
 
             return;
         }
@@ -42,6 +47,6 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $this->command?->info("Dev user [{$email}] created/updated successfully.");
+        $this->command->info("Dev user [{$email}] created/updated successfully.");
     }
 }
