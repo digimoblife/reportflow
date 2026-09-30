@@ -31,6 +31,13 @@ Akibat: setelah mengubah token/secret/`APP_URL`, jalankan `docker compose restar
 `TELEGRAM_WEBHOOK_PATH`, jalankan juga `docker compose up -d --force-recreate nginx`. `APP_ENV` dari compose mengalahkan `.env`
 hanya untuk `app`.
 
+## Jaringan: worker harus punya egress
+
+`reportflow-internal` bersifat `internal: true` (tanpa internet). Worker yang mengirim konfirmasi ke Telegram (dan nanti ke AI)
+juga tergabung di `reportflow-public`; postgres dan redis hanya di jaringan internal. Tanpa itu, pesan "⏳" tidak pernah
+diedit (DNS `api.telegram.org` gagal di worker, job pengiriman berulang tiap ~12 dtk sampai `retryUntil`). Ditemukan di uji
+langsung pertama; dijaga `tests/Unit/Infra/NginxTunnelTest.php`.
+
 ## Persiapan (sekali)
 
 ```bash

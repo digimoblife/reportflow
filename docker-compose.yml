@@ -46,6 +46,9 @@ services:
         condition: service_healthy
     networks:
       - reportflow-internal
+      # Egress: the worker calls the Telegram Bot API (and the AI provider from M3). `reportflow-internal`
+      # has no route to the internet, so without this network confirmations are never delivered.
+      - reportflow-public
     deploy:
       resources:
         limits:

@@ -21,7 +21,7 @@ function tunnelDirectives(): string
 
 /**
  * Minimal reader for the parts of docker-compose.yml these tests need (no YAML dependency):
- * per service, the `ports`, `environment` and `volumes` list items.
+ * per service, the `ports`, `environment`, `volumes` and `networks` list items.
  *
  * @return array<string, array<string, list<string>>>
  */
@@ -46,7 +46,7 @@ function compose(): array
             $service = $m[1];
             $services[$service] = [];
             $section = null;
-        } elseif ($service !== null && preg_match('/^    (ports|environment|volumes):\s*$/', $line, $m)) {
+        } elseif ($service !== null && preg_match('/^    (ports|environment|volumes|networks):\s*$/', $line, $m)) {
             $section = $m[1];
             $services[$service][$section] = [];
         } elseif ($service !== null && preg_match('/^    [a-z_]+:/', $line)) {
@@ -138,4 +138,15 @@ it('never puts the webhook path itself in a tracked file', function () {
     // The template only references the variable; compose only interpolates it.
     expect(tunnelTemplate())->toContain('${TELEGRAM_WEBHOOK_PATH}')
         ->and(file_get_contents(repoFile('.env.example')))->toMatch('/^TELEGRAM_WEBHOOK_PATH=\s*$/m');
+});
+
+it('gives the worker egress to reach Telegram, while data stores stay on the internal network only', function () {
+    $compose = compose();
+
+    // reportflow-internal is `internal: true` (no internet). The worker sends the confirmations.
+    expect($compose['worker']['networks'])->toContain('reportflow-internal')->toContain('reportflow-public');
+
+    foreach (['postgres', 'redis'] as $store) {
+        expect($compose[$store]['networks'])->toBe(['reportflow-internal']);
+    }
 });
