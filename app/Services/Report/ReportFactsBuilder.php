@@ -72,6 +72,12 @@ class ReportFactsBuilder
         ], $language->value);
     }
 
+    /** True when a section's facts say there is nothing ("None."): then an introduction to a list would introduce nothing. */
+    public function isEmpty(string $facts, Language $language): bool
+    {
+        return $facts === $this->none($language);
+    }
+
     /** Escapes Markdown control characters in text that a person wrote and flattens it to one line. */
     public function escape(string $text): string
     {

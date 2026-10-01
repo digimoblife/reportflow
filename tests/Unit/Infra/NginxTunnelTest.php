@@ -125,7 +125,7 @@ it('publishes only nginx ports 80 and 8081, both on 127.0.0.1', function () {
 
 it('publishes nothing for postgres, redis, gotenberg, app, worker and scheduler', function (string $service) {
     expect(compose()[$service])->not->toHaveKey('ports');
-})->with(['postgres', 'redis', 'gotenberg', 'app', 'worker', 'scheduler']);
+})->with(['postgres', 'redis', 'gotenberg', 'app', 'worker', 'worker-reports', 'scheduler']);
 
 it('wires the template and a safe default path into the nginx service', function () {
     $nginx = compose()['nginx'];
@@ -149,4 +149,20 @@ it('gives the worker egress to reach Telegram, while data stores stay on the int
     foreach (['postgres', 'redis'] as $store) {
         expect($compose[$store]['networks'])->toBe(['reportflow-internal']);
     }
+});
+
+it('runs reports on their own single worker with a memory limit, and keeps them off the main worker', function () {
+    $block = function (string $service): string {
+        preg_match('/^  '.preg_quote($service, '/').':\n(.*?)(?=^  [a-z0-9_-]+:\n|^\S)/ms', (string) file_get_contents(repoFile('docker-compose.yml')), $m);
+
+        return $m[1] ?? '';
+    };
+
+    $main = $block('worker');
+    $reports = $block('worker-reports');
+
+    expect($main)->toContain('--queue=default,ai')->not->toContain('reports')
+        ->and($reports)->toContain('--queue=reports')->not->toContain('default')->toContain('memory: 384M')
+        ->toContain('gotenberg:')->toContain('- reportflow-internal')->toContain('- reportflow-public')
+        ->and($block('gotenberg'))->toContain('--chromium-max-concurrency=1');
 });

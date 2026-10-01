@@ -53,8 +53,9 @@ PostgreSQL, Redis, Gotenberg hanya di network internal Docker.
   storage bersama). Setiap setting baru di `.env.example`/`config` yang menunjuk layanan eksternal atau penyimpanan
   bersama WAJIB dikunci di `tests/bootstrap.php` (nilai `<env>` di `phpunit.xml` kalah dari `.env`) dan ditambahkan
   ke `tests/Feature/TestIsolationTest.php`. Jangan mengisi nilai `"null"` lewat env: `env()` mengubahnya menjadi PHP null.
-- Panggilan keluar hanya lewat `TelegramClient` dan `AiProvider`. Di test keduanya dipaksa `fake`
-  (`tests/bootstrap.php`) dan `Http::preventStrayRequests()` aktif; `TELEGRAM_CLIENT=fake` ditolak saat boot di production.
+- Panggilan keluar hanya lewat `TelegramClient`, `AiProvider`, dan `PdfRenderer` (Gotenberg). Di test ketiganya dipaksa `fake`
+  (`tests/bootstrap.php`) dan `Http::preventStrayRequests()` aktif; `TELEGRAM_CLIENT=fake`, `AI_PROVIDER=fake`, `PDF_RENDERER=fake` ditolak saat boot di production.
+  File laporan hanya di disk privat `reports` (di test `Storage::fake`), diunduh lewat signed URL.
   Fixture credential palsu dirakit saat runtime (`Tests\Support\FakeSecrets`), jangan menulis literal utuh di repo.
 - Semua panggilan AI lewat `AIService`; catat ke `ai_interactions` (termasuk `prompt_version`).
 - Prompt disimpan sebagai file versi: `resources/prompts/<nama>/v<N>.md`. Ubah prompt = naikkan versi + jalankan eval

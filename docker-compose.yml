@@ -35,7 +35,7 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     restart: unless-stopped
-    command: ["php", "artisan", "queue:work", "redis", "--queue=default,ai,reports", "--tries=3", "--timeout=90"]
+    command: ["php", "artisan", "queue:work", "redis", "--queue=default,ai", "--tries=3", "--timeout=90"]
     volumes:
       - .:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
@@ -53,6 +53,37 @@ services:
       resources:
         limits:
           memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep 'queue:work' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Reports (M7): one process, one job at a time. Gotenberg runs a single Chromium (--chromium-max-concurrency=1) and
+  # a 4 GB VPS has little room for a burst, so PDF rendering and the AI section calls are kept off the main worker.
+  worker-reports:
+    image: reportflow-app:latest
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "redis", "--queue=reports", "--tries=3", "--timeout=300", "--max-time=3600", "--memory=320"]
+    volumes:
+      - .:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      gotenberg:
+        condition: service_healthy
+    networks:
+      - reportflow-internal
+      # Egress for the AI provider (section narratives); Gotenberg is reached on the internal network.
+      - reportflow-public
+    deploy:
+      resources:
+        limits:
+          memory: 384M
     healthcheck:
       test: ["CMD-SHELL", "ps aux | grep -v grep | grep 'queue:work' || exit 1"]
       interval: 15s

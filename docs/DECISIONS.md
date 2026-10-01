@@ -667,3 +667,10 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - Angka dalam narasi hanya boleh berasal dari data: **instruksi tidak ikut memperluas daftar angka**, jadi angka yang diketik editor baru boleh muncul setelah menjadi activity. Rewrite yang jatuh ke kalimat tetap ditolak (`rewrite_failed`) daripada disimpan setengah hati. Section yang hanya berisi data (completed, cross_month, incidents) berubah hanya bila ada fakta baru.
 - **Edit manual:** setelah simpan, section yang memuat angka baru (dibanding versi sebelumnya) memunculkan tawaran "Simpan sebagai activity?" (form task laporan, tanggal dalam periode, uraian; di-redact); hanya saran, tidak menulis apa pun sendiri.
 - Belum ada eval kualitas `report_instruction`/`report_section` di model sungguhan.
+
+## M7f — Worker laporan, RAM dan penutup (PRD §83, §84)
+
+- **`worker-reports`** (queue `reports`, satu proses, `--max-time=3600 --memory=320`, batas 384M, jaringan internal + egress untuk AI); worker utama kini `--queue=default,ai`. Gotenberg tetap 1 Chromium. Dijaga tes infra.
+- **Terukur lokal** (satu laporan nyata via Redis + Gotenberg): `worker-reports` ≈ 58 MiB, `gotenberg` ≈ 504 MiB, `worker` ≈ 48 MiB; PDF ≈ 31 KB, `.md` ≈ 1,2 KB. Render PDF sungguhan diperiksa visual.
+- Tidak ada pengantar untuk daftar kosong (section Ongoing/Detailed tanpa data hanya berisi "None."/"Tidak ada.").
+- **Sisa/di luar M7:** kualitas narasi `report_section` dan `report_instruction` di model sungguhan belum diukur (tidak ada eval laporan); pengiriman/review lewat Telegram, reminder bulanan dan late entries = M8; template per project dan DOCX = Phase 3.

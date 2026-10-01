@@ -189,6 +189,17 @@ describe('traceability', function () {
             ->and($this->report->fresh()->status)->toBe(ReportStatus::InReview);
     });
 
+    it('does not introduce a list that is empty', function () {
+        fakeAi()->using(fn (AiRequest $r) => goodNarrative($r));
+        $this->invoice->update(['status' => TaskStatus::Cancelled]);
+        $this->tracking->update(['status' => TaskStatus::Cancelled]);   // nothing is ongoing or waiting any more
+
+        $version = $this->generator->generate($this->report);
+
+        expect(sectionOf($version, 'ongoing')['markdown'])->toBe('None.')
+            ->and(collect(fakeAi()->requests)->map(fn ($r) => json_decode($r->user, true)['section']['key'])->all())->not->toContain('ongoing');
+    });
+
     it('does not call the AI for a period without activities', function () {
         $empty = $this->generator->findOrCreate($this->project, ReportType::Monthly, '2026-01-01', '2026-01-31', Language::English);
 

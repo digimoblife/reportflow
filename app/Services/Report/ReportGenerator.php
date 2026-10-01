@@ -154,7 +154,7 @@ class ReportGenerator
             $narrative = '';
             $fallback = false;
 
-            if ($section['narrative']) {
+            if ($section['narrative'] && ! (in_array($section['key'], ['detailed', 'ongoing'], true) && $this->facts->isEmpty($facts, $language))) {
                 [$narrative, $fallback] = $this->narrative($report, $section['key'], $data, $instruction);
             }
 
