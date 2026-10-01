@@ -108,8 +108,9 @@ class ReportWorkflow
      * Adds a version built from $current's content, in a transaction the caller already opened.
      *
      * @param  array<string, mixed>  $content
+     * @param  list<int>|null  $sourceActivityIds  the new version's frozen activities (default: the current version's)
      */
-    public function append(Report $report, ReportVersion $current, array $content, ReportCreatedBy $by, string $channel, ?string $instruction): ReportVersion
+    public function append(Report $report, ReportVersion $current, array $content, ReportCreatedBy $by, string $channel, ?string $instruction, ?array $sourceActivityIds = null): ReportVersion
     {
         $next = (int) ReportVersion::query()->where('report_id', $report->id)->max('version_no') + 1;
 
@@ -118,7 +119,7 @@ class ReportWorkflow
             'version_no' => $next,
             'content' => $content,
             'data_snapshot_at' => $current->data_snapshot_at,
-            'source_activity_ids' => $current->source_activity_ids,
+            'source_activity_ids' => $sourceActivityIds ?? $current->source_activity_ids,
             'created_by' => $by,
             'source_channel' => $channel,
             'instruction' => $instruction,
@@ -133,7 +134,7 @@ class ReportWorkflow
     /**
      * Locks the report row and checks the person is still looking at its current version.
      */
-    private function lock(Report $report, int $expectedVersionId, bool $requireReview = false): Report
+    public function lock(Report $report, int $expectedVersionId, bool $requireReview = false): Report
     {
         $locked = Report::query()->lockForUpdate()->findOrFail($report->id);
 

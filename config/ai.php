@@ -25,6 +25,10 @@ return [
         'medium' => 0.70,
     ],
 
+    'report_instruction' => [
+        'prompt' => 'report_instruction@v1',
+    ],
+
     'report_section' => [
         'prompt' => 'report_section@v1',
     ],

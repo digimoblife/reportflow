@@ -2,17 +2,21 @@
 
 namespace App\Filament\Resources\Reports\Pages;
 
+use App\Enums\ActivityType;
 use App\Enums\ReportStatus;
 use App\Filament\Resources\Reports\ReportResource;
 use App\Models\Report;
 use App\Models\ReportFile;
 use App\Models\ReportVersion;
 use App\Models\User;
+use App\Services\Report\ReportDataSelector;
 use App\Services\Report\ReportDiff;
+use App\Services\Report\ReportEditor;
 use App\Services\Report\ReportHtml;
 use App\Services\Report\ReportWorkflow;
 use App\Services\Report\SignedDownload;
 use App\Services\Report\StaleReportException;
+use Carbon\CarbonImmutable;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
@@ -39,11 +43,30 @@ class ViewReport extends ViewRecord
     /** @var array<string, string> section key => Markdown being edited */
     public array $sections = [];
 
+    /** @var array<string, string> section key => instruction being typed */
+    public array $instructions = [];
+
+    /** @var list<string> sections where the last manual save added numbers: offer "save as activity" */
+    public array $factOffers = [];
+
+    public ?string $factSection = null;
+
+    public string $factTask = '';
+
+    public string $factDate = '';
+
+    public string $factSummary = '';
+
+    public string $factType = 'other';
+
     public bool $newerAvailable = false;
 
     public ?int $compareFrom = null;
 
     public ?int $compareTo = null;
+
+    /** @var array<string, scalar> placeholders for the next notification */
+    public array $notes = [];
 
     public function mount(int|string $record): void
     {
@@ -100,6 +123,7 @@ class ViewReport extends ViewRecord
     public function saveSections(): void
     {
         $this->guarded(function (ReportWorkflow $workflow): string {
+            $before = $this->loadedVersion();
             $version = $workflow->saveEdit($this->report(), $this->loadedVersionId, $this->sections);
 
             if ($version === null) {
@@ -107,9 +131,87 @@ class ViewReport extends ViewRecord
             }
 
             $this->loadVersion($version->id);
+            $this->factOffers = $before === null ? [] : app(ReportEditor::class)->factCandidates($before, $version);
 
             return 'saved';
         });
+    }
+
+    /** "Edit via instruksi" for one section (PRD §42): new facts become activities first, then the section is rewritten. */
+    public function instruct(string $key): void
+    {
+        $text = trim($this->instructions[$key] ?? '');
+
+        $this->guarded(function () use ($key, $text): string {
+            $result = app(ReportEditor::class)->instruct($this->report(), $this->loadedVersionId, $key, $text);
+
+            if ($result->ok() && $result->version !== null) {
+                $this->loadVersion($result->version->id);
+                $this->instructions[$key] = '';
+                $this->notes = ['count' => $result->factsSaved];
+
+                return 'instructed';
+            }
+
+            $this->notes = ['facts' => implode('; ', $result->unmatched)];
+
+            return $result->status;
+        });
+    }
+
+    public function openFact(string $key): void
+    {
+        $report = $this->report();
+        $this->factSection = $key;
+        $this->factTask = '';
+        $this->factType = 'other';
+        $this->factSummary = '';
+        $this->factDate = min($report->period_end->format('Y-m-d'), now($this->timezone())->format('Y-m-d'));
+    }
+
+    public function dismissFact(string $key): void
+    {
+        $this->factOffers = array_values(array_filter($this->factOffers, fn (string $k): bool => $k !== $key));
+
+        if ($this->factSection === $key) {
+            $this->factSection = null;
+        }
+    }
+
+    public function saveFact(): void
+    {
+        $key = (string) $this->factSection;
+
+        $this->guarded(function () use ($key): string {
+            $type = ActivityType::tryFrom($this->factType) ?? ActivityType::Other;
+            $result = app(ReportEditor::class)->saveFact($this->report(), (int) $this->factTask, $this->factDate, $this->factSummary, $type);
+
+            if (! $result->ok()) {
+                return 'invalid';
+            }
+
+            $this->dismissFact($key);
+
+            return 'fact_saved';
+        });
+    }
+
+    /**
+     * Tasks of this report (for the "save as activity" form).
+     *
+     * @return array<int, string>
+     */
+    public function reportTasks(): array
+    {
+        $version = $this->loadedVersion();
+
+        if ($version === null) {
+            return [];
+        }
+
+        $data = app(ReportDataSelector::class)->select($this->report()->project, $this->report()->period_start->format('Y-m-d'), $this->report()->period_end->format('Y-m-d'), $this->timezone(), CarbonImmutable::instance($version->data_snapshot_at), $version->source_activity_ids);
+
+        return array_map(fn (array $t): string => $t['title'], $data->tasks);
     }
 
     public function approve(): void
@@ -255,7 +357,8 @@ class ViewReport extends ViewRecord
         }
 
         $this->record = Report::query()->with(['project', 'currentVersion'])->findOrFail($this->report()->id);
-        $notification = Notification::make()->title((string) __('ui.dashboard.reports.notices.'.$key));
-        (in_array($key, ['stale', 'not_possible'], true) ? $notification->warning() : $notification->success())->send();
+        $notification = Notification::make()->title((string) __('ui.dashboard.reports.notices.'.$key, $this->notes));
+        $this->notes = [];
+        (in_array($key, ['saved', 'approved', 'cancelled', 'instructed', 'fact_saved'], true) ? $notification->success() : $notification->warning())->send();
     }
 }

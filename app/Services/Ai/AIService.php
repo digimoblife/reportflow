@@ -22,6 +22,8 @@ class AIService
 
     public const PURPOSE_REPORT_SECTION = 'report_section';
 
+    public const PURPOSE_REPORT_INSTRUCTION = 'report_instruction';
+
     private const MAX_ATTEMPTS = 2;
 
     public function __construct(
@@ -125,6 +127,38 @@ class AIService
                 $body = $retryCodes === [] ? $payload : $payload + ['previous_reply_rejected' => array_slice($retryCodes, 0, 10)];
 
                 return new AiRequest(self::PURPOSE_REPORT_SECTION, $prompt['version'], $prompt['text'], json_encode($body, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+            },
+            null,
+            $projectId,
+            $validate,
+            $reportId,
+        );
+    }
+
+    /**
+     * Reads an editor's instruction for a report section and returns the NEW FACTS it states (PRD §42 "aturan fakta baru").
+     * The model only proposes; the caller validates every fact against the report's tasks and period and records it as an
+     * activity before the section is rewritten.
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  \Closure(array<mixed>): list<string>  $validate
+     *
+     * @throws AiProviderException
+     * @throws AiExtractionFailed
+     * @throws JsonException
+     */
+    public function interpretReportInstruction(array $payload, \Closure $validate, int $reportId, int $projectId): ExtractionOutcome
+    {
+        $prompt = $this->prompts->load((string) config('ai.report_instruction.prompt'));
+
+        return $this->run(
+            self::PURPOSE_REPORT_INSTRUCTION,
+            $prompt['version'],
+            $payload,
+            function (array $retryCodes) use ($prompt, $payload): AiRequest {
+                $body = $retryCodes === [] ? $payload : $payload + ['previous_reply_rejected' => array_slice($retryCodes, 0, 10)];
+
+                return new AiRequest(self::PURPOSE_REPORT_INSTRUCTION, $prompt['version'], $prompt['text'], json_encode($body, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
             },
             null,
             $projectId,

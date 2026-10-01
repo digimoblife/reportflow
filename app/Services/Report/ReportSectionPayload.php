@@ -69,11 +69,15 @@ final readonly class ReportSectionPayload
             'activities' => $activities,
         ];
 
+        // Numbers must come from the data, never from the instruction: a figure the editor typed counts only once it is
+        // recorded as an activity (PRD §42 new-facts rule), so the pool is computed before the instruction is added.
+        $pool = self::numbers(json_encode(self::withoutIds($payload), JSON_UNESCAPED_UNICODE) ?: '');
+
         if ($instruction !== null && trim($instruction) !== '') {
             $payload['instruction'] = $instruction;
         }
 
-        return new self($payload, $titles, self::numbers(json_encode(self::withoutIds($payload), JSON_UNESCAPED_UNICODE) ?: ''));
+        return new self($payload, $titles, $pool);
     }
 
     /**

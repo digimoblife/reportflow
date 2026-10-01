@@ -58,6 +58,39 @@
                                               class="block w-full border-none bg-transparent px-3 py-1.5 font-mono text-sm text-gray-950 outline-none dark:text-white"></textarea>
                                 </x-filament::input.wrapper>
                             </label>
+
+                            <div class="flex flex-wrap items-center gap-2" wire:key="instr-{{ $section['key'] }}">
+                                <x-filament::input.wrapper class="min-w-[16rem] flex-1">
+                                    <x-filament::input type="text" wire:model="instructions.{{ $section['key'] }}" maxlength="1000"
+                                        placeholder="{{ __('ui.dashboard.reports.view.instruct_placeholder') }}" aria-label="{{ __('ui.dashboard.reports.view.instruct_label') }}" />
+                                </x-filament::input.wrapper>
+                                <x-filament::button size="xs" color="gray" wire:click="instruct('{{ $section['key'] }}')">{{ __('ui.dashboard.reports.view.instruct_button') }}</x-filament::button>
+                            </div>
+
+                            @if (in_array($section['key'], $factOffers, true))
+                                <div class="rounded-lg bg-warning-50 p-3 text-sm dark:bg-white/5" wire:key="offer-{{ $section['key'] }}">
+                                    <p>{{ __('ui.dashboard.reports.view.fact_offer', ['section' => $section['title']]) }}</p>
+                                    @if ($factSection === $section['key'])
+                                        <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                                            <x-filament::input.wrapper><x-filament::input.select wire:model="factTask">
+                                                <option value="">{{ __('ui.dashboard.reports.view.fact_task') }}…</option>
+                                                @foreach ($this->reportTasks() as $id => $title)<option value="{{ $id }}">{{ $title }}</option>@endforeach
+                                            </x-filament::input.select></x-filament::input.wrapper>
+                                            <x-filament::input.wrapper><x-filament::input type="date" wire:model="factDate" /></x-filament::input.wrapper>
+                                            <x-filament::input.wrapper class="sm:col-span-2"><x-filament::input type="text" wire:model="factSummary" maxlength="300" placeholder="{{ __('ui.dashboard.reports.view.fact_summary') }}" /></x-filament::input.wrapper>
+                                        </div>
+                                        <div class="mt-2 flex gap-2">
+                                            <x-filament::button size="xs" wire:click="saveFact">{{ __('ui.dashboard.reports.view.fact_save') }}</x-filament::button>
+                                            <x-filament::button size="xs" color="gray" wire:click="dismissFact('{{ $section['key'] }}')">{{ __('ui.dashboard.reports.view.fact_dismiss') }}</x-filament::button>
+                                        </div>
+                                    @else
+                                        <div class="mt-2 flex gap-2">
+                                            <x-filament::button size="xs" wire:click="openFact('{{ $section['key'] }}')">{{ __('ui.dashboard.reports.view.fact_save') }}</x-filament::button>
+                                            <x-filament::button size="xs" color="gray" wire:click="dismissFact('{{ $section['key'] }}')">{{ __('ui.dashboard.reports.view.fact_dismiss') }}</x-filament::button>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         @endforeach
                     </div>
 

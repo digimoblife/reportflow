@@ -76,4 +76,23 @@ final readonly class ReportDataSet
     {
         return array_map('intval', array_keys($this->tasks));
     }
+
+    /**
+     * The same data plus extra activities (kept in date order, incidents recomputed). Used to show the model and the
+     * report what an edit will look like before the activities are written.
+     *
+     * @param  list<array{id: int, task_id: int, date: string, type: string, summary: string, source: string}>  $extra
+     */
+    public function withActivities(array $extra): self
+    {
+        $all = [...$this->activities, ...$extra];
+        usort($all, fn (array $x, array $y): int => [$x['date'], $x['id']] <=> [$y['date'], $y['id']]);
+
+        $incidents = array_values(array_map(
+            fn (array $a): int => $a['id'],
+            array_filter($all, fn (array $a): bool => in_array($a['type'], ['blocker', 'resolution'], true)),
+        ));
+
+        return new self($this->projectId, $this->projectName, $this->periodStart, $this->periodEnd, $this->timezone, $this->snapshotAt, $all, $this->tasks, $this->completedTaskIds, $this->ongoingTaskIds, $this->waitingTaskIds, $this->crossMonthTaskIds, $incidents);
+    }
 }

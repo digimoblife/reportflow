@@ -260,3 +260,69 @@ describe('report page', function () {
         Livewire::test(ViewReport::class, ['record' => $report->getKey()])->assertDontSee('Files are being prepared');
     });
 });
+
+describe('editing by instruction on the report page', function () {
+    /** The model finds $facts (and $unmatched) in an instruction and writes a plain narrative. */
+    function dashboardAi(array $facts = [], array $unmatched = []): void
+    {
+        fakeAi()->using(function (AiRequest $r) use ($facts, $unmatched) {
+            $p = json_decode($r->user, true);
+
+            return $r->purpose === 'report_instruction'
+                ? json_encode(['new_facts' => $facts, 'unmatched_facts' => $unmatched])
+                : json_encode(['markdown' => 'Work centred on {{task:'.$p['tasks'][0]['id'].'}}.', 'used_task_ids' => [$p['tasks'][0]['id']]]);
+        });
+    }
+
+    it('applies an instruction with a new fact: activity saved, new version loaded', function () {
+        $report = reviewReport();
+        dashboardAi([['task_id' => $this->task->id, 'summary' => 'The outage lasted 25 minutes.', 'date' => '2026-09-14', 'activity_type' => 'blocker']]);
+
+        $page = Livewire::test(ViewReport::class, ['record' => $report->getKey()])
+            ->set('instructions.incidents', 'Add the downtime: outage of 25 minutes on 14 September')->call('instruct', 'incidents');
+
+        $report = $report->fresh();
+        expect($report->currentVersion->version_no)->toBe(2)->and($report->currentVersion->created_by)->toBe(ReportCreatedBy::InstructionEdit)
+            ->and(Activity::query()->where('source', 'report_edit')->count())->toBe(1);
+        $page->assertSet('loadedVersionId', $report->current_version_id)->assertSet('instructions.incidents', '')->assertSee('The outage lasted 25 minutes.')->assertSee('Edited by instruction');
+    });
+
+    it('explains when a fact fits no task, and changes nothing', function () {
+        $report = reviewReport();
+        dashboardAi([], ['A server move in August']);
+
+        Livewire::test(ViewReport::class, ['record' => $report->getKey()])
+            ->set('instructions.incidents', 'Mention the server move')->call('instruct', 'incidents')
+            ->assertNotified(__('ui.dashboard.reports.notices.unmatched', ['facts' => 'A server move in August']));
+
+        expect(ReportVersion::query()->count())->toBe(1);
+    });
+
+    it('offers to save numbers typed into a section as an activity, and saves it on request', function () {
+        $report = reviewReport();
+        $current = $report->currentVersion;
+        $overview = collect($current->content['sections'])->firstWhere('key', 'overview')['markdown'];
+
+        $page = Livewire::test(ViewReport::class, ['record' => $report->getKey()])
+            ->set('sections.overview', $overview."\n\nThe outage lasted 25 minutes.")->call('saveSections')
+            ->assertSet('factOffers', ['overview'])->assertSee('Save them as an activity too');
+
+        $page->call('openFact', 'overview')->set('factTask', (string) $this->task->id)->set('factDate', '2026-09-14')->set('factSummary', 'The outage lasted 25 minutes.')->set('factType', 'blocker')
+            ->call('saveFact')->assertNotified(__('ui.dashboard.reports.notices.fact_saved'))->assertSet('factOffers', []);
+
+        $activity = Activity::query()->where('source', 'report_edit')->sole();
+        expect($activity->summary)->toBe('The outage lasted 25 minutes.')->and($activity->task_id)->toBe($this->task->id);
+    });
+
+    it('refuses an invalid fact without saving', function () {
+        $report = reviewReport();
+        $overview = collect($report->currentVersion->content['sections'])->firstWhere('key', 'overview')['markdown'];
+
+        Livewire::test(ViewReport::class, ['record' => $report->getKey()])
+            ->set('sections.overview', $overview.' 25')->call('saveSections')
+            ->call('openFact', 'overview')->set('factTask', '999999')->set('factSummary', 'Something happened')->call('saveFact')
+            ->assertNotified(__('ui.dashboard.reports.notices.invalid'));
+
+        expect(Activity::query()->where('source', 'report_edit')->count())->toBe(0);
+    });
+});

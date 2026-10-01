@@ -1,0 +1,24 @@
+{
+  "$id": "report_instruction.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["new_facts", "unmatched_facts"],
+  "properties": {
+    "new_facts": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["task_id", "summary", "date", "activity_type"],
+        "properties": {
+          "task_id": {"type": "integer", "minimum": 1},
+          "summary": {"type": "string", "minLength": 3, "maxLength": 300},
+          "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+          "activity_type": {"type": "string", "enum": ["request", "investigation", "development", "configuration", "bug_fix", "testing", "deployment", "communication", "research", "documentation", "milestone", "blocker", "resolution", "follow_up", "other"]}
+        }
+      }
+    },
+    "unmatched_facts": {"type": "array", "maxItems": 5, "items": {"type": "string", "maxLength": 200}}
+  }
+}
