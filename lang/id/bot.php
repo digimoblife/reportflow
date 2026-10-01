@@ -259,6 +259,33 @@ return [
         ],
     ],
 
+    'reminder' => [
+        'daily' => [
+            'Selamat sore! Belum ada catatan pekerjaan hari ini. Ada yang sudah dikerjakan?',
+            'Nuwun sewu, hari ini belum ada catatan pekerjaan di arsip. Ada yang mau dicatat?',
+        ],
+        'add_prompt' => [
+            'Monggo, tulis saja pekerjaannya di sini, nanti saya catat.',
+            'Siap, ketik saja apa yang sudah dikerjakan, saya yang mencatat.',
+        ],
+        'none_done' => [
+            'Baik, hari ini tidak saya ingatkan lagi.',
+            'Siap, pengingat hari ini saya tutup.',
+        ],
+        'snoozed' => [
+            'Baik, saya ingatkan lagi satu jam lagi.',
+            'Siap, satu jam lagi saya ingatkan.',
+        ],
+        'snooze_limit' => [
+            'Sudah tiga kali ditunda, jadi pengingat hari ini saya tutup.',
+            'Penundaan sudah tiga kali, pengingat hari ini saya tutup ya.',
+        ],
+        'answered' => [
+            'Pengingat ini sudah ditanggapi.',
+            'Pengingat ini sudah dijawab sebelumnya.',
+        ],
+    ],
+
     'sync' => [
         'answered_via_dashboard' => [
             '✅ Sudah dijawab lewat dashboard.',

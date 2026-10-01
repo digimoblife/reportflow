@@ -15,6 +15,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
+ * @property int $id
+ * @property ReminderType $type
+ * @property array<string, mixed> $schedule
+ * @property array<string, mixed> $config
+ * @property bool $enabled
+ *
  * PRD §28, §32, §49 reminder_rules. project_id null = global rule.
  */
 #[Fillable(['user_id', 'project_id', 'type', 'schedule', 'config', 'priority', 'enabled'])]

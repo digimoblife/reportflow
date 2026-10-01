@@ -258,6 +258,33 @@ return [
         ],
     ],
 
+    'reminder' => [
+        'daily' => [
+            'Hi! No work notes yet today. Did you work on anything?',
+            'Quick nudge: nothing is logged for today yet. Anything to note down?',
+        ],
+        'add_prompt' => [
+            "Go ahead and just write what you did here, I'll log it.",
+            'Sure, type what you worked on and I will note it down.',
+        ],
+        'none_done' => [
+            'Okay, no more reminders today.',
+            'Fine, I will close today\'s reminder.',
+        ],
+        'snoozed' => [
+            "Okay, I'll remind you again in an hour.",
+            'Sure, one more reminder in an hour.',
+        ],
+        'snooze_limit' => [
+            "That's three snoozes, so I'm closing today's reminder.",
+            'Snoozed three times already, so today\'s reminder is closed.',
+        ],
+        'answered' => [
+            'This reminder was already answered.',
+            'Already answered earlier.',
+        ],
+    ],
+
     'sync' => [
         'answered_via_dashboard' => [
             '✅ Already answered via the dashboard.',

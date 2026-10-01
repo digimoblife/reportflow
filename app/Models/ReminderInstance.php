@@ -13,13 +13,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $reminder_rule_id
+ * @property ReminderState $status
+ * @property Carbon|null $next_run_at
+ * @property Carbon|null $sent_at
+ * @property Carbon|null $snoozed_until
+ * @property int|null $telegram_message_id
+ * @property string|null $action_taken
+ * @property Carbon|null $reminder_date
+ * @property int $send_count
+ * @property int $snooze_count
+ * @property ReminderRule $rule
+ *
  * PRD §29, §49 reminder_instances.
  */
 #[Fillable([
     'reminder_rule_id', 'task_id', 'next_run_at', 'status', 'sent_at', 'snoozed_until', 'telegram_message_id',
-    'action_taken',
+    'action_taken', 'reminder_date', 'send_count', 'snooze_count',
 ])]
 class ReminderInstance extends Model implements UserScoped
 {
@@ -37,6 +51,9 @@ class ReminderInstance extends Model implements UserScoped
             'sent_at' => 'datetime',
             'snoozed_until' => 'datetime',
             'telegram_message_id' => 'integer',
+            'reminder_date' => 'date:Y-m-d',
+            'send_count' => 'integer',
+            'snooze_count' => 'integer',
         ];
     }
 
