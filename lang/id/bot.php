@@ -259,6 +259,13 @@ return [
         ],
     ],
 
+    'sync' => [
+        'answered_via_dashboard' => [
+            '✅ Sudah dijawab lewat dashboard.',
+            '✅ Pertanyaan ini sudah dijawab di dashboard.',
+        ],
+    ],
+
     'callback' => [
         'answered' => [
             'Pertanyaan ini sudah dijawab.',

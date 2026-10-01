@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Domain\Tasks\InvalidTaskStatusTransition;
 use App\Enums\OutcomeState;
 use App\Enums\TaskStatus;
+use App\Jobs\SyncTelegramBubbles;
 use App\Models\InboundMessage;
 use App\Models\Project;
 use App\Models\Task;
@@ -101,6 +102,10 @@ class WorklogInput extends Page
         $undone = app(UndoService::class)->undo($message, $index === null ? null : [$index]);
 
         $partial = array_filter($undone, fn (array $u): bool => $u['partial']) !== [];
+        if ($undone !== []) {
+            SyncTelegramBubbles::dispatchFor($message, SyncTelegramBubbles::REFRESH);
+        }
+
         $this->notice = (string) __($undone === [] ? 'ui.dashboard.worklog.notices.not_possible' : ($partial ? 'ui.dashboard.worklog.notices.undone_partial' : 'ui.dashboard.worklog.notices.undone'));
         $this->noticeKind = $undone === [] ? 'warning' : 'success';
         $this->closePanel();
@@ -146,6 +151,10 @@ class WorklogInput extends Page
             $this->noticeKind = 'warning';
 
             return;
+        }
+
+        if ($result !== null) {
+            SyncTelegramBubbles::dispatchFor($message, SyncTelegramBubbles::REFRESH);
         }
 
         $this->notice = (string) __($result === null ? 'ui.dashboard.worklog.notices.not_possible' : 'ui.dashboard.worklog.notices.done');

@@ -258,6 +258,13 @@ return [
         ],
     ],
 
+    'sync' => [
+        'answered_via_dashboard' => [
+            '✅ Already answered via the dashboard.',
+            '✅ This question was answered on the dashboard.',
+        ],
+    ],
+
     'callback' => [
         'answered' => [
             'This question was already answered.',

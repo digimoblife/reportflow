@@ -614,3 +614,11 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - `TaskResource`: daftar (filter status/project/periode `last_activity_at` dalam hari kalender user, pencarian judul, polling 10 dtk) dan halaman detail (detail, aktivitas, riwayat `task_events`). Tidak ada buat/hapus di UI: task lahir dari catatan, dan setiap perubahan lewat `TaskLifecycle`.
 - Edit di halaman detail: ubah judul (`TaskLifecycle::rename`, event `title_changed`), ubah status (opsi dari matriks, `changeStatus`), pindahkan aktivitas (`ActivityMover`: event `moved` di task asal dan tujuan dengan `activity_ids`, `project_id` aktivitas mengikuti task tujuan, `last_activity_at` dihitung ulang dari `activity_date` terbaru, baris `corrections(move_task)` tanpa pesan).
 - Optimistic locking: halaman menyimpan `loadedVersion` (terkunci) saat dibuka dan memakainya sebagai `expectedVersion`. Bila task berubah dari channel lain, edit ditolak dengan notifikasi "Task ini baru saja diubah…" dan aksi "Muat ulang" memperbarui versi.
+
+## M5d — Inbox dan sinkronisasi dua arah (PRD §22, §23, §74)
+
+- `PendingAnswerService` (Worklog) menjawab pertanyaan klarifikasi untuk semua channel; `PendingAnswerHandler` (Telegram) hanya pembungkus. Jawaban kedua dari channel mana pun menemukan item tidak lagi `pending` dan tidak menulis apa-apa ("sudah dijawab").
+  `ProposalApplier::applyPending` kini mempertahankan `question_message_id` pada item hasil, agar channel lain tetap bisa menemukan bubble pertanyaannya.
+- Halaman `Inbox`: pesan `failed` / `needs_clarification` dari kedua channel, polling 5 dtk. Teks dan tombol pertanyaan memakai `ConfirmationComposer::question()` yang sama dengan Telegram (callback data di-parse menjadi aksi Livewire), jadi tidak ada logika pertanyaan ganda.
+- `SyncTelegramBubbles` (job idempoten, hanya id): Dashboard → Telegram. `answered`: bubble pertanyaan menjadi "✅ Sudah dijawab lewat dashboard" (+ hasil dan tombol koreksi bila diterapkan) lalu konfirmasi digambar ulang; `refresh`: setelah undo/koreksi dari dashboard; `reprocessed`: bubble lama ditutup, konfirmasi kembali "⏳". Pesan asal dashboard tidak punya bubble sehingga tidak ada job. Telegram → dashboard otomatis lewat polling.
+- Keputusan sederhana M5: pertanyaan untuk catatan yang berasal dari dashboard hanya muncul di dashboard.

@@ -92,6 +92,20 @@ return [
                 'undone' => 'Undone',
             ],
         ],
+        'inbox' => [
+            'nav' => 'Inbox',
+            'title' => 'Inbox',
+            'intro' => 'Notes that failed to process or wait for your answer, from Telegram and the dashboard.',
+            'empty' => 'All clear, nothing is held up.',
+            'failed' => 'Failed to process. The original note is safely stored.',
+            'reprocess' => 'Reprocess',
+            'notices' => [
+                'answered' => 'Answer saved.',
+                'already' => 'This question was already answered.',
+                'reprocessing' => 'Reprocessing the note.',
+                'busy' => 'That note is already being processed.',
+            ],
+        ],
         'worklog' => [
             'nav' => 'Log Work',
             'title' => 'Log Work',

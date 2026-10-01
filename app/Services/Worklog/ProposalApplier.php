@@ -104,6 +104,8 @@ class ProposalApplier
                 : null;
 
             $written = $this->write($message, $pending->index, $data, $task, $project, $status, $when);
+            // Keep the bubble that asked the question: the other channel still has to find and close it.
+            $written = $written->with(['question_message_id' => $pending->questionMessageId]);
 
             $outcome = Outcome::fromArray($message->outcome);
 

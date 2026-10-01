@@ -92,6 +92,20 @@ return [
                 'undone' => 'Dibatalkan',
             ],
         ],
+        'inbox' => [
+            'nav' => 'Inbox',
+            'title' => 'Inbox',
+            'intro' => 'Catatan yang gagal diproses atau menunggu jawaban Anda, dari Telegram maupun dashboard.',
+            'empty' => 'Beres, tidak ada yang tertahan.',
+            'failed' => 'Gagal diproses. Catatan aslinya aman tersimpan.',
+            'reprocess' => 'Proses ulang',
+            'notices' => [
+                'answered' => 'Jawaban disimpan.',
+                'already' => 'Pertanyaan ini sudah dijawab.',
+                'reprocessing' => 'Catatan diproses ulang.',
+                'busy' => 'Catatan itu sedang diproses.',
+            ],
+        ],
         'worklog' => [
             'nav' => 'Catat Pekerjaan',
             'title' => 'Catat Pekerjaan',
