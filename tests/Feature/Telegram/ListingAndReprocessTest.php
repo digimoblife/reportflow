@@ -28,13 +28,21 @@ function lastSent(): array
 }
 
 describe('/projects and /project', function () {
-    it('lists active projects with their active task counts', function () {
+    it('lists active projects with their active and completed task counts', function () {
         send('/projects', 10);
 
         $text = lastSent()['text'];
-        expect($text)->toContain('📁 Harbor Portal — 4 task aktif')
-            ->and($text)->toContain('📁 Kedai App — 1 task aktif')
+        expect($text)->toContain('📁 Harbor Portal — 4 task aktif · 2 selesai')
+            ->and($text)->toContain('📁 Kedai App — 1 task aktif · 0 selesai')
             ->and($text)->not->toContain('Old Thing');
+    });
+
+    it('counts a completed task in the list even though it is not active', function () {
+        $this->w['kedai']->tasks()->getRelated()->newQuery()->create(['project_id' => $this->w['kedai']->id, 'title' => 'Done thing', 'status' => 'completed', 'type' => 'task', 'priority' => 'normal']);
+
+        send('/projects', 10);
+
+        expect(lastSent()['text'])->toContain('📁 Kedai App — 1 task aktif · 1 selesai');
     });
 
     it('shows one project by name or alias, and a picker for ambiguous words', function () {

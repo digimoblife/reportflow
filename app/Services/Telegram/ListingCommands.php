@@ -40,12 +40,14 @@ class ListingCommands
             return $this->plain($this->messages->get('list.projects_empty', $language));
         }
 
-        $counts = $this->activeCounts(array_values($projects->pluck('id')->map(fn ($id): int => (int) $id)->all()));
+        $ids = array_values($projects->pluck('id')->map(fn ($id): int => (int) $id)->all());
+        $counts = $this->countsByStatus($ids, self::ACTIVE);
+        $completed = $this->countsByStatus($ids, [TaskStatus::Completed]);
         $lang = $language->value;
         $lines = [$this->messages->get('list.projects_title', $language, ['count' => $projects->count()]), ''];
 
         foreach ($projects as $project) {
-            $lines[] = '📁 '.$project->name.' — '.($counts[$project->id] ?? 0).' '.$this->label('active_tasks', $lang);
+            $lines[] = '📁 '.$project->name.' — '.($counts[$project->id] ?? 0).' '.$this->label('active_tasks', $lang).' · '.($completed[$project->id] ?? 0).' '.$this->label('completed_tasks', $lang);
         }
 
         return $this->plain($this->fit($lines));
@@ -320,12 +322,13 @@ class ListingCommands
 
     /**
      * @param  list<int>  $projectIds
-     * @return array<int, int>
+     * @param  list<TaskStatus>  $statuses
+     * @return array<int, int> task count per project id, for the given statuses
      */
-    private function activeCounts(array $projectIds): array
+    private function countsByStatus(array $projectIds, array $statuses): array
     {
         /** @var array<int, int> $counts */
-        $counts = Task::query()->whereIn('project_id', $projectIds)->whereIn('status', self::ACTIVE)
+        $counts = Task::query()->whereIn('project_id', $projectIds)->whereIn('status', $statuses)
             ->selectRaw('project_id, count(*) as total')->groupBy('project_id')->pluck('total', 'project_id')->map(fn ($n): int => (int) $n)->all();
 
         return $counts;
