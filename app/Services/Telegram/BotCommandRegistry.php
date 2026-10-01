@@ -17,7 +17,7 @@ final class BotCommandRegistry
 
     public function __construct()
     {
-        $available = ['start', 'help', 'undo', 'projects', 'project', 'tasks', 'task', 'inbox', 'reminder', 'review', 'reports'];
+        $available = ['start', 'help', 'undo', 'projects', 'project', 'tasks', 'task', 'inbox', 'reminder', 'review', 'reports', 'report'];
 
         $this->commands = [];
         foreach ([

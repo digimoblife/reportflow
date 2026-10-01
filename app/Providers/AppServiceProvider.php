@@ -18,6 +18,7 @@ use App\Services\Telegram\HttpTelegramClient;
 use App\Services\Telegram\NavigationHandler;
 use App\Services\Telegram\PendingAnswerHandler;
 use App\Services\Telegram\ReminderHandler;
+use App\Services\Telegram\ReportCommands;
 use App\Services\Telegram\ReportReviewHandler;
 use App\Services\Telegram\TelegramClient;
 use App\Services\Worklog\Extraction\ConfidencePolicy;
@@ -95,6 +96,7 @@ class AppServiceProvider extends ServiceProvider
             $this->app->make(NavigationHandler::class)->register($router);
             $this->app->make(ReminderHandler::class)->register($router);
             $this->app->make(ReportReviewHandler::class)->register($router);
+            $router->onReportStart(fn ($data, $update, $user, $language) => $this->app->make(ReportCommands::class)->startFromButton($data, $update, $user, $language));
         });
 
         RateLimiter::for('telegram-webhook', fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip() ?? 'unknown'));

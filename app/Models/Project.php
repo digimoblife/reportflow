@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string $slug
  * @property ProjectStatus $status
+ * @property Language|null $default_language
  * @property array<int, mixed>|null $aliases
  *
  * PRD §17, §49 projects.

@@ -282,7 +282,7 @@ return [
         'cross_month' => 'Lintas bulan',
         'incidents' => 'Insiden / kendala',
         'fallback_note' => ':count bagian memakai kalimat tetap karena narasi AI tidak lolos pemeriksaan.',
-        'buttons' => ['approve' => '✅ Approve', 'regenerate' => '🔄 Regenerate', 'edit' => '✏️ Edit via instruksi', 'dashboard' => '🌐 Buka di Dashboard', 'cancel' => '✖️ Cancel', 'back' => '⬅️ Kembali'],
+        'buttons' => ['wait' => '⏳ Tunggu selesai', 'skip' => '⏭ Tanpa entri ini', 'new_version' => '🆕 Buat versi baru', 'dismiss' => 'Biarkan', 'approve' => '✅ Approve', 'regenerate' => '🔄 Regenerate', 'edit' => '✏️ Edit via instruksi', 'dashboard' => '🌐 Buka di Dashboard', 'cancel' => '✖️ Cancel', 'back' => '⬅️ Kembali'],
     ],
 
     'lists' => [

@@ -282,7 +282,7 @@ return [
         'cross_month' => 'Cross-month',
         'incidents' => 'Incidents / issues',
         'fallback_note' => ':count section(s) use a fixed sentence because the AI narrative did not pass the checks.',
-        'buttons' => ['approve' => '✅ Approve', 'regenerate' => '🔄 Regenerate', 'edit' => '✏️ Edit via instruction', 'dashboard' => '🌐 Open in Dashboard', 'cancel' => '✖️ Cancel', 'back' => '⬅️ Back'],
+        'buttons' => ['wait' => '⏳ Wait until finished', 'skip' => '⏭ Without these entries', 'new_version' => '🆕 New version', 'dismiss' => 'Leave it', 'approve' => '✅ Approve', 'regenerate' => '🔄 Regenerate', 'edit' => '✏️ Edit via instruction', 'dashboard' => '🌐 Open in Dashboard', 'cancel' => '✖️ Cancel', 'back' => '⬅️ Back'],
     ],
 
     'lists' => [

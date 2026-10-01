@@ -59,6 +59,7 @@ class CommandRouter
             'task' => $this->show($chatId, $this->listing->task($argument, $language, $user->timezone)),
             'inbox' => $this->show($chatId, $this->listing->inbox($language, $user->timezone)),
             'reminder' => $this->reminder($user, $chatId, $language, $argument),
+            'report' => $this->reports->start($user, $chatId, $language, $argument),
             'review' => $this->reports->review($user, $chatId, $language),
             'reports' => $this->reports->reports($user, $chatId, $language),
             default => null,

@@ -314,6 +314,30 @@ return [
     ],
 
     'report' => [
+        'start_usage' => [
+            'Write the month like /report 2026-09, or just /report for the month being reported.',
+            'Month format: /report 2026-09. Without it I pick the right month.',
+        ],
+        'no_activity' => [
+            'There are no notes in :month yet, so there is nothing to report.',
+            ':month is still empty, no activity to report.',
+        ],
+        'pick_project' => [
+            'Which project is the :month report for?',
+            'Pick the project for the :month report:',
+        ],
+        'pending_entries' => [
+            ':count note(s) are still being processed, so not everything is in the report yet. Wait, or generate without them?',
+            ':count note(s) are still processing. Wait until they finish, or generate without them?',
+        ],
+        'already_approved' => [
+            'The :period report is already approved. Make a new version?',
+            'The :period report is final. Want a new version?',
+        ],
+        'dismissed' => [
+            'Okay, nothing was changed.',
+            'Fine, I left it as it was.',
+        ],
         'review_intro' => [
             'The report draft is ready. Have a look before deciding.',
             "Here's the draft report. Check the summary, then choose what to do.",

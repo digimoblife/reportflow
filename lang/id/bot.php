@@ -315,6 +315,30 @@ return [
     ],
 
     'report' => [
+        'start_usage' => [
+            'Tulis bulannya seperti /report 2026-09, atau /report saja untuk bulan yang sedang dilaporkan.',
+            'Format bulan: /report 2026-09. Tanpa tambahan, saya pilih bulan yang pas.',
+        ],
+        'no_activity' => [
+            'Belum ada catatan di bulan :month, jadi belum ada yang bisa dilaporkan.',
+            'Bulan :month masih kosong, belum ada aktivitas untuk dilaporkan.',
+        ],
+        'pick_project' => [
+            'Laporan :month untuk project yang mana?',
+            'Pilih project untuk laporan :month:',
+        ],
+        'pending_entries' => [
+            ':count catatan masih diproses, jadi belum semuanya masuk ke laporan. Tunggu dulu atau buat tanpa catatan itu?',
+            'Masih ada :count catatan yang diproses. Mau menunggu sampai selesai, atau buat laporan tanpa catatan itu?',
+        ],
+        'already_approved' => [
+            'Laporan :period sudah disetujui. Buat versi baru?',
+            'Laporan :period sudah final. Mau dibuatkan versi baru?',
+        ],
+        'dismissed' => [
+            'Baik, tidak ada yang diubah.',
+            'Siap, saya biarkan seperti semula.',
+        ],
         'review_intro' => [
             'Draft laporan sudah siap. Silakan ditinjau dulu, nggih.',
             'Ini draft laporannya. Cek ringkasannya, lalu putuskan langkah berikutnya.',

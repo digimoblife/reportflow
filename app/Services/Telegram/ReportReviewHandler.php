@@ -49,6 +49,14 @@ class ReportReviewHandler
 
         $current = $report->currentVersion;
 
+        // Choices that are not about a particular version: "wait / skip entries" and "new version / dismiss".
+        if (in_array($data->action, ['wt', 'sk', 'nv', 'ig'], true)) {
+            $this->messenger->tryAnswer($callbackId);
+            $this->unversioned($data, $report, $update, $language);
+
+            return;
+        }
+
         // A press made on an older review: show the newest instead of acting on something the person no longer sees.
         if ($current === null || $current->version_no !== $data->versionNo) {
             $this->messenger->tryAnswer($callbackId, $this->messages->get('report.stale', $language));
@@ -68,6 +76,19 @@ class ReportReviewHandler
             'cx' => $this->cancel($report, $update, $language),
             default => null,
         };
+    }
+
+    private function unversioned(ReportCallback $data, Report $report, TelegramUpdate $update, Language $language): void
+    {
+        if ($data->action === 'ig') {
+            $this->edit($update, $this->messages->get('report.dismissed', $language), []);
+
+            return;
+        }
+
+        $result = $this->requests->request($report->project, $report->period_start->format('Y-m-d'), $report->period_end->format('Y-m-d'), $report->language, $data->action === 'wt', 'telegram');
+
+        $this->edit($update, $this->messages->get($result['status'] === ReportRequests::QUEUED ? 'report.generating' : 'report.busy', $language), []);
     }
 
     /**
