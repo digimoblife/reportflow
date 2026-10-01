@@ -730,3 +730,11 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - **Restore test** (`restore-test.sh`): newest local (else remote) archive → checksum → decrypt → files vs. manifest → scratch database `restore_test_<epoch>` (dropped afterwards) → table count ≤ live, row counts printed. Never touches the live database. `restore.sh` restores only into a new database/directory, requires `--yes`, refuses the live database name and non-empty directories.
 - **Compose:** `backup` service behind `profiles: ["backup"]` (cron from `BACKUP_CRON`, default 19:00 UTC); the scheduler joined `reportflow-public` because `ops:check` sends Telegram alerts directly.
 - A real run (backup → rclone → restore-test) passed against the dev database. Note: `docker compose down -v` deletes the dev data volumes; never use it for cleanup here.
+
+## M9d — `reportflow:purge` (PRD §57)
+
+- `reportflow:purge activity|task|project|report|message {id}` or `user` (all data of one user; the user row stays). `--user=ID` is required when there is more than one user. **Dry run unless `--force`**, and `--force` still asks for confirmation. Output is counts per table only.
+- One transaction, children before parents with raw `DB::table` deletes (this deliberately bypasses model hooks, including the "approved report versions are immutable" guard: purge is the one sanctioned way to remove them). Report files leave the `reports` disk after the commit. `last_activity_at` of surviving tasks is recomputed from the remaining activities (same rule as `ActivityMover`).
+- Cascade rules: project → tasks, activities, reports (+versions, files), templates, reminder rules/instances, and the AI logs of that project; task → its activities, events, people links; report → versions, files, AI logs of the report; message → its AI logs and corrections.
+- What it does **not** reach unless asked: the message an activity came from (`--with-messages`), the activities a message created (`--with-activities`, message target), and report versions of other reports that were built from a purged activity (reported as a note count; purge those reports too). AI logs of a purged *task* are removed only through its messages, because they cannot be tied to a task without parsing JSON input.
+- The trace is `system_events(type=purge)` with the target and row counts only.
