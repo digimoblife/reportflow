@@ -1,0 +1,10 @@
+{
+  "$id": "report_section.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["markdown", "used_task_ids"],
+  "properties": {
+    "markdown": {"type": "string", "minLength": 1, "maxLength": 1500},
+    "used_task_ids": {"type": "array", "maxItems": 60, "items": {"type": "integer", "minimum": 1}}
+  }
+}

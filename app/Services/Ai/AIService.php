@@ -20,6 +20,8 @@ class AIService
 
     public const PURPOSE_CORRECTION = 'worklog_correction';
 
+    public const PURPOSE_REPORT_SECTION = 'report_section';
+
     private const MAX_ATTEMPTS = 2;
 
     public function __construct(
@@ -100,10 +102,42 @@ class AIService
     }
 
     /**
+     * One report section's narrative (PRD §44): the model is shown only that section's data and answers with JSON
+     * `{markdown, used_task_ids}`. `$validate` returns error codes (schema + traceability); a rejected reply is retried
+     * once with the codes, then AiExtractionFailed. The caller falls back to the deterministic text.
+     *
+     * @param  array<string, mixed>  $payload  language, section, project, period, counts, tasks, activities, optional instruction
+     * @param  \Closure(array<mixed>): list<string>  $validate
+     *
+     * @throws AiProviderException
+     * @throws AiExtractionFailed
+     * @throws JsonException
+     */
+    public function writeReportSection(array $payload, \Closure $validate, int $reportId, int $projectId): ExtractionOutcome
+    {
+        $prompt = $this->prompts->load((string) config('ai.report_section.prompt'));
+
+        return $this->run(
+            self::PURPOSE_REPORT_SECTION,
+            $prompt['version'],
+            $payload,
+            function (array $retryCodes) use ($prompt, $payload): AiRequest {
+                $body = $retryCodes === [] ? $payload : $payload + ['previous_reply_rejected' => array_slice($retryCodes, 0, 10)];
+
+                return new AiRequest(self::PURPOSE_REPORT_SECTION, $prompt['version'], $prompt['text'], json_encode($body, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+            },
+            null,
+            $projectId,
+            $validate,
+            $reportId,
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $input
      * @param  callable(list<string>): AiRequest  $makeRequest
      */
-    private function run(string $purpose, string $promptVersion, array $input, callable $makeRequest, ?int $inboundMessageId, ?int $projectId): ExtractionOutcome
+    private function run(string $purpose, string $promptVersion, array $input, callable $makeRequest, ?int $inboundMessageId, ?int $projectId, ?\Closure $validate = null, ?int $reportId = null): ExtractionOutcome
     {
         $retryCodes = [];
         $tokensIn = 0;
@@ -115,7 +149,7 @@ class AIService
             try {
                 $response = $this->provider->complete($request);
             } catch (AiProviderException $e) {
-                $this->recorder->record($purpose, $this->provider->name(), $promptVersion, $input, null, false, 'provider_error', inboundMessageId: $inboundMessageId, projectId: $projectId);
+                $this->recorder->record($purpose, $this->provider->name(), $promptVersion, $input, null, false, 'provider_error', inboundMessageId: $inboundMessageId, projectId: $projectId, reportId: $reportId);
 
                 throw $e;
             }
@@ -126,7 +160,7 @@ class AIService
             $decoded = JsonOutput::decode($response->content);
             $codes = $decoded === null
                 ? [trim($response->content) === '' ? 'empty_reply' : 'invalid_json']
-                : $this->schema->errors($decoded);
+                : ($validate !== null ? $validate($decoded) : $this->schema->errors($decoded));
 
             $this->recorder->record(
                 $purpose,
@@ -141,10 +175,11 @@ class AIService
                 $response->latencyMs,
                 $inboundMessageId,
                 $projectId,
+                $reportId,
             );
 
-            if ($codes === [] && $decoded !== null) {
-                return new ExtractionOutcome($decoded, $promptVersion, $attempt, $tokensIn, $tokensOut);
+            if ($codes === []) {
+                return new ExtractionOutcome((array) $decoded, $promptVersion, $attempt, $tokensIn, $tokensOut);
             }
 
             $retryCodes = $codes;

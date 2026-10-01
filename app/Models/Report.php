@@ -14,8 +14,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $project_id
+ * @property ReportType $type
+ * @property Carbon $period_start
+ * @property Carbon $period_end
+ * @property Language $language
+ * @property int|null $template_id
+ * @property ReportStatus $status
+ * @property int|null $current_version_id
+ * @property Carbon|null $generation_lock_until
+ * @property Carbon|null $approved_at
+ * @property Project $project
+ *
  * PRD §36–§44, §49 reports.
  */
 #[Fillable([

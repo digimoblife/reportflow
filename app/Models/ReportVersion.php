@@ -15,8 +15,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $report_id
+ * @property int $version_no
+ * @property array<string, mixed> $content
+ * @property Carbon $data_snapshot_at
+ * @property list<int> $source_activity_ids
+ * @property ReportCreatedBy $created_by
+ * @property string|null $source_channel
+ * @property string|null $instruction
+ * @property int $version
+ *
  * PRD §23, §43, §44, §49 report_versions. Approved versions are immutable (enforced in M7).
  */
 #[Fillable([

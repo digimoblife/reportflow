@@ -26,10 +26,12 @@ class AiInteractionRecorder
         ?int $latencyMs = null,
         ?int $inboundMessageId = null,
         ?int $projectId = null,
+        ?int $reportId = null,
     ): AiInteraction {
         return AiInteraction::query()->create([
             'project_id' => $projectId,
             'inbound_message_id' => $inboundMessageId,
+            'report_id' => $reportId,
             'purpose' => $purpose,
             'model' => $model,
             'prompt_version' => $promptVersion,

@@ -25,6 +25,10 @@ return [
         'medium' => 0.70,
     ],
 
+    'report_section' => [
+        'prompt' => 'report_section@v1',
+    ],
+
     'correction' => [
         'prompt' => 'worklog_correction@v1',
     ],
