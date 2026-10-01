@@ -37,10 +37,10 @@ class ReminderPolicy
             return 'already_logged';
         }
 
+        // Every message counts, this reminder's own earlier sends (before a snooze) included.
         $sentToday = (int) ReminderInstance::query()
             ->where('sent_at', '>=', ReminderSchedule::dayStart($user, $date))
             ->where('sent_at', '<', ReminderSchedule::dayStart($user, $date)->addDay())
-            ->where('id', '!=', $instance->id)
             ->sum('send_count');
 
         return $sentToday >= ReminderSchedule::DAILY_LIMIT ? 'daily_limit' : null;
