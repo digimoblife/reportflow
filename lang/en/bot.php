@@ -178,6 +178,14 @@ return [
             "That change isn't possible.",
             'That change is not allowed.',
         ],
+        'reply_applied' => [
+            'Okay, fixed. Here is the updated note.',
+            "Done, I corrected it. Here's the result.",
+        ],
+        'reply_unchanged' => [
+            'I read your reply but found nothing to change. The note stays as it was.',
+            'Nothing changed. Try spelling out the fix, for example the task name or the status.',
+        ],
         'project_new_only' => [
             'Changing the project only works for new tasks. For an existing task use Move task.',
             'Existing tasks cannot change project; move the note with Move task instead.',

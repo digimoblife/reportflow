@@ -18,6 +18,8 @@ class AIService
 {
     public const PURPOSE_EXTRACTION = 'worklog_extraction';
 
+    public const PURPOSE_CORRECTION = 'worklog_correction';
+
     private const MAX_ATTEMPTS = 2;
 
     public function __construct(
@@ -44,18 +46,76 @@ class AIService
         $prompt = $this->prompts->load($promptReference ?? (string) config('ai.extraction.prompt'));
         $input = $this->input($message, $candidates, $today);
 
-        $projectId = $candidates->detectedProjectIds[0] ?? null;
+        return $this->run(
+            self::PURPOSE_EXTRACTION,
+            $prompt['version'],
+            $input,
+            fn (array $retryCodes): AiRequest => $this->buildRequest($message, $candidates, $today, $promptReference, $retryCodes),
+            $inboundMessageId,
+            $candidates->detectedProjectIds[0] ?? null,
+        );
+    }
+
+    /**
+     * Corrects the result of an earlier note from the person's reply to its confirmation (M4f). Same output schema,
+     * same validation and retry rules as extraction; the caller validates the proposal and applies it.
+     *
+     * @param  string  $original  the REDACTED original note
+     * @param  string  $correction  the REDACTED reply
+     * @param  list<array<string, mixed>>  $previous  what was recorded from the original note
+     *
+     * @throws AiProviderException
+     * @throws AiExtractionFailed
+     * @throws JsonException
+     */
+    public function correctWorklog(
+        #[\SensitiveParameter] string $original,
+        #[\SensitiveParameter] string $correction,
+        array $previous,
+        CandidateSet $candidates,
+        CarbonImmutable $today,
+        ?int $inboundMessageId = null,
+    ): ExtractionOutcome {
+        $prompt = $this->prompts->load((string) config('ai.correction.prompt'));
+        $input = [
+            'today' => $today->format('Y-m-d'),
+            'timezone' => $today->getTimezone()->getName(),
+            'original_message' => $original,
+            'previous_result' => $previous,
+            'correction' => $correction,
+        ] + $candidates->toPrompt();
+
+        return $this->run(
+            self::PURPOSE_CORRECTION,
+            $prompt['version'],
+            $input,
+            function (array $retryCodes) use ($prompt, $input): AiRequest {
+                $payload = $retryCodes === [] ? $input : $input + ['previous_reply_rejected' => array_slice($retryCodes, 0, 10)];
+
+                return new AiRequest(self::PURPOSE_CORRECTION, $prompt['version'], $prompt['text'], json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+            },
+            $inboundMessageId,
+            $candidates->detectedProjectIds[0] ?? null,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @param  callable(list<string>): AiRequest  $makeRequest
+     */
+    private function run(string $purpose, string $promptVersion, array $input, callable $makeRequest, ?int $inboundMessageId, ?int $projectId): ExtractionOutcome
+    {
         $retryCodes = [];
         $tokensIn = 0;
         $tokensOut = 0;
 
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
-            $request = $this->buildRequest($message, $candidates, $today, $promptReference, $retryCodes);
+            $request = $makeRequest($retryCodes);
 
             try {
                 $response = $this->provider->complete($request);
             } catch (AiProviderException $e) {
-                $this->recorder->record(self::PURPOSE_EXTRACTION, $this->provider->name(), $prompt['version'], $input, null, false, 'provider_error', inboundMessageId: $inboundMessageId, projectId: $projectId);
+                $this->recorder->record($purpose, $this->provider->name(), $promptVersion, $input, null, false, 'provider_error', inboundMessageId: $inboundMessageId, projectId: $projectId);
 
                 throw $e;
             }
@@ -69,9 +129,9 @@ class AIService
                 : $this->schema->errors($decoded);
 
             $this->recorder->record(
-                self::PURPOSE_EXTRACTION,
+                $purpose,
                 $response->model,
-                $prompt['version'],
+                $promptVersion,
                 $input,
                 $response->content,
                 $codes === [],
@@ -84,7 +144,7 @@ class AIService
             );
 
             if ($codes === [] && $decoded !== null) {
-                return new ExtractionOutcome($decoded, $prompt['version'], $attempt, $tokensIn, $tokensOut);
+                return new ExtractionOutcome($decoded, $promptVersion, $attempt, $tokensIn, $tokensOut);
             }
 
             $retryCodes = $codes;

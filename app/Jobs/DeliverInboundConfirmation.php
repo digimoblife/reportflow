@@ -111,7 +111,30 @@ class DeliverInboundConfirmation implements ShouldQueue
             return;
         }
 
+        $this->refreshCorrectedBubble($messenger, $composer, $message, $language, $user->timezone, $chatId);
+
         Cache::put($deliveredKey, true, self::DELIVERED_TTL_SECONDS);
+    }
+
+    /**
+     * After a reply correction replaced the old result, the old confirmation shows it as cancelled (no buttons).
+     */
+    private function refreshCorrectedBubble(TelegramMessenger $messenger, ConfirmationComposer $composer, InboundMessage $message, Language $language, string $timezone, int $chatId): void
+    {
+        $original = $message->correction_of_id === null ? null : InboundMessage::query()->find($message->correction_of_id);
+        $outcome = $original === null ? null : Outcome::fromArray($original->outcome);
+
+        if ($original === null || $outcome === null || $original->reply_message_id === null || $outcome->count(OutcomeState::Undone) === 0) {
+            return;
+        }
+
+        $view = $composer->confirmation($original, $outcome, $language, $timezone);
+
+        try {
+            $messenger->edit($chatId, $original->reply_message_id, $view['text'], $view['keyboard'] ?? []);
+        } catch (TelegramApiException) {
+            // Not modified, gone or not editable: the new confirmation already tells the story.
+        }
     }
 
     /**

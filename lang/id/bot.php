@@ -179,6 +179,14 @@ return [
             'Perubahan itu tidak bisa dilakukan.',
             'Tidak bisa, perubahan itu tidak diizinkan.',
         ],
+        'reply_applied' => [
+            'Nggih, saya perbaiki. Begini catatan yang baru.',
+            'Siap, sudah saya betulkan. Ini hasilnya.',
+        ],
+        'reply_unchanged' => [
+            'Saya baca balasan Anda, tapi belum menemukan yang perlu diubah. Catatan tetap seperti semula.',
+            'Belum ada yang berubah, nggih. Coba tulis perbaikannya lebih jelas, misalnya nama task atau statusnya.',
+        ],
         'project_new_only' => [
             'Ganti project hanya untuk task baru. Untuk task lama, pakai Pindah Task.',
             'Task lama tidak bisa pindah project; pindahkan catatannya lewat Pindah Task.',

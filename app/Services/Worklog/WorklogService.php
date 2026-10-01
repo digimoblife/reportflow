@@ -24,10 +24,22 @@ class WorklogService
         private readonly AIService $ai,
         private readonly ExtractionValidator $validator,
         private readonly ProposalApplier $applier,
+        private readonly ReplyCorrectionService $corrections,
     ) {}
 
     public function process(InboundMessage $message): WorklogResult
     {
+        if ($message->correction_of_id !== null && ($corrected = $this->corrections->process($message)) !== null) {
+            Log::info('worklog.corrected', [
+                'inbound_message_id' => $message->id,
+                'corrects' => $message->correction_of_id,
+                'items' => $corrected->proposal->summary(),
+                'applied' => $corrected->outcome->count(OutcomeState::Applied),
+            ]);
+
+            return $corrected;
+        }
+
         $user = User::query()->findOrFail($message->user_id);
         $today = CarbonImmutable::now($user->timezone)->startOfDay();
 

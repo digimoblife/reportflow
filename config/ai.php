@@ -25,6 +25,10 @@ return [
         'medium' => 0.70,
     ],
 
+    'correction' => [
+        'prompt' => 'worklog_correction@v1',
+    ],
+
     'extraction' => [
         'prompt' => 'worklog_extraction@v2',
         // Task lookback for Completed tasks in the candidate list (PRD §12).

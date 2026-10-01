@@ -41,10 +41,12 @@ class ConfirmationComposer
 
         if ($applied === [] && $undone > 0) {
             $lines = [$this->messages->get('undo.done', $language)];
+        } elseif ($applied === [] && $message->correction_of_id !== null && $pending === 0 && $rejected === 0) {
+            $lines = [$this->messages->get('correction.reply_unchanged', $language)];
         } elseif ($applied === []) {
             $lines = [$this->messages->get($pending > 0 ? 'worklog.pending_notice' : 'worklog.nothing_recorded', $language, ['count' => $pending])];
         } else {
-            $lines = [$this->messages->get('worklog.recorded', $language)];
+            $lines = [$this->messages->get($message->correction_of_id !== null ? 'correction.reply_applied' : 'worklog.recorded', $language)];
             $numbered = count($applied) > 1;
 
             foreach ($applied as $i => $item) {

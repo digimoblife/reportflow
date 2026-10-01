@@ -10,6 +10,7 @@ use App\Models\InboundMessage;
 use App\Models\User;
 use App\Services\Redaction\RedactionResult;
 use App\Services\Redaction\RedactionService;
+use App\Services\Worklog\Outcome;
 use App\Services\Worklog\ProjectService;
 use App\Support\UserContext;
 use Illuminate\Support\Carbon;
@@ -158,6 +159,7 @@ class TelegramIngestionService
             'edited_at' => $edited ? $now : null,
             'status' => InboundMessageStatus::Received->value,
             'reprocess_count' => 0,
+            'correction_of_id' => $update->isEdit() ? null : $this->correctionTarget($update, $user),
             'created_at' => $now,
             'updated_at' => $now,
         ]);
@@ -187,6 +189,24 @@ class TelegramIngestionService
         }
 
         ProcessInboundMessage::dispatch($message->id, $user->id);
+    }
+
+    /**
+     * A reply to one of the bot's confirmations that has applied items is a correction of that message (M4f, PRD §21).
+     */
+    private function correctionTarget(TelegramUpdate $update, User $user): ?int
+    {
+        if ($update->replyToMessageId === null) {
+            return null;
+        }
+
+        $target = InboundMessage::query()
+            ->where('telegram_chat_id', $update->chatId)
+            ->where('reply_message_id', $update->replyToMessageId)
+            ->whereIn('status', [InboundMessageStatus::Processed, InboundMessageStatus::NeedsClarification])
+            ->first();
+
+        return $target !== null && (Outcome::fromArray($target->outcome)?->applied() ?? []) !== [] ? $target->id : null;
     }
 
     private function handleEdit(TelegramUpdate $update, User $user, RedactionResult $redaction, Language $language): void

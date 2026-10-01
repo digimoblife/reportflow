@@ -561,3 +561,11 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - Proses ulang (`redo`) = `ReprocessService`: undo hasil run lama (`corrections(undo)`), status → `received`, `outcome` → null, `reprocess_count++`, job baru. Hanya dari `processed|failed|needs_clarification`; tekan ganda → "sedang diproses".
   Bubble pertanyaan lama diedit menjadi "diganti" tanpa tombol; bubble konfirmasi lama menjadi "⏳" lalu diedit oleh job pengiriman. Penanda cache pengiriman kini memuat `reprocess_count`.
 - Suntingan pesan yang sudah selesai: pesan menawarkan [Proses ulang] / [Biarkan]; tanpa jawaban tidak ada yang berubah (menutup TODO M2).
+
+## M4f — Koreksi lewat reply (PRD §21)
+
+- Balasan (reply) ke bubble konfirmasi yang punya item `applied` disimpan sebagai `inbound_messages` sendiri dengan `correction_of_id` (input mentah tetap diawetkan, jalur proses tetap satu). Reply ke hal lain, atau ke konfirmasi tanpa item terapan, adalah catatan biasa.
+- `ReplyCorrectionService`: AI (`worklog_correction@v1`, purpose `worklog_correction`, dicatat di `ai_interactions`) mengusulkan hasil terkoreksi untuk catatan ASLI; usulan divalidasi seperti ekstraksi (candidate list, skema, confidence). Task yang dibuat catatan asli dikeluarkan dari kandidat (akan hilang saat undo).
+- Dalam satu transaksi: undo hasil lama (`corrections(undo)`), lalu apply usulan ke pesan balasan. Undo hanya terjadi bila ada item yang tidak ditolak validator. Balasan yang bukan koreksi (`items: []`), usulan ditolak, atau AI gagal → hasil lama tidak berubah; bot bilang tidak ada yang berubah.
+- Bubble konfirmasi lama diedit menjadi "dibatalkan" tanpa tombol.
+- Belum ada: kasus koreksi di dataset eval (harness `eval:run` hanya mengevaluasi ekstraksi). Dicatat untuk M4g/Phase berikutnya; kualitas prompt koreksi di model sungguhan belum diukur.

@@ -19,6 +19,16 @@ final readonly class CandidateSet
         public array $detectedProjectIds = [],
     ) {}
 
+    /**
+     * The same set without some tasks (e.g. the ones a message created, about to be undone by a correction).
+     *
+     * @param  list<int>  $taskIds
+     */
+    public function without(array $taskIds): self
+    {
+        return new self($this->projects, array_diff_key($this->tasks, array_flip($taskIds)), $this->detectedProjectIds);
+    }
+
     public function isCompact(): bool
     {
         return $this->detectedProjectIds === [];
