@@ -11,3 +11,11 @@ storage/framework/sessions/*
 storage/logs/*
 .env
 .DS_Store
+.env.*
+!.env.example
+secrets
+storage/app
+storage/framework
+storage/logs
+docker-compose.override.yml
+bootstrap/cache/*.php

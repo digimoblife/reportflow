@@ -1,0 +1,86 @@
+# Production override (PRD §56, §83, M9e):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml build
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# The code is inside the image (no bind mounts), only nginx publishes ports (80/443), the dev test database is not created,
+# and certificates live in the `letsencrypt` volume. Required in .env: APP_DOMAIN, APP_URL=https://APP_DOMAIN, APP_ENV=production.
+# See docs/runbooks/deploy.md.
+
+x-app-prod: &app-prod
+  build:
+    context: .
+    dockerfile: docker/php/Dockerfile
+    target: prod
+  # No .env inside the image: the environment comes from the host's .env (never baked into a layer).
+  env_file:
+    - .env
+  volumes: !override
+    - app_storage:/var/www/html/storage
+
+services:
+  app:
+    <<: *app-prod
+    environment: !override
+      - APP_ENV=production
+  worker:
+    <<: *app-prod
+  worker-reports:
+    <<: *app-prod
+  scheduler:
+    <<: *app-prod
+
+  postgres:
+    volumes: !override
+      - postgres_data:/var/lib/postgresql/data
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile.prod
+    image: reportflow-nginx:latest
+    ports: !override
+      - "80:80"
+      - "443:443"
+    environment: !override
+      - APP_DOMAIN=${APP_DOMAIN:?set APP_DOMAIN in .env}
+      - TELEGRAM_WEBHOOK_PATH=${TELEGRAM_WEBHOOK_PATH:?set TELEGRAM_WEBHOOK_PATH in .env}
+      - NGINX_ENVSUBST_FILTER=^(APP_DOMAIN|TELEGRAM_WEBHOOK_PATH)$$
+    volumes: !override
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot_webroot:/var/www/certbot:ro
+    # Reload every 6 hours so a renewed certificate is picked up without a restart.
+    command: ["/bin/sh", "-c", "while :; do sleep 6h & wait $${!}; nginx -s reload; done & exec nginx -g 'daemon off;'"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/nginx-health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Renews certificates (twice a day it checks; renews inside the last 30 days). Issuing the first one: scripts/tls/issue.sh.
+  certbot:
+    image: certbot/certbot:v3.0.1
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"]
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    networks:
+      - reportflow-public
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # Backups read report files from the storage volume; the status file lives there too (storage/app/backup/status.json).
+  backup:
+    volumes: !override
+      - app_storage:/app/storage
+      - backup_data:/backups
+      - ${BACKUP_KEY_FILE:-./secrets/backup.key}:/run/secrets/backup_key:ro
+      - ${RCLONE_CONFIG_DIR:-./secrets/rclone}:/config/rclone:ro
+    environment:
+      STATUS_FILE: /app/storage/app/backup/status.json
+
+volumes:
+  letsencrypt:
+  certbot_webroot:

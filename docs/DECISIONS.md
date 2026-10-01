@@ -738,3 +738,13 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - Cascade rules: project → tasks, activities, reports (+versions, files), templates, reminder rules/instances, and the AI logs of that project; task → its activities, events, people links; report → versions, files, AI logs of the report; message → its AI logs and corrections.
 - What it does **not** reach unless asked: the message an activity came from (`--with-messages`), the activities a message created (`--with-activities`, message target), and report versions of other reports that were built from a purged activity (reported as a note count; purge those reports too). AI logs of a purged *task* are removed only through its messages, because they cannot be tied to a task without parsing JSON input.
 - The trace is `system_events(type=purge)` with the target and row counts only.
+
+## M9e — Security hardening and TLS (PRD §56, §83)
+
+- **Edge:** `docker-compose.prod.yml` + `docker/nginx/prod.conf.template`. nginx is the TLS terminator (certbot webroot, certificates in the `letsencrypt` volume, reload every 6 h); PHP-FPM gets `HTTPS on` through fastcgi, so Laravel needs no trusted proxy. Port 80 only serves ACME and redirects to `https://$APP_DOMAIN`; unknown names get a refused handshake.
+- **Production image:** `docker/php/Dockerfile` is now multi-stage (`base`, `prod`, `dev` — dev stays last so a plain `docker compose build` still builds dev). `prod` has the code, `composer install --no-dev`, Filament assets, `opcache.validate_timestamps=0`, no `.env`. The nginx image copies `public/` from the app image, so build `app` before `nginx`.
+- **Environment in production** comes from the host's `.env` through `env_file`. Backup mounts the `app_storage` volume (rw, because the status file lives there) instead of the code directory.
+- **Forced in code, not trusted to `.env`:** debug off, secure/HttpOnly/lax cookies, https URLs, host pinned to `APP_URL`. `APP_URL` is read from `.env` and dotenv re-reads it on every boot, so the host-pin test uses `localhost` rather than overriding it.
+- **No CSP** for now (Filament/Livewire need inline scripts); reasons and other omissions are in `docs/SECURITY_REVIEW.md`.
+- **Verified live** with a self-signed certificate: `nginx -t`, 80→443 redirect to the configured domain (not the Host header), headers, 421 on a foreign Host, handshake refused for a foreign SNI, TLS 1.1 refused, `*.php` 404, dotfiles 403, login rate limit (429 after the burst), static assets. Let's Encrypt itself cannot be tested without a real domain (go-live checklist).
+- The `/` route now redirects to `/admin`; the Laravel welcome page needed a Vite build that the image does not have.

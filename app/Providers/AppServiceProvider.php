@@ -35,6 +35,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use RuntimeException;
@@ -80,6 +81,27 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
+     * Settings that must never be loose in production, whatever the .env says (PRD §56): no debug pages (they print
+     * configuration and stack traces), session cookies only over HTTPS and out of reach of scripts, generated URLs
+     * (signed report links, redirects) always https.
+     */
+    private function hardenProduction(): void
+    {
+        if (! $this->app->isProduction()) {
+            return;
+        }
+
+        config([
+            'app.debug' => false,
+            'session.secure' => true,
+            'session.http_only' => true,
+            'session.same_site' => in_array(config('session.same_site'), ['lax', 'strict'], true) ? config('session.same_site') : 'lax',
+        ]);
+
+        URL::forceScheme('https');
+    }
+
+    /**
      * Bootstrap any application services.
      */
     public function boot(): void
@@ -91,6 +113,8 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->isProduction() && config('telegram.client') !== 'http') {
             throw new RuntimeException('TELEGRAM_CLIENT must be "http" in production.');
         }
+
+        $this->hardenProduction();
 
         // A fake probe in production would report a dead system as healthy.
         if ($this->app->isProduction() && config('ops.probe') !== 'real') {

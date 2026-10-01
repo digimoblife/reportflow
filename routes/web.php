@@ -6,9 +6,8 @@ use App\Http\Middleware\RequireSecureInProduction;
 use App\Services\Ops\HealthChecks;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// The product is the dashboard; there is no public landing page (and no Vite build in the image).
+Route::redirect('/', '/admin');
 
 Route::middleware([RequireSecureInProduction::class, 'throttle:10,1'])->prefix('auth')->group(function () {
     Route::get('/telegram/callback', [DashboardLoginController::class, 'telegram'])->name('auth.telegram.callback');

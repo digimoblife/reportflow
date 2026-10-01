@@ -25,6 +25,15 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         }
 
+        // Production answers only for its own host (APP_URL); a forged Host header gets a 400 instead of reaching the app.
+        if (env('APP_ENV') === 'production') {
+            $middleware->trustHosts(at: function (): array {
+                $host = parse_url((string) env('APP_URL'), PHP_URL_HOST);
+
+                return is_string($host) && $host !== '' ? ['^'.preg_quote($host, '/').'$'] : [];
+            }, subdomains: false);
+        }
+
         $middleware->trustProxies(at: $proxies, headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

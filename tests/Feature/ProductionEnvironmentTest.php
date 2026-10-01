@@ -23,3 +23,29 @@ it('serves the dashboard over HTTPS only, has no password login, and does not se
         expect(User::count())->toBe($userCountBefore);
     });
 });
+
+it('keeps debug off, cookies secure and links https in production, whatever the .env says (PRD §56)', function () {
+    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg', 'OPS_PROBE' => 'real', 'APP_DEBUG' => 'true', 'SESSION_SECURE_COOKIE' => 'false', 'SESSION_HTTP_ONLY' => 'false', 'SESSION_SAME_SITE' => 'none'], function () {
+        expect(config('app.debug'))->toBeFalse()
+            ->and(config('session.secure'))->toBeTrue()
+            ->and(config('session.http_only'))->toBeTrue()
+            ->and(config('session.same_site'))->toBe('lax')
+            ->and(url('/x'))->toStartWith('https://');
+    });
+});
+
+it('answers only for its own host in production', function () {
+    // APP_URL comes from .env (http://localhost), and dotenv re-reads it on every app boot, so the allowed host is "localhost".
+    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg', 'OPS_PROBE' => 'real'], function () {
+        $this->get('https://localhost/admin/login')->assertOk();
+        $this->get('https://evil.example.test/admin/login')->assertStatus(400);
+    });
+});
+
+it('does not force https or tighten cookies outside production', function () {
+    expect(url('/x'))->toStartWith('http://');
+});
+
+it('redirects the bare domain to the dashboard instead of rendering a page without assets', function () {
+    $this->get('/')->assertRedirect('/admin');
+});
