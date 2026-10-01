@@ -601,3 +601,10 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - Whitelist = `users.telegram_user_id`; `User::canAccessPanel` mensyaratkannya. Panel di production HTTPS-only (`RequireSecureInProduction` pada middleware panel).
 - Jalur dev/darurat: `php artisan reportflow:login-link <telegram_id>` mencetak link sekali pakai (5 menit, hanya hash token di cache, ditolak di production). Bukan command bot: daftar PRD §20 tidak berubah. Widget baru bisa dipakai setelah ada domain HTTPS tetap yang didaftarkan lewat `/setdomain` di BotFather.
 - `BindUserContext` mengikat `UserContext` dari user yang login pada page load (authMiddleware) dan pada setiap update Livewire (persistent middleware); tanpa user, query ber-scope gagal-tertutup.
+
+## M5b — Catat Pekerjaan di dashboard (PRD §22, §23)
+
+- Halaman beranda panel = `WorklogInput`: kotak teks → `DashboardSubmission` (redaction fail-closed, `inbound_messages.source=dashboard`, `idempotency_key = dashboard:{user}:{uuid form}`, `insertOrIgnore`, lalu `ProcessInboundMessage`). Kunci diganti setelah sukses; klik ganda/retry membawa kunci sama → satu baris.
+  Pesan dashboard tidak memicu pesan Telegram (`DeliverInboundConfirmation` hanya untuk sumber Telegram).
+- Daftar catatan terbaru (kedua channel, `wire:poll.5s`) memakai `OutcomeItemPresenter` (data terstruktur; Telegram memformat teks darinya, keluaran Telegram tidak berubah). Tombol Undo / Pindah Task / Ubah Status / Ganti Project memanggil `UndoService` / `CorrectionService` yang sama dengan Telegram.
+- Bahasa UI per request dari `users.default_language` (di `BindUserContext`, termasuk update Livewire).

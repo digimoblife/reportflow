@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Services\Worklog\Outcome;
 use App\Services\Worklog\OutcomeItem;
+use App\Services\Worklog\OutcomeItemPresenter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Lang;
 
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Lang;
  */
 class ConfirmationComposer
 {
-    public function __construct(private readonly BotMessages $messages) {}
+    public function __construct(private readonly BotMessages $messages, private readonly OutcomeItemPresenter $presenter) {}
 
     /**
      * @return array{text: string, keyboard: list<list<array{text: string, callback_data: string}>>|null}
@@ -79,29 +80,27 @@ class ConfirmationComposer
     public function block(OutcomeItem $item, Language $language, string $timezone, ?int $number = null): string
     {
         $lang = $language->value;
-        $task = Task::query()->find($item->taskId);
-        $project = Project::query()->find($item->projectId);
-        $activity = $item->activityId === null ? null : Activity::query()->find($item->activityId);
+        $view = $this->presenter->present($item, $timezone);
         $t = fn (string $key): string => (string) Lang::get('ui.'.$key, [], $lang);
 
         $prefix = $number === null ? '' : "{$number}) ";
-        $new = $item->createdTask ? ' ('.$t('labels.new').')' : '';
-        $lines = [$prefix.'📁 '.($project === null ? '-' : $project->name).' → '.($task === null ? '-' : $task->title).$new];
+        $new = $view['is_new'] ? ' ('.$t('labels.new').')' : '';
+        $lines = [$prefix.'📁 '.($view['project'] ?? '-').' → '.($view['task'] ?? '-').$new];
 
-        if ($activity !== null) {
-            $lines[] = '🛠 '.$t('labels.activity').': '.$t('activity_types.'.$activity->activity_type->value).' — '.mb_substr($activity->summary, 0, 200);
+        if ($view['activity'] !== null) {
+            $lines[] = '🛠 '.$t('labels.activity').': '.$t('activity_types.'.$view['activity']['type']).' — '.mb_substr($view['activity']['summary'], 0, 200);
         }
 
-        if ($item->statusTo !== null) {
-            $from = $item->statusFrom === null ? '' : $t('statuses.'.$item->statusFrom).' → ';
-            $reopened = $item->reopened ? ' ('.$t('labels.reopened').')' : '';
-            $lines[] = '🔄 '.$t('labels.status').': '.$from.$t('statuses.'.$item->statusTo).$reopened;
-        } elseif ($task !== null) {
-            $lines[] = '🔄 '.$t('labels.status').': '.$t('statuses.'.$task->status->value);
+        if ($view['status_changed']) {
+            $from = $view['status_from'] === null ? '' : $t('statuses.'.$view['status_from']).' → ';
+            $reopened = $view['reopened'] ? ' ('.$t('labels.reopened').')' : '';
+            $lines[] = '🔄 '.$t('labels.status').': '.$from.$t('statuses.'.$view['status_to']).$reopened;
+        } elseif ($view['status_to'] !== null) {
+            $lines[] = '🔄 '.$t('labels.status').': '.$t('statuses.'.$view['status_to']);
         }
 
-        if ($activity !== null && $activity->activity_date->format('Y-m-d') !== CarbonImmutable::now($timezone)->format('Y-m-d')) {
-            $lines[] = '📅 '.$this->date($activity->activity_date->format('Y-m-d'), $lang);
+        if ($view['date_differs'] && $view['activity'] !== null) {
+            $lines[] = '📅 '.$this->date($view['activity']['date'], $lang);
         }
 
         return implode("\n", $lines);
