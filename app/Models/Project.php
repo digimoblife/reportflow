@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $name
+ * @property string $slug
+ * @property ProjectStatus $status
  * @property array<int, mixed>|null $aliases
  *
  * PRD §17, §49 projects.

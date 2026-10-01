@@ -622,3 +622,9 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - Halaman `Inbox`: pesan `failed` / `needs_clarification` dari kedua channel, polling 5 dtk. Teks dan tombol pertanyaan memakai `ConfirmationComposer::question()` yang sama dengan Telegram (callback data di-parse menjadi aksi Livewire), jadi tidak ada logika pertanyaan ganda.
 - `SyncTelegramBubbles` (job idempoten, hanya id): Dashboard → Telegram. `answered`: bubble pertanyaan menjadi "✅ Sudah dijawab lewat dashboard" (+ hasil dan tombol koreksi bila diterapkan) lalu konfirmasi digambar ulang; `refresh`: setelah undo/koreksi dari dashboard; `reprocessed`: bubble lama ditutup, konfirmasi kembali "⏳". Pesan asal dashboard tidak punya bubble sehingga tidak ada job. Telegram → dashboard otomatis lewat polling.
 - Keputusan sederhana M5: pertanyaan untuk catatan yang berasal dari dashboard hanya muncul di dashboard.
+
+## M5e — Pengaturan dan penutup M5 (PRD §22, §74)
+
+- Halaman `Settings`: bahasa, zona waktu (daftar IANA), hari kerja, saklar reminder (hanya disimpan; logika reminder = M6) dan project (`ProjectService::rename/setAliases/setActive`: nama unik per user lewat slug, alias unik maks 10, arsip tidak menghapus task/riwayat tetapi project tidak lagi ditawarkan ke asisten).
+- Kriteria §74 poin 1–2 diuji di `tests/Feature/Dashboard/AcceptanceTest.php`: halaman memoll tiap 5 dtk (≤ 10 dtk) dan tidak ada duplikat dari klik ganda, retry, atau webhook terkirim ulang. Poin 3–6 (report) milik M7.
+- Di luar M5: halaman Reports (M7), reminder (M6), command `/login` di bot, pertanyaan klarifikasi untuk catatan dashboard di Telegram.

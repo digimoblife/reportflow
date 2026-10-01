@@ -73,6 +73,7 @@ docker compose exec app php artisan test
 docker compose exec app ./vendor/bin/pint
 docker compose exec app ./vendor/bin/phpstan analyse
 docker compose exec app php artisan eval:run        # tersedia sejak M3
+docker compose exec app php artisan reportflow:login-link <telegram_id>   # link login dashboard sekali pakai (dev; M5)
 ```
 
 Definition of Done tiap task: test hijau, pint + phpstan bersih, migrasi bisa `migrate:fresh --seed`, tidak ada

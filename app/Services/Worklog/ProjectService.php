@@ -50,4 +50,58 @@ class ProjectService
 
         return [$project, true];
     }
+
+    /**
+     * @return bool false when the name is unusable or another project of the user already has that slug
+     */
+    public function rename(Project $project, string $name): bool
+    {
+        $clean = $this->normalizeName($name);
+
+        if ($clean === null) {
+            return false;
+        }
+
+        $slug = Str::slug($clean);
+
+        if (Project::query()->where('slug', $slug)->where('id', '!=', $project->id)->exists()) {
+            return false;
+        }
+
+        $project->update(['name' => $clean, 'slug' => $slug]);
+
+        return true;
+    }
+
+    /**
+     * Aliases help the assistant recognise the project in a note: trimmed, unique (case-insensitive), at most 10.
+     *
+     * @param  array<array-key, mixed>  $aliases
+     * @return list<string> what was stored
+     */
+    public function setAliases(Project $project, array $aliases): array
+    {
+        $clean = [];
+
+        foreach ($aliases as $alias) {
+            $alias = trim((string) preg_replace('/\s+/u', ' ', is_scalar($alias) ? (string) $alias : ''));
+
+            if ($alias !== '' && mb_strlen($alias) <= 40 && ! in_array(mb_strtolower($alias), array_map('mb_strtolower', $clean), true)) {
+                $clean[] = $alias;
+            }
+        }
+
+        $clean = array_slice($clean, 0, 10);
+        $project->update(['aliases' => $clean]);
+
+        return $clean;
+    }
+
+    /**
+     * Archived projects stay in the database with their tasks and history; they just stop being offered to the assistant.
+     */
+    public function setActive(Project $project, bool $active): void
+    {
+        $project->update(['status' => $active ? ProjectStatus::Active : ProjectStatus::Archived]);
+    }
 }
