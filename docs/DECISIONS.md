@@ -756,3 +756,10 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - The backup container mounts the checkout read-only (for `.env` and the compose files) with `app_storage` over `storage/` in production.
 - CI gained an `infra` job: script syntax, `docker compose config` for dev and production, a real build of the production images, and `nginx -t` on the production template with a throw-away certificate.
 - **M9 acceptance:** restore test passed locally (backup → rclone local remote → scratch DB); §73/§76 are measurable on the Health page; alerts and the deep health endpoint exist. What only a human can finish is listed in `docs/runbooks/go-live-checklist.md`: VPS, domain, real certificate, rclone remote and backup key, `/setdomain`, DeepSeek prices, one month of dogfooding.
+
+## Deploy on the shared VPS (reportflow.deployroom.my.id)
+
+- The VPS already runs other projects behind a host nginx that owns 80/443 with certbot. So this deployment uses `./vps/compose.sh` (= base + prod + `docker-compose.vps.yml`): the reportflow nginx container publishes only `127.0.0.1:9081`, certbot is disabled, TLS ends at the host nginx. `docker-compose.prod.yml` and `docker/nginx/prod.conf.template` stay the reference for a dedicated server.
+- Host nginx files are kept in `vps/host/` for reference (`/etc/nginx/conf.d/reportflow-limits.conf` with uniquely named rate-limit zones, and the server block managed by certbot). The host block sets `access_log off` because the webhook path is a secret in the request line, and the same security headers and rate limits as the production template. HSTS and foreign-SNI refusal are not applied here (other sites share the IP and server).
+- Host pinning (`trustHosts` from `APP_URL`) still holds in Laravel; the container healthcheck therefore uses `/nginx-health`, which the container nginx answers itself.
+- First deploy done without backup: `BACKUP_REMOTE` is empty, so `ops:check` raises `backup_stale` until the backup service is configured (expected).

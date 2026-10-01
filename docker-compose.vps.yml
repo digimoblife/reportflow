@@ -1,0 +1,29 @@
+services:
+
+  nginx:
+    build:
+      context: .
+      dockerfile: vps/nginx/Dockerfile
+      args:
+        APP_IMAGE: reportflow-app:latest
+    image: reportflow-nginx-vps:latest
+    ports: !override
+      - "127.0.0.1:9081:80"
+    volumes: !override []
+    environment: !override []
+    command: ["nginx", "-g", "daemon off;"]
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - reportflow-public
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/nginx-health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  certbot:
+    profiles: ["disabled-on-vps"]
+
