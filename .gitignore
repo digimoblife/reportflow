@@ -24,3 +24,5 @@ yarn-error.log
 /node_modules
 tests/Eval/data/
 .DS_Store
+/secrets/
+/storage/app/backup/

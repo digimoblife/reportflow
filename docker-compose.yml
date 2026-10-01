@@ -108,6 +108,7 @@ services:
         condition: service_healthy
     networks:
       - reportflow-internal
+      - reportflow-public   # ops:check sends alerts to Telegram directly
     deploy:
       resources:
         limits:
@@ -118,6 +119,40 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  # Nightly encrypted backup, copied off the server with rclone (PRD §84). Opt-in: `docker compose --profile backup up -d backup`.
+  # One-off: `docker compose run --rm backup /scripts/restore-test.sh`.
+  backup:
+    profiles: ["backup"]
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGUSER: ${DB_USERNAME:-reportflow}
+      PGPASSWORD: ${DB_PASSWORD}
+      PGDATABASE: ${DB_DATABASE:-reportflow}
+      BACKUP_REMOTE: ${BACKUP_REMOTE:-}
+      BACKUP_CRON: ${BACKUP_CRON:-0 19 * * *}
+      RCLONE_CONFIG: /config/rclone/rclone.conf
+      TZ: UTC
+    volumes:
+      - .:/app:ro
+      - ./storage/app/backup:/status
+      - backup_data:/backups
+      - ${BACKUP_KEY_FILE:-./secrets/backup.key}:/run/secrets/backup_key:ro
+      - ${RCLONE_CONFIG_DIR:-./secrets/rclone}:/config/rclone:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - reportflow-internal
+      - reportflow-public
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   postgres:
     image: postgres:16-alpine
@@ -225,4 +260,5 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  backup_data:
   app_storage:

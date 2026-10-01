@@ -2,8 +2,6 @@
 
 namespace App\Services\Ops;
 
-use App\Models\SystemEvent;
-use App\Support\UserContext;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +20,6 @@ class HealthChecks
 
     public function __construct(
         private readonly ServiceProbe $probe,
-        private readonly UserContext $context,
     ) {}
 
     public static function workerKey(string $queue): string
@@ -109,7 +106,8 @@ class HealthChecks
     }
 
     /**
-     * Backup status is written by the backup service (a JSON file); restore verification is an event.
+     * Backup status is written by the backup service (a JSON file); restore verification is a field of the same file
+     * (written by restore-test.sh).
      *
      * @param  array<string, mixed>  $a
      * @return list<OpsCondition>
@@ -122,8 +120,7 @@ class HealthChecks
         $first = isset($status['first_success_at']) ? Carbon::parse((string) $status['first_success_at']) : $last;
         $ageHours = $last === null ? null : round($last->diffInMinutes($now) / 60, 1);
 
-        $verified = $this->context->runAsSystem(fn () => SystemEvent::query()->where('type', OpsEvents::RESTORE_VERIFIED)->max('created_at'));
-        $verifiedAt = $verified === null ? null : Carbon::parse((string) $verified);
+        $verifiedAt = isset($status['last_restore_verified_at']) ? Carbon::parse((string) $status['last_restore_verified_at']) : null;
         $restoreAgeDays = $verifiedAt === null ? ($first === null ? null : $first->diffInDays($now)) : $verifiedAt->diffInDays($now);
 
         return [

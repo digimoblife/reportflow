@@ -22,8 +22,6 @@ class OpsEvents
 
     public const PURGE = 'purge';
 
-    public const RESTORE_VERIFIED = 'restore_verified';
-
     public const ALERT = 'alert';
 
     /**

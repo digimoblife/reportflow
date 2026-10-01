@@ -39,8 +39,7 @@ function allHealthy(): void
         Cache::put(HealthChecks::workerKey($queue), now('UTC')->getTimestamp(), 3600);
     }
     Cache::put(HealthChecks::HEARTBEAT_SCHEDULER, now('UTC')->getTimestamp(), 3600);
-    writeBackupStatus(['last_status' => 'ok', 'last_success_at' => now('UTC')->subHours(3)->toIso8601String(), 'first_success_at' => now('UTC')->subDays(10)->toIso8601String()]);
-    app(UserContext::class)->runAsSystem(fn () => SystemEvent::query()->create(['type' => OpsEvents::RESTORE_VERIFIED, 'context' => [], 'user_id' => null, 'created_at' => now('UTC')->subDays(3)]));
+    writeBackupStatus(['last_status' => 'ok', 'last_success_at' => now('UTC')->subHours(3)->toIso8601String(), 'first_success_at' => now('UTC')->subDays(10)->toIso8601String(), 'last_restore_verified_at' => now('UTC')->subDays(3)->toIso8601String()]);
 }
 
 function writeBackupStatus(array $status): void
@@ -191,13 +190,12 @@ describe('backups', function () {
     });
 
     it('asks for a restore test every 35 days', function () {
-        app(UserContext::class)->runAsSystem(fn () => SystemEvent::query()->where('type', OpsEvents::RESTORE_VERIFIED)->delete());
         writeBackupStatus(['last_status' => 'ok', 'last_success_at' => now('UTC')->subHours(1)->toIso8601String(), 'first_success_at' => now('UTC')->subDays(40)->toIso8601String()]);
 
         check();
         expect(alerts())->toHaveCount(1)->and(alerts()[0])->toContain('Uji restore')->toContain('40');
 
-        app(UserContext::class)->runAsSystem(fn () => OpsEvents::record(OpsEvents::RESTORE_VERIFIED, ['archive' => 'x']));
+        writeBackupStatus(['last_status' => 'ok', 'last_success_at' => now('UTC')->subHours(1)->toIso8601String(), 'first_success_at' => now('UTC')->subDays(40)->toIso8601String(), 'last_restore_verified_at' => now('UTC')->toIso8601String()]);
         check();
         expect(alerts())->toHaveCount(2);   // the "recovered" message
     });

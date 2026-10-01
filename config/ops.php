@@ -30,5 +30,5 @@ return [
     'probe' => env('OPS_PROBE', 'real'),
 
     // Where the backup service writes its status (read by ops:check).
-    'backup_status_file' => env('BACKUP_STATUS_FILE', storage_path('app/backup-status.json')),
+    'backup_status_file' => env('BACKUP_STATUS_FILE', storage_path('app/backup/status.json')),
 ];
