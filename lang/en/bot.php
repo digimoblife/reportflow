@@ -32,8 +32,8 @@ return [
 
     'help' => [
         'guide' => [
-            "How it works: just tell me what you worked on, for example \"Fixed the login bug on 9Club today\". I'll note it down and file it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily reminder\n/help - this guide\n\nReport commands will arrive step by step.",
-            "Quick guide: write what you did today and I'll log it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily reminder\n/help - this guide\n\nReport commands are coming step by step.",
+            "How it works: just tell me what you worked on, for example \"Fixed the login bug on 9Club today\". I'll note it down and file it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily and monthly reminders\n/report - make the monthly report\n/review - review the draft report\n/reports - list reports\n/help - this guide",
+            "Quick guide: write what you did today and I'll log it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily and monthly reminders\n/report - make the monthly report\n/review - review the draft report\n/reports - list reports\n/help - this guide",
         ],
     ],
 

@@ -33,8 +33,8 @@ return [
 
     'help' => [
         'guide' => [
-            "Cara kerjanya: ceritakan saja pekerjaan Anda, misalnya \"Hari ini fix bug login 9Club\". Saya catat dan arsipkan.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian\n/help - panduan ini\n\nPerintah laporan menyusul bertahap.",
-            "Panduan singkat: tulis apa yang Anda kerjakan hari ini, nanti saya catat.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian\n/help - panduan ini\n\nPerintah laporan menyusul bertahap, nggih.",
+            "Cara kerjanya: ceritakan saja pekerjaan Anda, misalnya \"Hari ini fix bug login 9Club\". Saya catat dan arsipkan.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian dan bulanan\n/report - buat laporan bulanan\n/review - tinjau draft laporan\n/reports - daftar laporan\n/help - panduan ini",
+            "Panduan singkat: tulis apa yang Anda kerjakan hari ini, nanti saya catat.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian dan bulanan\n/report - buat laporan bulanan\n/review - tinjau draft laporan\n/reports - daftar laporan\n/help - panduan ini",
         ],
     ],
 
