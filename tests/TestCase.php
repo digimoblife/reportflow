@@ -10,6 +10,17 @@ use RuntimeException;
 abstract class TestCase extends BaseTestCase
 {
     /**
+     * Pages must render without a front-end build (CI has no public/build); also re-applied after the app is rebuilt
+     * (withAppEnvironment() refreshes it).
+     */
+    protected function refreshApplication(): void
+    {
+        parent::refreshApplication();
+
+        $this->withoutVite();
+    }
+
+    /**
      * Hook called by RefreshDatabase before executing migrate:fresh.
      */
     protected function beforeRefreshingDatabase()
