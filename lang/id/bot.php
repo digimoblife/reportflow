@@ -281,8 +281,8 @@ return [
             'Penundaan sudah tiga kali, pengingat hari ini saya tutup ya.',
         ],
         'status' => [
-            "Status pengingat:\n\nHarian: :state — :time (:days)\nBulanan: segera hadir",
-            "Pengingat saat ini:\n\nHarian: :state — :time (:days)\nBulanan: segera hadir",
+            "Status pengingat:\n\nHarian: :state — :time (:days)\nBulanan: :mstate — :mtime (hari terakhir bulan)",
+            "Pengingat saat ini:\n\nHarian: :state — :time (:days)\nBulanan: :mstate — :mtime (hari terakhir bulan)",
         ],
         'on_done' => [
             'Siap, pengingat saya nyalakan lagi.',
@@ -300,13 +300,37 @@ return [
             'Jamnya belum jelas. Tulis seperti /reminder daily 18:00.',
             'Format jam salah. Contoh yang benar: /reminder daily 17:30.',
         ],
-        'monthly_unavailable' => [
-            'Pengingat bulanan belum tersedia, nanti menyusul bersama laporan.',
-            'Yang bulanan belum ada, menyusul setelah fitur laporan jadi.',
-        ],
         'usage' => [
-            "Perintah pengingat:\n/reminder - lihat status\n/reminder on - nyalakan\n/reminder off - matikan\n/reminder daily 18:00 - atur jam harian",
+            "Perintah pengingat:\n/reminder - lihat status\n/reminder on - nyalakan\n/reminder off - matikan\n/reminder daily 18:00 - atur jam harian\n/reminder monthly 09:00 - atur jam pengingat bulanan",
             "Cara memakai pengingat:\n/reminder - status\n/reminder on atau off\n/reminder daily 18:00 - jam pengingat harian",
+        ],
+        'monthly_intro' => [
+            'Bulan :month hampir berakhir. Ini ringkasan catatan Anda:',
+            'Penutup bulan :month. Berikut isi catatan Anda bulan ini:',
+        ],
+        'monthly_ask' => [
+            'Mau menyiapkan laporannya sekarang?',
+            'Laporannya mau disiapkan sekarang?',
+        ],
+        'monthly_started' => [
+            'Siap, laporan saya siapkan.',
+            'Baik, saya mulai menyiapkan laporannya.',
+        ],
+        'monthly_review' => [
+            'Baik, ini task yang sedang berjalan untuk Anda tinjau dulu.',
+            'Silakan tinjau dulu task yang berjalan di bawah ini.',
+        ],
+        'monthly_set' => [
+            'Siap, pengingat laporan bulanan sekarang pukul :time di hari terakhir bulan.',
+            'Baik, saya ingatkan soal laporan bulanan tiap hari terakhir bulan pukul :time.',
+        ],
+        'monthly_on' => [
+            'Pengingat laporan bulanan dinyalakan.',
+            'Siap, pengingat laporan bulanan aktif.',
+        ],
+        'monthly_off' => [
+            'Pengingat laporan bulanan dimatikan.',
+            'Baik, pengingat laporan bulanan saya matikan.',
         ],
         'answered' => [
             'Pengingat ini sudah ditanggapi.',

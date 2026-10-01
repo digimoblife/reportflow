@@ -24,6 +24,48 @@ class ReminderSettings
         );
     }
 
+    public const DEFAULT_MONTHLY_TIME = '09:00';
+
+    /** The monthly report reminder: last day of the month at `schedule.time` (PRD §25, §32). */
+    public function monthly(): ReminderRule
+    {
+        return ReminderRule::query()->firstOrCreate(
+            ['project_id' => null, 'type' => ReminderType::MonthlyReport],
+            ['schedule' => ['day' => 'last', 'time' => self::DEFAULT_MONTHLY_TIME], 'config' => [], 'priority' => ReminderPriority::Normal, 'enabled' => true],
+        );
+    }
+
+    public function monthlyTime(): string
+    {
+        $time = $this->monthly()->schedule['time'] ?? null;
+
+        return is_string($time) && ReminderSchedule::validTime($time) ? $time : self::DEFAULT_MONTHLY_TIME;
+    }
+
+    public function setMonthlyTime(string $time): bool
+    {
+        $time = ReminderSchedule::parseTime($time);
+
+        if ($time === null) {
+            return false;
+        }
+
+        $rule = $this->monthly();
+        $rule->update(['schedule' => ['time' => $time] + (array) $rule->schedule]);
+
+        return true;
+    }
+
+    public function setMonthlyEnabled(bool $enabled): void
+    {
+        $this->monthly()->update(['enabled' => $enabled]);
+
+        if (! $enabled) {
+            ReminderInstance::query()->where('reminder_rule_id', $this->monthly()->id)->whereIn('status', [ReminderState::Scheduled, ReminderState::Snoozed])
+                ->update(['status' => ReminderState::Cancelled, 'action_taken' => 'disabled']);
+        }
+    }
+
     public function time(): string
     {
         $time = $this->daily()->schedule['time'] ?? null;
@@ -54,6 +96,7 @@ class ReminderSettings
 
         if ($enabled) {
             $this->daily();
+            $this->monthly();
 
             return;
         }

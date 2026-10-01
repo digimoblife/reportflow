@@ -3,11 +3,13 @@
 namespace App\Jobs;
 
 use App\Enums\ReminderState;
+use App\Enums\ReminderType;
 use App\Jobs\Middleware\WithUserContext;
 use App\Models\ReminderInstance;
 use App\Models\User;
 use App\Services\Reminder\ReminderPolicy;
 use App\Services\Telegram\BotMessages;
+use App\Services\Telegram\MonthlyReminderComposer;
 use App\Services\Telegram\ReminderCallback;
 use App\Services\Telegram\TelegramApiException;
 use App\Services\Telegram\TelegramMessenger;
@@ -94,11 +96,19 @@ class SendReminder implements ShouldQueue
             'callback_data' => (new ReminderCallback($instance->id, $action))->encode(),
         ];
 
-        try {
-            $id = $messenger->send($user->telegram_user_id, $messages->get('reminder.daily', $language), null, [
+        if ($instance->rule->type === ReminderType::MonthlyReport) {
+            $view = app(MonthlyReminderComposer::class)->compose($instance, $user, $language);
+            [$text, $keyboard] = [$view['text'], $view['keyboard']];
+        } else {
+            $text = $messages->get('reminder.daily', $language);
+            $keyboard = [
                 [$button('reminder_add', 'add')],
                 [$button('reminder_none', 'none'), $button('reminder_later', 'later')],
-            ]);
+            ];
+        }
+
+        try {
+            $id = $messenger->send($user->telegram_user_id, $text, null, $keyboard);
         } catch (TelegramApiException $e) {
             if ($e->isRetryable()) {
                 $this->release(max($e->retryAfter ?? 0, 15));

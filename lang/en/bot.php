@@ -280,8 +280,8 @@ return [
             'Snoozed three times already, so today\'s reminder is closed.',
         ],
         'status' => [
-            "Reminder status:\n\nDaily: :state — :time (:days)\nMonthly: coming soon",
-            "Your reminders right now:\n\nDaily: :state — :time (:days)\nMonthly: coming soon",
+            "Reminder status:\n\nDaily: :state — :time (:days)\nMonthly: :mstate — :mtime (last day of the month)",
+            "Your reminders right now:\n\nDaily: :state — :time (:days)\nMonthly: :mstate — :mtime (last day of the month)",
         ],
         'on_done' => [
             'Okay, reminders are back on.',
@@ -299,13 +299,37 @@ return [
             'I could not read that time. Write it like /reminder daily 18:00.',
             'That time format is off. A valid one: /reminder daily 17:30.',
         ],
-        'monthly_unavailable' => [
-            'The monthly reminder is not available yet; it comes with reports.',
-            'Monthly is not there yet, it follows once reports are built.',
-        ],
         'usage' => [
-            "Reminder commands:\n/reminder - status\n/reminder on - switch on\n/reminder off - switch off\n/reminder daily 18:00 - set the daily time",
+            "Reminder commands:\n/reminder - status\n/reminder on - switch on\n/reminder off - switch off\n/reminder daily 18:00 - set the daily time\n/reminder monthly 09:00 - set the monthly reminder time",
             "How reminders work:\n/reminder - status\n/reminder on or off\n/reminder daily 18:00 - daily reminder time",
+        ],
+        'monthly_intro' => [
+            ':month is almost over. Here is what your notes hold:',
+            'End of :month. This is what you logged this month:',
+        ],
+        'monthly_ask' => [
+            'Shall I prepare the report now?',
+            'Want me to prepare the report now?',
+        ],
+        'monthly_started' => [
+            'Okay, preparing the report.',
+            'Sure, I am starting the report.',
+        ],
+        'monthly_review' => [
+            'Okay, here are your active tasks to review first.',
+            'Have a look at the tasks in progress below first.',
+        ],
+        'monthly_set' => [
+            'Done, the monthly report reminder is now at :time on the last day of the month.',
+            'Okay, I will remind you about the monthly report on the last day of the month at :time.',
+        ],
+        'monthly_on' => [
+            'Monthly report reminder switched on.',
+            'Done, the monthly report reminder is active.',
+        ],
+        'monthly_off' => [
+            'Monthly report reminder switched off.',
+            'Okay, the monthly report reminder is off.',
         ],
         'answered' => [
             'This reminder was already answered.',

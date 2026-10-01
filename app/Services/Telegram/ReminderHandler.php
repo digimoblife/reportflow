@@ -4,6 +4,7 @@ namespace App\Services\Telegram;
 
 use App\Enums\Language;
 use App\Enums\ReminderState;
+use App\Enums\ReminderType;
 use App\Models\ReminderInstance;
 use App\Models\User;
 use App\Services\Reminder\ReminderSchedule;
@@ -20,6 +21,8 @@ class ReminderHandler
     public function __construct(
         private readonly TelegramMessenger $messenger,
         private readonly BotMessages $messages,
+        private readonly ReportCommands $reports,
+        private readonly ListingCommands $listing,
     ) {}
 
     public function register(CallbackRouter $router): void
@@ -44,6 +47,8 @@ class ReminderHandler
         $reply = match ($data->action) {
             'add' => $guard->update(['status' => ReminderState::Acknowledged, 'action_taken' => 'add']) === 1 ? 'reminder.add_prompt' : null,
             'later' => $this->snooze($guard, $instance, $user, $now),
+            'gen' => $guard->update(['status' => ReminderState::Acknowledged, 'action_taken' => 'gen']) === 1 ? 'reminder.monthly_started' : null,
+            'rev' => $guard->update(['status' => ReminderState::Acknowledged, 'action_taken' => 'rev']) === 1 ? 'reminder.monthly_review' : null,
             default => $guard->update(['status' => ReminderState::Dismissed, 'action_taken' => $data->action]) === 1 ? 'reminder.none_done' : null,
         };
 
@@ -60,6 +65,14 @@ class ReminderHandler
         } catch (TelegramApiException) {
             // The bubble is gone or already shows this text; the state is saved either way.
         }
+
+        if ($data->action === 'gen') {
+            // The month the reminder is about; the report command picks the project (or asks).
+            $this->reports->start($user, $update->chatId, $language, $instance->reminder_date?->format('Y-m'));
+        } elseif ($data->action === 'rev') {
+            $view = $this->listing->tasks(0, $language, $user->timezone);
+            $this->messenger->trySend($update->chatId, $view['text'], null, $view['keyboard'] === [] ? null : $view['keyboard']);
+        }
     }
 
     /**
@@ -72,10 +85,11 @@ class ReminderHandler
             return $guard->update(['status' => ReminderState::Dismissed, 'action_taken' => 'snooze_limit']) === 1 ? 'reminder.snooze_limit' : null;
         }
 
-        $until = $now->addMinutes(ReminderSchedule::SNOOZE_MINUTES);
+        $monthly = $instance->rule->type === ReminderType::MonthlyReport;
+        $until = $monthly ? $now->addDay() : $now->addMinutes(ReminderSchedule::SNOOZE_MINUTES);
 
         // A snooze that would land tomorrow is not a snooze: the next workday's reminder covers it.
-        if (ReminderSchedule::localDate($user, $until) !== ReminderSchedule::localDate($user, $now)) {
+        if (! $monthly && ReminderSchedule::localDate($user, $until) !== ReminderSchedule::localDate($user, $now)) {
             return $guard->update(['status' => ReminderState::Dismissed, 'action_taken' => 'snooze_past_day']) === 1 ? 'reminder.none_done' : null;
         }
 

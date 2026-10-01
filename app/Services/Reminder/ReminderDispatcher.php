@@ -45,6 +45,9 @@ class ReminderDispatcher
         $rule = $this->settings->daily();
         $this->createToday($user, $rule->id, $rule->enabled, $this->settings->time(), $now);
 
+        $monthly = $this->settings->monthly();
+        $this->createMonthEnd($user, $monthly->id, $monthly->enabled, $this->settings->monthlyTime(), $now);
+
         $queued = 0;
 
         $due = ReminderInstance::query()->with('rule')
@@ -81,6 +84,30 @@ class ReminderDispatcher
         }
 
         // ON CONFLICT DO NOTHING on (rule, date): a second scheduler pass is a normal outcome, not an error.
+        ReminderInstance::query()->insertOrIgnore([
+            'reminder_rule_id' => $ruleId,
+            'reminder_date' => $date,
+            'next_run_at' => $at,
+            'status' => ReminderState::Scheduled->value,
+            'send_count' => 0,
+            'snooze_count' => 0,
+            'created_at' => Carbon::now('UTC'),
+            'updated_at' => Carbon::now('UTC'),
+        ]);
+    }
+
+    /** On the last day of the user's month, at the monthly time (any weekday: a report does not depend on workdays). */
+    private function createMonthEnd(User $user, int $ruleId, bool $enabled, string $time, CarbonImmutable $now): void
+    {
+        $local = ReminderSchedule::localNow($user, $now);
+        $date = $local->format('Y-m-d');
+        $at = ReminderSchedule::scheduledAt($user, $date, $time);
+
+        if (! $enabled || $date !== $local->endOfMonth()->format('Y-m-d') || $now->lessThan($at)
+            || $now->greaterThan($at->addMinutes(ReminderSchedule::EXPIRY_MINUTES))) {
+            return;
+        }
+
         ReminderInstance::query()->insertOrIgnore([
             'reminder_rule_id' => $ruleId,
             'reminder_date' => $date,

@@ -44,6 +44,13 @@
                     <x-filament::input.wrapper class="mt-1"><x-filament::input type="time" wire:model="reminderTime" /></x-filament::input.wrapper>
                 </label>
 
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" wire:model="monthlyEnabled"> {{ __('ui.dashboard.settings.monthly') }}</label>
+
+                <label class="block text-sm">
+                    <span class="font-medium">{{ __('ui.dashboard.settings.monthly_time') }}</span>
+                    <x-filament::input.wrapper class="mt-1"><x-filament::input type="time" wire:model="monthlyTime" /></x-filament::input.wrapper>
+                </label>
+
                 <x-filament::button type="submit">{{ __('ui.dashboard.settings.save') }}</x-filament::button>
             </form>
         </x-filament::section>

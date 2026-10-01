@@ -23,6 +23,8 @@ beforeEach(function () {
     $this->w = worklogWorld($this->user);
     // worklogWorld makes a stranger's project too; only the users a test creates on purpose should receive reminders.
     User::query()->where('id', '!=', $this->user->id)->update(['reminders_enabled' => false]);
+    // 30 September is also a month-end: these tests are about the daily reminder only.
+    app(ReminderSettings::class)->setMonthlyEnabled(false);
 });
 
 afterEach(fn () => Carbon::setTestNow());
@@ -266,7 +268,7 @@ describe('time helpers', function () {
         app(ReminderSettings::class)->daily();
         app(ReminderSettings::class)->daily();
 
-        expect(ReminderRule::query()->count())->toBe(1)->and(app(ReminderSettings::class)->time())->toBe('18:00');
+        expect(ReminderRule::query()->where('type', 'daily_worklog')->count())->toBe(1)->and(app(ReminderSettings::class)->time())->toBe('18:00');
     });
 
     it('cancels what is waiting when reminders are switched off', function () {

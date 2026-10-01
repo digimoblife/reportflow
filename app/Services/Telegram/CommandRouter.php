@@ -124,13 +124,31 @@ class CommandRouter
             $sub === 'on' => $this->remindersOn($user, $chatId, $language),
             $sub === 'off' => $this->remindersOff($user, $chatId, $language),
             $sub === 'status' => $this->reminderStatus($user, $chatId, $language),
-            $sub === 'monthly' => $this->reply($chatId, 'reminder.monthly_unavailable', $language),
+            $sub === 'monthly' => $this->monthlyReminder($user, $chatId, $language, $rest),
             $sub === 'daily' && $rest === '' => $this->reminderStatus($user, $chatId, $language),
             $sub === 'daily' => $this->reminders->setTime($rest)
                 ? $this->reply($chatId, 'reminder.daily_set', $language, ['time' => $this->reminders->time()])
                 : $this->reply($chatId, 'reminder.daily_invalid', $language),
             default => $this->reply($chatId, 'reminder.usage', $language),
         };
+    }
+
+    /** `/reminder monthly`, `monthly on|off`, `monthly HH:MM`. */
+    private function monthlyReminder(User $user, int $chatId, Language $language, string $rest): void
+    {
+        match (true) {
+            $rest === '' => $this->reminderStatus($user, $chatId, $language),
+            $rest === 'on' => $this->monthlySwitch($chatId, $language, true),
+            $rest === 'off' => $this->monthlySwitch($chatId, $language, false),
+            $this->reminders->setMonthlyTime($rest) => $this->reply($chatId, 'reminder.monthly_set', $language, ['time' => $this->reminders->monthlyTime()]),
+            default => $this->reply($chatId, 'reminder.daily_invalid', $language),
+        };
+    }
+
+    private function monthlySwitch(int $chatId, Language $language, bool $on): void
+    {
+        $this->reminders->setMonthlyEnabled($on);
+        $this->reply($chatId, $on ? 'reminder.monthly_on' : 'reminder.monthly_off', $language);
     }
 
     private function remindersOn(User $user, int $chatId, Language $language): void
@@ -158,6 +176,8 @@ class CommandRouter
             'state' => (string) Lang::get('ui.reminder_states.'.($enabled ? 'on' : 'off'), [], $lang),
             'time' => $this->reminders->time(),
             'days' => $days,
+            'mstate' => (string) Lang::get('ui.reminder_states.'.($enabled && $this->reminders->monthly()->enabled ? 'on' : 'off'), [], $lang),
+            'mtime' => $this->reminders->monthlyTime(),
         ]);
     }
 

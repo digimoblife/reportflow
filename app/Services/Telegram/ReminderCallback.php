@@ -10,7 +10,7 @@ use InvalidArgumentException;
  */
 final readonly class ReminderCallback
 {
-    public const ACTIONS = ['add', 'none', 'later', 'tomorrow'];
+    public const ACTIONS = ['add', 'none', 'later', 'tomorrow', 'gen', 'rev'];
 
     public function __construct(
         public int $instanceId,

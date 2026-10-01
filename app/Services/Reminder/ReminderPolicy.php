@@ -3,8 +3,11 @@
 namespace App\Services\Reminder;
 
 use App\Enums\ReminderState;
+use App\Enums\ReminderType;
+use App\Enums\ReportStatus;
 use App\Models\Activity;
 use App\Models\ReminderInstance;
+use App\Models\Report;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 
@@ -24,6 +27,10 @@ class ReminderPolicy
             return 'disabled';
         }
 
+        if ($rule->type === ReminderType::MonthlyReport) {
+            return $this->monthly($instance, $user, $now, $date);
+        }
+
         if ($date === null || ReminderSchedule::localDate($user, $now) !== $date) {
             return 'expired';   // a snooze that ran past midnight
         }
@@ -37,12 +44,53 @@ class ReminderPolicy
             return 'already_logged';
         }
 
-        // Every message counts, this reminder's own earlier sends (before a snooze) included.
-        $sentToday = (int) ReminderInstance::query()
-            ->where('sent_at', '>=', ReminderSchedule::dayStart($user, $date))
-            ->where('sent_at', '<', ReminderSchedule::dayStart($user, $date)->addDay())
-            ->sum('send_count');
+        return $this->overLimit($user, $now) ? 'daily_limit' : null;
+    }
 
-        return $sentToday >= ReminderSchedule::DAILY_LIMIT ? 'daily_limit' : null;
+    /**
+     * Month-end report reminder: due on the last day of the month, still valid for two days after that (a snooze of one
+     * day lands on the 1st); skipped when nothing happened in the month or every active project already has an
+     * approved report for it.
+     */
+    private function monthly(ReminderInstance $instance, User $user, CarbonImmutable $now, ?string $date): ?string
+    {
+        if ($date === null) {
+            return 'expired';
+        }
+
+        $deadline = CarbonImmutable::parse($date, $user->timezone)->addDays(3)->startOfDay()->utc();
+
+        if ($now->greaterThanOrEqualTo($deadline)
+            || ($instance->status === ReminderState::Scheduled && $instance->next_run_at !== null
+                && $now->greaterThan(CarbonImmutable::instance($instance->next_run_at)->addMinutes(ReminderSchedule::EXPIRY_MINUTES)))) {
+            return 'expired';
+        }
+
+        [$from, $to] = [CarbonImmutable::parse($date)->startOfMonth()->format('Y-m-d'), $date];
+        $projects = Activity::query()->whereBetween('activity_date', [$from, $to])->distinct()->pluck('project_id')->all();
+
+        if ($projects === []) {
+            return 'no_activity';
+        }
+
+        $approved = Report::query()->whereIn('project_id', $projects)->where('status', ReportStatus::Approved)
+            ->where('period_start', $from)->where('period_end', $to)->distinct()->pluck('project_id')->all();
+
+        if (count($approved) === count($projects)) {
+            return 'report_exists';
+        }
+
+        return $this->overLimit($user, $now) ? 'daily_limit' : null;
+    }
+
+    /** Every reminder message of the user's local day counts, a reminder's own earlier sends (before a snooze) included. */
+    private function overLimit(User $user, CarbonImmutable $now): bool
+    {
+        $today = ReminderSchedule::localDate($user, $now);
+
+        return (int) ReminderInstance::query()
+            ->where('sent_at', '>=', ReminderSchedule::dayStart($user, $today))
+            ->where('sent_at', '<', ReminderSchedule::dayStart($user, $today)->addDay())
+            ->sum('send_count') >= ReminderSchedule::DAILY_LIMIT;
     }
 }
