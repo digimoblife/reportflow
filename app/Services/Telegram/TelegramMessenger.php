@@ -2,6 +2,7 @@
 
 namespace App\Services\Telegram;
 
+use App\Services\Ops\OpsEvents;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -65,6 +66,7 @@ class TelegramMessenger
             return $this->send($chatId, $text, $replyTo, $keyboard);
         } catch (TelegramApiException $e) {
             Log::warning('telegram.send_failed', ['method' => $e->apiMethod, 'status' => $e->httpStatus, 'description' => $e->description]);
+            OpsEvents::record(OpsEvents::TELEGRAM_FAILED, ['method' => $e->apiMethod, 'status' => $e->httpStatus]);
 
             return null;
         }

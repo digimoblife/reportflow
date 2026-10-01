@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\Ai\AiExtractionFailed;
 use App\Services\Ai\AiProviderException;
 use App\Services\Ai\AIService;
+use App\Services\Ops\OpsEvents;
 use App\Support\UserContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
@@ -105,14 +106,17 @@ class ReportGenerator
             return null;
         }
 
+        $startedAt = hrtime(true);
+
         try {
             $user = User::query()->findOrFail($this->context->requireUserId());
             $report = Report::query()->with('project')->findOrFail($report->id);
             $data = $this->selector->select($report->project, $report->period_start->format('Y-m-d'), $report->period_end->format('Y-m-d'), $user->timezone);
 
-            $version = $this->writeVersion($report, $data, $this->composeSections($report, $data), ReportCreatedBy::AiGenerate, $channel, null);
+            $version = $this->writeVersion($report, $data, $this->composeSections($report, $data), ReportCreatedBy::AiGenerate, $channel, null, (int) round((hrtime(true) - $startedAt) / 1_000_000));
         } catch (Throwable $e) {
             Report::query()->whereKey($report->id)->update(['generation_lock_until' => null, 'status' => $previous]);
+            OpsEvents::record(OpsEvents::REPORT_FAILED, ['report_id' => $report->id, 'exception' => $e::class]);
 
             throw $e;
         }
@@ -172,9 +176,9 @@ class ReportGenerator
     /**
      * @param  list<array{key: string, title: string, markdown: string, fallback: bool}>  $sections
      */
-    public function writeVersion(Report $report, ReportDataSet $data, array $sections, ReportCreatedBy $by, string $channel, ?string $instruction): ReportVersion
+    public function writeVersion(Report $report, ReportDataSet $data, array $sections, ReportCreatedBy $by, string $channel, ?string $instruction, ?int $generationMs = null): ReportVersion
     {
-        $version = DB::transaction(function () use ($report, $data, $sections, $by, $channel, $instruction): ReportVersion {
+        $version = DB::transaction(function () use ($report, $data, $sections, $by, $channel, $instruction, $generationMs): ReportVersion {
             $next = (int) ReportVersion::query()->where('report_id', $report->id)->max('version_no') + 1;
 
             $version = ReportVersion::query()->create([
@@ -185,6 +189,7 @@ class ReportGenerator
                     'language' => $report->language->value,
                     'sections' => $sections,
                     'counts' => $data->counts(),
+                    'meta' => ['generation_ms' => $generationMs],
                 ],
                 'data_snapshot_at' => $data->snapshotAt,
                 'source_activity_ids' => $data->sourceActivityIds(),

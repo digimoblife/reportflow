@@ -20,6 +20,10 @@ return [
     ],
 
     // PRD §13 initial values; retuned from the evaluation dataset (skill prompt-eval).
+    // Price per million tokens by model, to show an estimated cost on the Health page (PRD §79). Left empty on purpose:
+    // fill it in from your provider's current price list, e.g. 'deepseek-flash' => ['input_per_million' => 0.0, 'output_per_million' => 0.0].
+    'pricing' => [],
+
     'confidence' => [
         'high' => 0.90,
         'medium' => 0.70,

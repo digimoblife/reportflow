@@ -91,6 +91,7 @@ class ProcessInboundMessage implements ShouldQueue
         InboundMessage::query()->whereKey($message->id)->update([
             'status' => ($result->outcome->hasPending()) ? InboundMessageStatus::NeedsClarification->value : InboundMessageStatus::Processed->value,
             'error' => null,
+            'processed_at' => now('UTC'),
         ]);
 
         DeliverInboundConfirmation::dispatch($message->id, $this->userId, DeliverInboundConfirmation::PROCESSED);

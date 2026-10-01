@@ -6,6 +6,7 @@ use App\Enums\ReportStatus;
 use App\Jobs\Middleware\WithUserContext;
 use App\Models\Report;
 use App\Models\User;
+use App\Services\Ops\OpsEvents;
 use App\Services\Report\ReportDrift;
 use App\Services\Report\ReportFactsBuilder;
 use App\Services\Telegram\BotMessages;
@@ -85,6 +86,7 @@ class SendReportOutdatedNotice implements ShouldQueue
                 return;
             }
 
+            OpsEvents::record(OpsEvents::TELEGRAM_FAILED, ['method' => $e->apiMethod, 'status' => $e->httpStatus]);
             Log::warning('report.outdated_notice_undeliverable', ['report_id' => $report->id, 'method' => $e->apiMethod, 'status' => $e->httpStatus]);
 
             return;

@@ -28,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $outcome
  * @property Carbon $received_at
  * @property int $reprocess_count
+ * @property Carbon|null $processed_at
  * @property int|null $correction_of_id the message whose confirmation this reply corrects (M4f)
  *
  * PRD §23, §48, §49 inbound_messages. `text` is always the post-redaction text.
@@ -36,7 +37,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'user_id', 'source', 'idempotency_key', 'telegram_chat_id', 'telegram_message_id', 'reply_message_id',
     'text', 'attachments', 'received_at', 'edited_at', 'status', 'error', 'reprocess_count', 'outcome',
-    'correction_of_id',
+    'correction_of_id', 'processed_at',
 ])]
 class InboundMessage extends Model implements UserScoped
 {
@@ -59,6 +60,7 @@ class InboundMessage extends Model implements UserScoped
             'outcome' => 'array',
             'received_at' => 'datetime',
             'edited_at' => 'datetime',
+            'processed_at' => 'datetime',
             'reprocess_count' => 'integer',
         ];
     }

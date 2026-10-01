@@ -10,6 +10,7 @@ use App\Jobs\Middleware\WithUserContext;
 use App\Models\InboundMessage;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\Ops\OpsEvents;
 use App\Services\Telegram\BotMessages;
 use App\Services\Telegram\ConfirmationComposer;
 use App\Services\Telegram\LanguageDetector;
@@ -102,6 +103,7 @@ class DeliverInboundConfirmation implements ShouldQueue
             }
 
             // 400/403 and friends: nothing to gain from retrying.
+            OpsEvents::record(OpsEvents::TELEGRAM_FAILED, ['method' => $e->apiMethod, 'status' => $e->httpStatus]);
             Log::warning('inbound.confirmation_undeliverable', [
                 'inbound_message_id' => $message->id,
                 'method' => $e->apiMethod,

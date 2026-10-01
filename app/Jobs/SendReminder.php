@@ -7,6 +7,7 @@ use App\Enums\ReminderType;
 use App\Jobs\Middleware\WithUserContext;
 use App\Models\ReminderInstance;
 use App\Models\User;
+use App\Services\Ops\OpsEvents;
 use App\Services\Reminder\ReminderPolicy;
 use App\Services\Telegram\BotMessages;
 use App\Services\Telegram\MonthlyReminderComposer;
@@ -116,6 +117,7 @@ class SendReminder implements ShouldQueue
                 return;
             }
 
+            OpsEvents::record(OpsEvents::TELEGRAM_FAILED, ['method' => $e->apiMethod, 'status' => $e->httpStatus]);
             Log::warning('reminder.undeliverable', ['reminder_instance_id' => $instance->id, 'method' => $e->apiMethod, 'status' => $e->httpStatus]);
             $this->cancel($instance->id, 'undeliverable');
 

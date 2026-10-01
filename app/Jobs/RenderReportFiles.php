@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Jobs\Middleware\WithUserContext;
 use App\Models\ReportVersion;
+use App\Services\Ops\OpsEvents;
 use App\Services\Report\ReportFiles;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -59,6 +60,7 @@ class RenderReportFiles implements ShouldQueue
 
     public function failed(Throwable $e): void
     {
+        OpsEvents::record(OpsEvents::PDF_FAILED, ['code' => $e->getMessage() === '' ? null : mb_substr($e->getMessage(), 0, 60)]);
         Log::error('report.files_failed', ['report_version_id' => $this->reportVersionId, 'exception' => $e::class, 'code' => $e->getMessage() === '' ? null : mb_substr($e->getMessage(), 0, 60)]);
     }
 }

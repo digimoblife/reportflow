@@ -7,6 +7,7 @@ use App\Jobs\Middleware\WithUserContext;
 use App\Models\ReportFile;
 use App\Models\ReportVersion;
 use App\Models\User;
+use App\Services\Ops\OpsEvents;
 use App\Services\Telegram\BotMessages;
 use App\Services\Telegram\ReportReviewComposer;
 use App\Services\Telegram\TelegramApiException;
@@ -109,6 +110,7 @@ class SendReportReview implements ShouldQueue
                 return;
             }
 
+            OpsEvents::record(OpsEvents::TELEGRAM_FAILED, ['method' => $e->apiMethod, 'status' => $e->httpStatus]);
             Log::warning('report.review_undeliverable', ['report_version_id' => $version->id, 'method' => $e->apiMethod, 'status' => $e->httpStatus]);
         }
     }
