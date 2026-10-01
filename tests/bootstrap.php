@@ -34,6 +34,7 @@ foreach ([
     'TELEGRAM_CLIENT' => 'fake',
     'AI_PROVIDER' => 'fake',
     'TELEGRAM_BOT_TOKEN' => '',
+    'TELEGRAM_BOT_USERNAME' => '',
     'DEEPSEEK_API_KEY' => '',
     'TRUSTED_PROXIES' => '',
     // Every other setting that points at a shared or external service. Hosts under .invalid never resolve,

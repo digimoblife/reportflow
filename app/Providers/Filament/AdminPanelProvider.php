@@ -2,7 +2,10 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\TelegramLogin;
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\BindUserContext;
+use App\Http\Middleware\RequireSecureInProduction;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -27,8 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            // TODO: hapus di M5 saat Telegram Login Widget diimplementasikan
-            ->when(app()->environment('local'), fn (Panel $panel) => $panel->login())
+            ->login(TelegramLogin::class)
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -43,6 +45,7 @@ class AdminPanelProvider extends PanelProvider
                 FilamentInfoWidget::class,
             ])
             ->middleware([
+                RequireSecureInProduction::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
@@ -55,6 +58,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                BindUserContext::class,
             ]);
     }
 }

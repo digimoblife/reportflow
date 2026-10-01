@@ -10,6 +10,9 @@ return [
 
     'token' => env('TELEGRAM_BOT_TOKEN'),
 
+    // Public bot username (not a secret) for the dashboard's Telegram Login Widget; empty = widget disabled.
+    'bot_username' => env('TELEGRAM_BOT_USERNAME'),
+
     // Sent back by Telegram in X-Telegram-Bot-Api-Secret-Token; A-Z a-z 0-9 _ - (1..256).
     'secret_token' => env('TELEGRAM_BOT_SECRET_TOKEN'),
 

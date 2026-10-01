@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Database\PostgresConnection;
+use App\Http\Middleware\BindUserContext;
 use App\Services\Ai\AiProvider;
 use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\Fakes\FakeAiProvider;
@@ -21,6 +22,7 @@ use Illuminate\Database\Connection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
@@ -56,6 +58,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Livewire component updates are separate requests: they must bind the user context too (fails closed otherwise).
+        Livewire::addPersistentMiddleware([BindUserContext::class]);
+
         // A fake Telegram client in production would silently swallow every user-facing message.
         if ($this->app->isProduction() && config('telegram.client') !== 'http') {
             throw new RuntimeException('TELEGRAM_CLIENT must be "http" in production.');

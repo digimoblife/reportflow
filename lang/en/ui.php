@@ -45,6 +45,15 @@ return [
         'next' => 'Next ➡️',
     ],
 
+    'dashboard' => [
+        'login' => [
+            'title' => 'Sign in',
+            'heading' => 'Sign in to ReportFlow',
+            'intro' => 'Sign in with your Telegram account. Only registered accounts can sign in.',
+            'not_configured' => 'Telegram login is not configured. Contact the system owner.',
+        ],
+    ],
+
     'lists' => [
         'active_tasks' => 'active tasks',
         'completed_tasks' => 'completed',

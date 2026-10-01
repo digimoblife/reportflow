@@ -45,6 +45,15 @@ return [
         'next' => 'Berikutnya ➡️',
     ],
 
+    'dashboard' => [
+        'login' => [
+            'title' => 'Masuk',
+            'heading' => 'Masuk ke ReportFlow',
+            'intro' => 'Masuk dengan akun Telegram Anda. Hanya akun yang sudah terdaftar yang bisa masuk.',
+            'not_configured' => 'Login Telegram belum dikonfigurasi. Hubungi pemilik sistem.',
+        ],
+    ],
+
     'lists' => [
         'active_tasks' => 'task aktif',
         'completed_tasks' => 'selesai',

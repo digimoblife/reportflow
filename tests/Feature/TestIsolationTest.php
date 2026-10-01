@@ -20,6 +20,7 @@ it('points every shared or external service at a test double or a dead host', fu
         ->and(env('GOTENBERG_URL'))->toEndWith('.invalid:3000')
         ->and(config('telegram.client'))->toBe('fake')
         ->and(config('telegram.token'))->toBeIn([null, ''])
+        ->and(config('telegram.bot_username'))->toBeIn([null, ''])
         ->and(config('ai.provider'))->toBe('fake')
         ->and(config('ai.deepseek.api_key'))->toBeIn([null, ''])
         ->and(config('ai.deepseek.base_url'))->toEndWith('.invalid')

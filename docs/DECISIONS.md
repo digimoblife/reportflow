@@ -592,3 +592,12 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
   dan keputusan prompt berikutnya tetap menunggu dataset nyata user (`tests/Eval/data/`).
 - PHPStan naik ke level 8 tanpa baseline. `WorklogResult` kini selalu membawa proposal dan outcome (bidang `placeholder` dihapus).
 - Prompt koreksi (`worklog_correction@v1`) belum punya kasus eval (lihat M4f).
+
+## M5a — Login dashboard (PRD §22, §56)
+
+- Panel `admin` tidak punya login email/password lagi (di semua environment). Halaman login (`TelegramLogin`) hanya memuat Telegram Login Widget bila `TELEGRAM_BOT_USERNAME` terisi.
+- `TelegramLoginVerifier`: HMAC-SHA256 dengan SHA256(token bot) sebagai kunci, `hash_equals`, `auth_date` ≤ 5 menit (toleransi 60 dtk ke depan), nilai harus string, payload yang sama hanya berlaku sekali (cache). Semua kegagalan = 403 polos.
+  Field tambahan dari Telegram ikut dalam string yang ditandatangani (seperti referensi Telegram), bukan ditolak.
+- Whitelist = `users.telegram_user_id`; `User::canAccessPanel` mensyaratkannya. Panel di production HTTPS-only (`RequireSecureInProduction` pada middleware panel).
+- Jalur dev/darurat: `php artisan reportflow:login-link <telegram_id>` mencetak link sekali pakai (5 menit, hanya hash token di cache, ditolak di production). Bukan command bot: daftar PRD §20 tidak berubah. Widget baru bisa dipakai setelah ada domain HTTPS tetap yang didaftarkan lewat `/setdomain` di BotFather.
+- `BindUserContext` mengikat `UserContext` dari user yang login pada page load (authMiddleware) dan pada setiap update Livewire (persistent middleware); tanpa user, query ber-scope gagal-tertutup.

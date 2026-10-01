@@ -6,6 +6,8 @@ namespace App\Models;
 use App\Enums\Language;
 use App\Models\Concerns\StoresTimestampsWithOffset;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,11 +20,11 @@ use Illuminate\Notifications\Notifiable;
  * @property Language $default_language
  *
  * The account owner (PRD §49 users). Not user-scoped itself; it is the scope.
- * TODO(M5): email/password login is local-only until the Telegram Login Widget lands.
+ * Signs in to the dashboard through the Telegram Login Widget; `telegram_user_id` is the whitelist (PRD §56).
  */
 #[Fillable(['name', 'email', 'password', 'telegram_user_id', 'timezone', 'default_language', 'workdays', 'reminders_enabled'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -44,6 +46,11 @@ class User extends Authenticatable
             'workdays' => 'array',
             'reminders_enabled' => 'boolean',
         ];
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->telegram_user_id !== null;
     }
 
     /**
