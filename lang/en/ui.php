@@ -46,6 +46,52 @@ return [
     ],
 
     'dashboard' => [
+        'tasks' => [
+            'nav' => 'Tasks',
+            'title' => 'Tasks',
+            'columns' => ['id' => '#', 'title' => 'Title', 'project' => 'Project', 'status' => 'Status', 'last_activity' => 'Last activity', 'waiting' => 'Waiting on'],
+            'filters' => ['status' => 'Status', 'project' => 'Project', 'period' => 'Activity period', 'from' => 'From', 'until' => 'Until'],
+            'view' => [
+                'details' => 'Details',
+                'timeline' => 'History and activities',
+                'events' => 'Task history',
+                'activities' => 'Activities',
+                'no_activities' => 'No activities yet.',
+                'no_events' => 'No history yet.',
+                'version_note' => 'Data loaded at version :version.',
+            ],
+            'actions' => [
+                'rename' => 'Rename',
+                'status' => 'Change status',
+                'move' => 'Move activities',
+                'reload' => 'Reload',
+            ],
+            'form' => [
+                'title' => 'Task title',
+                'status' => 'New status',
+                'activities' => 'Activities to move',
+                'target' => 'Move to task',
+            ],
+            'notices' => [
+                'renamed' => 'Title updated.',
+                'unchanged' => 'Nothing changed.',
+                'status_changed' => 'Status updated.',
+                'status_invalid' => 'That status change is not allowed.',
+                'moved' => ':count activity(ies) moved.',
+                'move_none' => 'No activities were moved.',
+                'stale' => 'This task was just changed elsewhere, so your change was not saved. Reload the page and try again.',
+                'reloaded' => 'Reloaded.',
+            ],
+            'events' => [
+                'created' => 'Task created',
+                'status_changed' => 'Status: :from → :to',
+                'reopened' => 'Reopened: :from → :to',
+                'title_changed' => 'Title changed: ":from" → ":to"',
+                'moved' => 'Activities moved',
+                'merged' => 'Merged',
+                'undone' => 'Undone',
+            ],
+        ],
         'worklog' => [
             'nav' => 'Log Work',
             'title' => 'Log Work',

@@ -180,4 +180,48 @@ class TaskLifecycle
 
         $this->event($task, TaskEventType::Moved, ['project_id' => $from, 'task_id' => $task->id], ['project_id' => $project->id, 'task_id' => $task->id], $actor, $inboundMessageId);
     }
+
+    /**
+     * @return bool false when the title is unchanged (nothing written)
+     *
+     * @throws StaleTaskException
+     */
+    public function rename(Task $task, string $title, EventActor $actor, ?int $inboundMessageId = null, ?int $expectedVersion = null): bool
+    {
+        $title = mb_substr(trim($title), 0, 200);
+
+        if ($title === '' || $title === $task->title) {
+            return false;
+        }
+
+        $before = ['title' => $task->title];
+        $this->save($task, ['title' => $title], $expectedVersion);
+        $this->event($task, TaskEventType::TitleChanged, $before, ['title' => $title], $actor, $inboundMessageId);
+
+        return true;
+    }
+
+    /**
+     * Sets last_activity_at after activities were added, moved or removed. Bumps the version.
+     *
+     * @throws StaleTaskException
+     */
+    public function setLastActivity(Task $task, ?CarbonImmutable $at, ?int $expectedVersion = null): void
+    {
+        $this->save($task, ['last_activity_at' => $at?->utc()], $expectedVersion);
+    }
+
+    /**
+     * Records that activities moved between two tasks (PRD §21; shape in docs/DECISIONS.md), on the task they left and the one they joined.
+     *
+     * @param  list<int>  $activityIds
+     */
+    public function recordActivitiesMoved(Task $source, Task $target, array $activityIds, EventActor $actor): void
+    {
+        $from = ['project_id' => $source->project_id, 'task_id' => $source->id, 'activity_ids' => $activityIds];
+        $to = ['project_id' => $target->project_id, 'task_id' => $target->id, 'activity_ids' => $activityIds];
+
+        $this->event($source, TaskEventType::Moved, $from, $to, $actor, null);
+        $this->event($target, TaskEventType::Moved, $from, $to, $actor, null);
+    }
 }

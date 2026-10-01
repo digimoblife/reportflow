@@ -608,3 +608,9 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
   Pesan dashboard tidak memicu pesan Telegram (`DeliverInboundConfirmation` hanya untuk sumber Telegram).
 - Daftar catatan terbaru (kedua channel, `wire:poll.5s`) memakai `OutcomeItemPresenter` (data terstruktur; Telegram memformat teks darinya, keluaran Telegram tidak berubah). Tombol Undo / Pindah Task / Ubah Status / Ganti Project memanggil `UndoService` / `CorrectionService` yang sama dengan Telegram.
 - Bahasa UI per request dari `users.default_language` (di `BindUserContext`, termasuk update Livewire).
+
+## M5c — Halaman Task (PRD §22, §23)
+
+- `TaskResource`: daftar (filter status/project/periode `last_activity_at` dalam hari kalender user, pencarian judul, polling 10 dtk) dan halaman detail (detail, aktivitas, riwayat `task_events`). Tidak ada buat/hapus di UI: task lahir dari catatan, dan setiap perubahan lewat `TaskLifecycle`.
+- Edit di halaman detail: ubah judul (`TaskLifecycle::rename`, event `title_changed`), ubah status (opsi dari matriks, `changeStatus`), pindahkan aktivitas (`ActivityMover`: event `moved` di task asal dan tujuan dengan `activity_ids`, `project_id` aktivitas mengikuti task tujuan, `last_activity_at` dihitung ulang dari `activity_date` terbaru, baris `corrections(move_task)` tanpa pesan).
+- Optimistic locking: halaman menyimpan `loadedVersion` (terkunci) saat dibuka dan memakainya sebagai `expectedVersion`. Bila task berubah dari channel lain, edit ditolak dengan notifikasi "Task ini baru saja diubah…" dan aksi "Muat ulang" memperbarui versi.

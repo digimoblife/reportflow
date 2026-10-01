@@ -46,6 +46,52 @@ return [
     ],
 
     'dashboard' => [
+        'tasks' => [
+            'nav' => 'Task',
+            'title' => 'Task',
+            'columns' => ['id' => '#', 'title' => 'Judul', 'project' => 'Project', 'status' => 'Status', 'last_activity' => 'Aktivitas terakhir', 'waiting' => 'Menunggu'],
+            'filters' => ['status' => 'Status', 'project' => 'Project', 'period' => 'Periode aktivitas', 'from' => 'Dari', 'until' => 'Sampai'],
+            'view' => [
+                'details' => 'Detail',
+                'timeline' => 'Riwayat dan aktivitas',
+                'events' => 'Riwayat task',
+                'activities' => 'Aktivitas',
+                'no_activities' => 'Belum ada aktivitas.',
+                'no_events' => 'Belum ada riwayat.',
+                'version_note' => 'Data dimuat versi :version.',
+            ],
+            'actions' => [
+                'rename' => 'Ubah judul',
+                'status' => 'Ubah status',
+                'move' => 'Pindahkan aktivitas',
+                'reload' => 'Muat ulang',
+            ],
+            'form' => [
+                'title' => 'Judul task',
+                'status' => 'Status baru',
+                'activities' => 'Aktivitas yang dipindahkan',
+                'target' => 'Pindahkan ke task',
+            ],
+            'notices' => [
+                'renamed' => 'Judul diperbarui.',
+                'unchanged' => 'Tidak ada yang berubah.',
+                'status_changed' => 'Status diperbarui.',
+                'status_invalid' => 'Perubahan status itu tidak diizinkan.',
+                'moved' => ':count aktivitas dipindahkan.',
+                'move_none' => 'Tidak ada aktivitas yang dipindahkan.',
+                'stale' => 'Task ini baru saja diubah dari tempat lain, jadi perubahan Anda tidak disimpan. Muat ulang halaman lalu coba lagi.',
+                'reloaded' => 'Data dimuat ulang.',
+            ],
+            'events' => [
+                'created' => 'Task dibuat',
+                'status_changed' => 'Status: :from → :to',
+                'reopened' => 'Dibuka lagi: :from → :to',
+                'title_changed' => 'Judul diubah: ":from" → ":to"',
+                'moved' => 'Aktivitas dipindahkan',
+                'merged' => 'Digabung',
+                'undone' => 'Dibatalkan',
+            ],
+        ],
         'worklog' => [
             'nav' => 'Catat Pekerjaan',
             'title' => 'Catat Pekerjaan',
