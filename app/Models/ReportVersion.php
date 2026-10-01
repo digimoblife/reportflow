@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MessageSource;
 use App\Enums\ReportCreatedBy;
+use App\Exceptions\ImmutableReportVersionException;
 use App\Models\Concerns\HasUserScope;
 use App\Models\Concerns\StoresTimestampsWithOffset;
 use App\Models\Contracts\UserScoped;
@@ -28,12 +29,13 @@ use Illuminate\Support\Carbon;
  * @property string|null $source_channel
  * @property string|null $instruction
  * @property int $version
+ * @property Carbon|null $approved_at
  *
  * PRD §23, §43, §44, §49 report_versions. Approved versions are immutable (enforced in M7).
  */
 #[Fillable([
     'report_id', 'version_no', 'content', 'data_snapshot_at', 'source_activity_ids', 'created_by',
-    'source_channel', 'instruction', 'version',
+    'source_channel', 'instruction', 'version', 'approved_at',
 ])]
 class ReportVersion extends Model implements UserScoped
 {
@@ -42,6 +44,22 @@ class ReportVersion extends Model implements UserScoped
 
     use HasUserScope;
     use StoresTimestampsWithOffset;
+
+    protected static function booted(): void
+    {
+        // An approved version is a record of what was signed off: never edited, never removed (PRD §43).
+        static::updating(function (self $version): void {
+            if ($version->getOriginal('approved_at') !== null) {
+                throw new ImmutableReportVersionException($version->id);
+            }
+        });
+
+        static::deleting(function (self $version): void {
+            if ($version->approved_at !== null) {
+                throw new ImmutableReportVersionException($version->id);
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -53,6 +71,7 @@ class ReportVersion extends Model implements UserScoped
             'created_by' => ReportCreatedBy::class,
             'source_channel' => MessageSource::class,
             'version' => 'integer',
+            'approved_at' => 'datetime',
         ];
     }
 

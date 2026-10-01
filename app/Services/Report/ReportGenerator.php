@@ -99,7 +99,7 @@ class ReportGenerator
      */
     public function generate(Report $report, string $channel = 'dashboard'): ?ReportVersion
     {
-        $previous = $report->status === ReportStatus::Generating ? ($report->current_version_id === null ? ReportStatus::Draft : ReportStatus::InReview) : $report->status;
+        $previous = $report->status === ReportStatus::Generating ? $this->settledStatus($report) : $report->status;
 
         if (! $this->lock($report)) {
             return null;
@@ -118,6 +118,21 @@ class ReportGenerator
         }
 
         return $version;
+    }
+
+    /**
+     * The status a report has when nothing is running: draft without a version, approved while its current version is an
+     * approved one, otherwise in review.
+     */
+    public function settledStatus(Report $report): ReportStatus
+    {
+        $current = $report->current_version_id === null ? null : ReportVersion::query()->find($report->current_version_id);
+
+        return match (true) {
+            $current === null => ReportStatus::Draft,
+            $current->approved_at !== null => ReportStatus::Approved,
+            default => ReportStatus::InReview,
+        };
     }
 
     /**
