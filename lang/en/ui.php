@@ -89,6 +89,7 @@ return [
                 'approved_note' => 'This version is approved and cannot be changed. Saving changes creates a new version.',
                 'snapshot' => 'Data as of :at',
                 'fallback' => 'This section uses a fixed sentence because the AI narrative did not pass the checks.',
+                'send_telegram' => 'Send to Telegram',
                 'instruct_label' => 'Edit via instruction',
                 'instruct_placeholder' => 'Example: add the downtime details, or shorten this part',
                 'instruct_button' => 'Apply instruction',
@@ -112,6 +113,7 @@ return [
                 'cancelled' => 'Report cancelled.',
                 'stale' => 'This report changed since the page was opened, so your change was not saved. Load the newest version and try again.',
                 'not_possible' => 'That step is not possible right now.',
+                'sent_telegram' => 'The report was sent to your Telegram.',
                 'instructed' => 'Instruction applied as a new version. :count new fact(s) saved as activities.',
                 'unmatched' => 'Nothing changed. This fact fits none of the report\'s tasks, please name the task: :facts',
                 'redaction_failed' => 'The instruction could not be checked safely, so it was not processed.',
@@ -270,6 +272,18 @@ return [
     ],
 
     'reminder_states' => ['on' => 'ON', 'off' => 'OFF'],
+
+    'report_review' => [
+        'snapshot' => 'data as of :at',
+        'activities' => 'Activities',
+        'completed' => 'Completed tasks',
+        'ongoing' => 'Ongoing tasks',
+        'waiting' => 'Waiting tasks',
+        'cross_month' => 'Cross-month',
+        'incidents' => 'Incidents / issues',
+        'fallback_note' => ':count section(s) use a fixed sentence because the AI narrative did not pass the checks.',
+        'buttons' => ['approve' => '✅ Approve', 'regenerate' => '🔄 Regenerate', 'edit' => '✏️ Edit via instruction', 'dashboard' => '🌐 Open in Dashboard', 'cancel' => '✖️ Cancel', 'back' => '⬅️ Back'],
+    ],
 
     'lists' => [
         'active_tasks' => 'active tasks',

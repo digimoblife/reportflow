@@ -29,6 +29,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $source_channel
  * @property string|null $instruction
  * @property int $version
+ * @property Report $report
  * @property Carbon|null $approved_at
  *
  * PRD §23, §43, §44, §49 report_versions. Approved versions are immutable (enforced in M7).

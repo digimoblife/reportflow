@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Reports\Pages;
 use App\Enums\ActivityType;
 use App\Enums\ReportStatus;
 use App\Filament\Resources\Reports\ReportResource;
+use App\Jobs\SendReportReview;
 use App\Models\Report;
 use App\Models\ReportFile;
 use App\Models\ReportVersion;
@@ -17,6 +18,7 @@ use App\Services\Report\ReportWorkflow;
 use App\Services\Report\SignedDownload;
 use App\Services\Report\StaleReportException;
 use Carbon\CarbonImmutable;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
@@ -237,6 +239,14 @@ class ViewReport extends ViewRecord
         $report = $this->report();
 
         return [
+            Action::make('sendTelegram')
+                ->label(__('ui.dashboard.reports.view.send_telegram'))
+                ->color('gray')
+                ->visible(fn (): bool => $this->loadedVersionId !== 0 && auth()->user() instanceof User && auth()->user()->telegram_user_id !== null)
+                ->action(function (): void {
+                    SendReportReview::dispatch($this->loadedVersionId, (int) auth()->id());
+                    Notification::make()->title((string) __('ui.dashboard.reports.notices.sent_telegram'))->success()->send();
+                }),
             ListReports::generateAction($report->project_id, $report->period_start->format('Y-m-d'), $report->period_end->format('Y-m-d'), $report->language->value, 'regenerate')->color('gray'),
         ];
     }

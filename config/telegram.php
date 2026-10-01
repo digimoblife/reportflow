@@ -24,6 +24,9 @@ return [
     'connect_timeout' => 3,
     'timeout' => 5,
 
+    // Uploading a file (a report) takes longer than a JSON call.
+    'upload_timeout' => 30,
+
     // Telegram rejects messages longer than this.
     'max_message_length' => 4096,
 

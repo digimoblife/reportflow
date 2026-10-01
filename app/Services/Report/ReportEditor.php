@@ -52,7 +52,7 @@ class ReportEditor
      * @throws StaleReportException when the report moved on since $expectedVersionId
      * @throws InvalidArgumentException when the report cannot be edited now
      */
-    public function instruct(Report $report, int $expectedVersionId, string $sectionKey, string $instruction, string $channel = 'dashboard'): InstructionResult
+    public function instruct(Report $report, int $expectedVersionId, string $sectionKey, #[\SensitiveParameter] string $instruction, string $channel = 'dashboard'): InstructionResult
     {
         $instruction = trim($instruction);
 

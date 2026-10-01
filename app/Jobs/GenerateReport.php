@@ -63,6 +63,11 @@ class GenerateReport implements ShouldQueue
             return;
         }
 
-        $generator->generate($report, $this->channel);
+        $version = $generator->generate($report, $this->channel);
+
+        // Asked for in Telegram: the draft comes back there as a review (PRD §42).
+        if ($version !== null && $this->channel === 'telegram') {
+            SendReportReview::dispatch($version->id, $this->userId);
+        }
     }
 }

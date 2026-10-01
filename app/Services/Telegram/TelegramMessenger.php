@@ -13,7 +13,7 @@ class TelegramMessenger
     public function __construct(private readonly TelegramClient $client) {}
 
     /**
-     * @param  list<list<array{text: string, callback_data: string}>>|null  $keyboard
+     * @param  list<list<array<string, string>>>|null  $keyboard
      *
      * @throws TelegramApiException
      */
@@ -23,13 +23,23 @@ class TelegramMessenger
     }
 
     /**
-     * @param  list<list<array{text: string, callback_data: string}>>|null  $keyboard  null = keep the buttons, [] = remove them
+     * @param  list<list<array<string, string>>>|null  $keyboard  null = keep the buttons, [] = remove them
      *
      * @throws TelegramApiException
      */
     public function edit(int $chatId, int $messageId, string $text, ?array $keyboard = null): void
     {
         $this->client->editMessageText($chatId, $messageId, TelegramText::fit($text), $keyboard);
+    }
+
+    /**
+     * @param  list<list<array<string, string>>>|null  $keyboard
+     *
+     * @throws TelegramApiException
+     */
+    public function sendDocument(int $chatId, string $filename, #[\SensitiveParameter] string $contents, ?string $caption = null, ?array $keyboard = null): int
+    {
+        return $this->client->sendDocument($chatId, $filename, $contents, $caption === null ? null : TelegramText::fit($caption, 1024), $keyboard);
     }
 
     /**
@@ -47,7 +57,7 @@ class TelegramMessenger
     /**
      * Best effort: returns the new message id, or null when Telegram refused or was unreachable.
      *
-     * @param  list<list<array{text: string, callback_data: string}>>|null  $keyboard
+     * @param  list<list<array<string, string>>>|null  $keyboard
      */
     public function trySend(int $chatId, string $text, ?int $replyTo = null, ?array $keyboard = null): ?int
     {

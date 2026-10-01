@@ -35,7 +35,7 @@ class ReportRequests
      * @param  bool  $waitForEntries  "Tunggu Selesai": hold back until nothing is being processed (or the wait limit)
      * @return array{status: string, report: Report|null}
      */
-    public function request(Project $project, string $start, string $end, Language $language, bool $waitForEntries = false): array
+    public function request(Project $project, string $start, string $end, Language $language, bool $waitForEntries = false, string $channel = 'dashboard'): array
     {
         try {
             $report = $this->generator->findOrCreate($project, $this->typeOf($start, $end), $start, $end, $language);
@@ -54,7 +54,7 @@ class ReportRequests
         GenerateReport::dispatch(
             $report->id,
             $this->context->requireUserId(),
-            'dashboard',
+            $channel,
             $waitForEntries,
             $now->copy()->addMinutes((int) config('reports.wait_minutes'))->getTimestamp(),
         );

@@ -38,6 +38,8 @@ class TelegramIngestionService
         private readonly OnboardingState $onboarding,
         private readonly ProjectService $projects,
         private readonly CallbackRouter $callbacks,
+        private readonly AwaitingReportInstruction $awaitingInstruction,
+        private readonly ReportReviewHandler $reportReview,
     ) {}
 
     public function handle(TelegramUpdate $update): void
@@ -92,6 +94,16 @@ class TelegramIngestionService
 
         if ($redaction->failed()) {
             $this->once($update, fn () => $this->messenger->trySend($update->chatId, $this->messages->get('security.redaction_error', $default)));
+
+            return;
+        }
+
+        // The message that follows "Edit via instruksi" is an instruction for a report section, not a worklog note.
+        if (! $update->isEdit() && ! $update->hasAttachment() && $this->awaitingInstruction->get($user->id) !== null) {
+            $this->once($update, function () use ($redaction, $update, $user, $default): void {
+                $this->notifyCredential($update->chatId, $redaction, $default);
+                $this->reportReview->instruction($user, $update->chatId, $default, $redaction->text);
+            });
 
             return;
         }

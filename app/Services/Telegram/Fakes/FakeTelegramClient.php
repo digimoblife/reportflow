@@ -17,6 +17,9 @@ final class FakeTelegramClient implements TelegramClient
     /** @var list<array{chat_id: int, message_id: int, text: string, keyboard: array<mixed>|null}> */
     public array $edits = [];
 
+    /** @var list<array{chat_id: int, message_id: int, filename: string, contents: string, caption: string|null, keyboard: array<mixed>|null}> */
+    public array $documents = [];
+
     /** @var list<array{id: string, text: string|null}> */
     public array $answers = [];
 
@@ -69,6 +72,18 @@ final class FakeTelegramClient implements TelegramClient
 
         $this->assertLength('editMessageText', $text);
         $this->edits[] = ['chat_id' => $chatId, 'message_id' => $messageId, 'text' => $text, 'keyboard' => $inlineKeyboard];
+    }
+
+    public function sendDocument(int $chatId, string $filename, #[\SensitiveParameter] string $contents, ?string $caption = null, ?array $inlineKeyboard = null): int
+    {
+        if ($this->sendFailures !== []) {
+            throw array_shift($this->sendFailures);
+        }
+
+        $id = $this->nextMessageId++;
+        $this->documents[] = ['chat_id' => $chatId, 'message_id' => $id, 'filename' => $filename, 'contents' => $contents, 'caption' => $caption, 'keyboard' => $inlineKeyboard];
+
+        return $id;
     }
 
     public function answerCallbackQuery(string $callbackQueryId, ?string $text = null): void

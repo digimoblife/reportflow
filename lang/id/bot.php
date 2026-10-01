@@ -314,6 +314,99 @@ return [
         ],
     ],
 
+    'report' => [
+        'review_intro' => [
+            'Draft laporan sudah siap. Silakan ditinjau dulu, nggih.',
+            'Ini draft laporannya. Cek ringkasannya, lalu putuskan langkah berikutnya.',
+        ],
+        'review_approved' => [
+            'Laporan ini sudah disetujui.',
+            'Laporan ini sudah final dan disetujui.',
+        ],
+        'approved' => [
+            'Laporan disetujui. Filenya saya kirim sebentar lagi, PDF dan Markdown.',
+            'Siap, laporan disetujui. PDF dan Markdown menyusul di bawah.',
+        ],
+        'generating' => [
+            'Laporan sedang dibuat. Saya kabari begitu draft-nya siap.',
+            'Draft laporan sedang disusun, tunggu sebentar ya.',
+        ],
+        'busy' => [
+            'Laporan ini sedang dibuat. Tunggu sampai selesai.',
+            'Masih ada proses pembuatan laporan yang berjalan untuk periode ini.',
+        ],
+        'stale' => [
+            'Laporan sudah berubah sejak pesan ini dikirim. Berikut versi terbarunya.',
+            'Pesan ini sudah usang karena laporannya diperbarui. Pakai yang terbaru.',
+        ],
+        'cancelled' => [
+            'Laporan dibatalkan.',
+            'Baik, laporan ini saya batalkan.',
+        ],
+        'not_possible' => [
+            'Langkah itu tidak bisa dilakukan sekarang.',
+            'Maaf, langkah itu belum bisa dijalankan saat ini.',
+        ],
+        'edit_pick' => [
+            'Bagian mana yang ingin diubah?',
+            'Pilih bagian laporan yang mau disunting.',
+        ],
+        'edit_prompt' => [
+            'Tulis instruksinya untuk bagian ":section" dalam satu pesan, misalnya "persingkat" atau "tambahkan bahwa downtime 25 menit di task Tracking".',
+            'Silakan kirim instruksi untuk bagian ":section" dalam satu pesan. Fakta baru akan saya simpan sebagai activity dulu.',
+        ],
+        'instructed' => [
+            'Sudah saya terapkan sebagai versi baru. :count fakta baru disimpan sebagai activity. Draft terbarunya menyusul.',
+            'Instruksi diterapkan jadi versi baru (:count fakta baru tersimpan). Saya kirim draft terbarunya.',
+        ],
+        'instruction' => [
+            'unmatched' => [
+                'Fakta ini belum cocok dengan task mana pun di laporan: :facts. Sebutkan nama task-nya, lalu kirim instruksinya lagi.',
+                'Saya tidak menemukan task untuk: :facts. Sebut task-nya, nggih, lalu coba lagi.',
+            ],
+            'redaction_failed' => [
+                'Instruksi itu tidak bisa diperiksa dengan aman, jadi tidak saya proses.',
+                'Instruksinya tidak bisa diperiksa dengan aman. Coba kirim lagi dalam bentuk yang lebih pendek.',
+            ],
+            'ai_failed' => [
+                'Instruksi belum bisa diproses sekarang, atau faktanya tidak lolos pemeriksaan. Tidak ada yang diubah.',
+                'Belum bisa memproses instruksi itu. Tidak ada yang diubah, coba lagi sebentar lagi.',
+            ],
+            'nothing_to_change' => [
+                'Bagian ini hanya berisi data, jadi instruksi tanpa fakta baru tidak mengubah apa pun.',
+                'Bagian itu isinya data murni; tanpa fakta baru tidak ada yang bisa diubah.',
+            ],
+            'rewrite_failed' => [
+                'Bagian itu belum bisa ditulis ulang dengan aman. Tidak ada yang diubah, coba lagi.',
+                'Penulisan ulang belum lolos pemeriksaan, jadi tidak ada yang diubah. Silakan coba lagi.',
+            ],
+            'invalid' => [
+                'Instruksinya terlalu pendek, terlalu panjang, atau bagiannya tidak dikenal. Coba lagi.',
+                'Instruksi tidak valid. Tulis 3 sampai 1000 karakter.',
+            ],
+        ],
+        'files_pending' => [
+            'File PDF masih disiapkan dan akan menyusul.',
+            'PDF-nya belum selesai dibuat, menyusul sebentar lagi.',
+        ],
+        'nothing_to_review' => [
+            'Tidak ada laporan yang menunggu tinjauan.',
+            'Belum ada draft laporan yang perlu ditinjau.',
+        ],
+        'none' => [
+            'Belum ada laporan.',
+            'Laporan masih kosong. Mulai dengan /report.',
+        ],
+        'list_title' => [
+            'Laporan terbaru:',
+            'Ini laporan Anda belakangan ini:',
+        ],
+        'list_hint' => [
+            'Ketik /review untuk meninjau draft terbaru.',
+            'Gunakan /review untuk membuka draft yang menunggu.',
+        ],
+    ],
+
     'sync' => [
         'answered_via_dashboard' => [
             '✅ Sudah dijawab lewat dashboard.',

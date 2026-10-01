@@ -9,7 +9,7 @@ namespace App\Services\Telegram;
 interface TelegramClient
 {
     /**
-     * @param  list<list<array{text: string, callback_data: string}>>|null  $inlineKeyboard
+     * @param  list<list<array<string, string>>>|null  $inlineKeyboard
      * @return int the message_id of the sent message
      *
      * @throws TelegramApiException
@@ -17,11 +17,21 @@ interface TelegramClient
     public function sendMessage(int $chatId, string $text, ?int $replyToMessageId = null, ?array $inlineKeyboard = null): int;
 
     /**
-     * @param  list<list<array{text: string, callback_data: string}>>|null  $inlineKeyboard  null = leave the buttons as they are, [] = remove them
+     * @param  list<list<array<string, string>>>|null  $inlineKeyboard  null = leave the buttons as they are, [] = remove them
      *
      * @throws TelegramApiException
      */
     public function editMessageText(int $chatId, int $messageId, string $text, ?array $inlineKeyboard = null): void;
+
+    /**
+     * Sends a file (a report PDF or Markdown) to a chat. `$contents` stays in memory; nothing about it is logged.
+     *
+     * @param  list<list<array<string, string>>>|null  $inlineKeyboard
+     * @return int the message_id of the sent message
+     *
+     * @throws TelegramApiException
+     */
+    public function sendDocument(int $chatId, string $filename, #[\SensitiveParameter] string $contents, ?string $caption = null, ?array $inlineKeyboard = null): int;
 
     /**
      * Acknowledge a button press (stops the client's loading spinner); optional short toast text.

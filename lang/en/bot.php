@@ -313,6 +313,99 @@ return [
         ],
     ],
 
+    'report' => [
+        'review_intro' => [
+            'The report draft is ready. Have a look before deciding.',
+            "Here's the draft report. Check the summary, then choose what to do.",
+        ],
+        'review_approved' => [
+            'This report has been approved.',
+            'This report is final and approved.',
+        ],
+        'approved' => [
+            "Report approved. I'll send the files in a moment, PDF and Markdown.",
+            'Done, the report is approved. PDF and Markdown follow below.',
+        ],
+        'generating' => [
+            "The report is being generated. I'll let you know when the draft is ready.",
+            'The draft report is being put together, one moment.',
+        ],
+        'busy' => [
+            'This report is already being generated. Wait until it finishes.',
+            'A generation for this period is already running.',
+        ],
+        'stale' => [
+            'The report changed after this message was sent. Here is the latest version.',
+            'This message is out of date because the report was updated. Use the newest one.',
+        ],
+        'cancelled' => [
+            'Report cancelled.',
+            'Okay, I cancelled this report.',
+        ],
+        'not_possible' => [
+            "That step isn't possible right now.",
+            'Sorry, that cannot be done at the moment.',
+        ],
+        'edit_pick' => [
+            'Which section do you want to change?',
+            'Pick the section of the report to edit.',
+        ],
+        'edit_prompt' => [
+            'Write your instruction for the ":section" section in one message, for example "make it shorter" or "add that the downtime lasted 25 minutes on the Tracking task".',
+            'Send the instruction for the ":section" section in a single message. New facts are saved as activities first.',
+        ],
+        'instructed' => [
+            'Applied as a new version. :count new fact(s) saved as activities. The latest draft follows.',
+            'Instruction applied as a new version (:count new fact(s) saved). I will send the latest draft.',
+        ],
+        'instruction' => [
+            'unmatched' => [
+                'This fact does not match any task in the report: :facts. Name the task and send the instruction again.',
+                'I could not find a task for: :facts. Mention the task and try again.',
+            ],
+            'redaction_failed' => [
+                'That instruction could not be checked safely, so I did not process it.',
+                'The instruction could not be checked safely. Try again with a shorter one.',
+            ],
+            'ai_failed' => [
+                'The instruction cannot be processed right now, or its facts did not pass the checks. Nothing was changed.',
+                'I could not process that instruction. Nothing was changed, please try again shortly.',
+            ],
+            'nothing_to_change' => [
+                'This section only holds data, so an instruction without a new fact changes nothing.',
+                'That section is pure data; without a new fact there is nothing to change.',
+            ],
+            'rewrite_failed' => [
+                'That section could not be rewritten safely. Nothing was changed, please try again.',
+                'The rewrite did not pass the checks, so nothing changed. Please try again.',
+            ],
+            'invalid' => [
+                'The instruction is too short, too long, or the section is unknown. Try again.',
+                'Invalid instruction. Write 3 to 1000 characters.',
+            ],
+        ],
+        'files_pending' => [
+            'The PDF is still being prepared and will follow.',
+            'The PDF is not finished yet, it follows shortly.',
+        ],
+        'nothing_to_review' => [
+            'No report is waiting for review.',
+            'There is no draft report to review.',
+        ],
+        'none' => [
+            'No reports yet.',
+            'No reports yet. Start with /report.',
+        ],
+        'list_title' => [
+            'Latest reports:',
+            'Your recent reports:',
+        ],
+        'list_hint' => [
+            'Type /review to review the newest draft.',
+            'Use /review to open the draft that is waiting.',
+        ],
+    ],
+
     'sync' => [
         'answered_via_dashboard' => [
             '✅ Already answered via the dashboard.',

@@ -23,6 +23,9 @@ class CallbackRouter
     /** @var (Closure(ReminderCallback, TelegramUpdate, User, Language): void)|null */
     private ?Closure $reminderHandler = null;
 
+    /** @var (Closure(ReportCallback, TelegramUpdate, User, Language): void)|null */
+    private ?Closure $reportHandler = null;
+
     public function __construct(
         private readonly TelegramMessenger $messenger,
         private readonly BotMessages $messages,
@@ -53,11 +56,27 @@ class CallbackRouter
     }
 
     /**
+     * @param  Closure(ReportCallback, TelegramUpdate, User, Language): void  $handler
+     */
+    public function onReport(Closure $handler): void
+    {
+        $this->reportHandler = $handler;
+    }
+
+    /**
      * Must run inside the user's UserContext.
      */
     public function handle(TelegramUpdate $update, User $user, Language $language): void
     {
         $callbackId = (string) $update->callbackId;
+        $report = ReportCallback::parse((string) $update->callbackData);
+
+        if ($report !== null && $this->reportHandler !== null) {
+            ($this->reportHandler)($report, $update, $user, $language);
+
+            return;
+        }
+
         $reminder = ReminderCallback::parse((string) $update->callbackData);
 
         if ($reminder !== null && $this->reminderHandler !== null) {

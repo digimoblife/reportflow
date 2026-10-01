@@ -89,6 +89,7 @@ return [
                 'approved_note' => 'Versi ini sudah disetujui dan tidak bisa diubah. Menyimpan perubahan akan membuat versi baru.',
                 'snapshot' => 'Data per :at',
                 'fallback' => 'Narasi section ini memakai kalimat tetap karena narasi AI tidak lolos pemeriksaan.',
+                'send_telegram' => 'Kirim ke Telegram',
                 'instruct_label' => 'Sunting via instruksi',
                 'instruct_placeholder' => 'Contoh: tambahkan detail downtime, atau persingkat bagian ini',
                 'instruct_button' => 'Terapkan instruksi',
@@ -112,6 +113,7 @@ return [
                 'cancelled' => 'Laporan dibatalkan.',
                 'stale' => 'Laporan ini berubah sejak halaman dibuka, jadi perubahan Anda tidak disimpan. Muat versi terbaru lalu coba lagi.',
                 'not_possible' => 'Langkah itu tidak bisa dilakukan sekarang.',
+                'sent_telegram' => 'Laporan dikirim ke Telegram Anda.',
                 'instructed' => 'Instruksi diterapkan sebagai versi baru. :count fakta baru disimpan sebagai activity.',
                 'unmatched' => 'Tidak ada yang diubah. Fakta ini tidak cocok dengan task mana pun di laporan, sebutkan task-nya: :facts',
                 'redaction_failed' => 'Instruksi tidak bisa diperiksa dengan aman, jadi tidak diproses.',
@@ -270,6 +272,18 @@ return [
     ],
 
     'reminder_states' => ['on' => 'AKTIF', 'off' => 'MATI'],
+
+    'report_review' => [
+        'snapshot' => 'versi data per :at',
+        'activities' => 'Aktivitas',
+        'completed' => 'Task selesai',
+        'ongoing' => 'Task berjalan',
+        'waiting' => 'Task menunggu',
+        'cross_month' => 'Lintas bulan',
+        'incidents' => 'Insiden / kendala',
+        'fallback_note' => ':count bagian memakai kalimat tetap karena narasi AI tidak lolos pemeriksaan.',
+        'buttons' => ['approve' => '✅ Approve', 'regenerate' => '🔄 Regenerate', 'edit' => '✏️ Edit via instruksi', 'dashboard' => '🌐 Buka di Dashboard', 'cancel' => '✖️ Cancel', 'back' => '⬅️ Kembali'],
+    ],
 
     'lists' => [
         'active_tasks' => 'task aktif',
