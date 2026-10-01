@@ -39,7 +39,8 @@ class LoginLinkService
 
         $userId = Cache::pull($this->key($token));
 
-        return is_int($userId) ? $userId : null;
+        // The Redis store hands integers back as numeric strings.
+        return is_int($userId) || (is_string($userId) && ctype_digit($userId)) ? (int) $userId : null;
     }
 
     private function key(string $token): string

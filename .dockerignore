@@ -19,3 +19,4 @@ storage/framework
 storage/logs
 docker-compose.override.yml
 bootstrap/cache/*.php
+public/build

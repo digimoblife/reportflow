@@ -141,3 +141,11 @@ describe('user context', function () {
         expect(Livewire\Livewire::getPersistentMiddleware())->toContain(BindUserContext::class);
     });
 });
+
+it('accepts a user id that the cache store returns as a numeric string (Redis does)', function () {
+    $links = app(LoginLinkService::class);
+    $token = $links->issue(42);
+    Cache::put('auth:login-link:'.hash('sha256', $token), '42', 300);
+
+    expect($links->consume($token))->toBe(42)->and($links->consume($token))->toBeNull();
+});

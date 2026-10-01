@@ -46,7 +46,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Production image (docker-compose.prod.yml): the code is baked in, dev dependencies are left out, nothing is bind-mounted.
-FROM base AS prod
+FROM base AS prod-app
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
@@ -59,6 +59,20 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/fra
     && php artisan package:discover --ansi \
     && php artisan filament:assets --ansi \
     && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Panel theme (Tailwind/Vite). It imports Filament's own CSS and scans our views, so it needs vendor/filament and the code.
+FROM node:22-alpine AS assets
+WORKDIR /var/www/html
+COPY package.json package-lock.json vite.config.js ./
+RUN npm ci --no-audit --no-fund
+COPY --from=prod-app /var/www/html/vendor/filament ./vendor/filament
+COPY resources ./resources
+COPY app ./app
+COPY lang ./lang
+RUN npm run build
+
+FROM prod-app AS prod
+COPY --from=assets --chown=www-data:www-data /var/www/html/public/build /var/www/html/public/build
 
 USER www-data
 

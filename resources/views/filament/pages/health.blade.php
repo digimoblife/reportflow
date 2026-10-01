@@ -14,7 +14,7 @@
         </div>
 
         <x-filament::section :heading="__('ui.dashboard.health.targets')">
-            <table class="w-full text-sm">
+            <table class="rf-table w-full text-sm">
                 <thead><tr class="text-left text-gray-500"><th>{{ __('ui.dashboard.health.metric') }}</th><th>{{ __('ui.dashboard.health.value') }}</th><th>{{ __('ui.dashboard.health.target') }}</th><th></th></tr></thead>
                 <tbody>
                     <tr><td>{{ __('ui.dashboard.health.correction_rate') }}</td><td>{{ $pct($t['correction_rate']['value']) }}</td><td>&lt; {{ $pct($t['correction_rate']['target']) }}</td><td><x-filament::badge size="sm" :color="$badge($t['correction_rate']['ok'])">{{ $mark($t['correction_rate']['ok']) }}</x-filament::badge></td></tr>
@@ -29,7 +29,7 @@
 
         <div class="grid gap-6 md:grid-cols-2">
             <x-filament::section :heading="__('ui.dashboard.health.ai')">
-                <dl class="grid grid-cols-2 gap-2 text-sm">
+                <dl class="rf-dl text-sm">
                     <dt>{{ __('ui.dashboard.health.requests') }}</dt><dd>{{ $m['ai']['requests'] }}</dd>
                     <dt>{{ __('ui.dashboard.health.failed') }}</dt><dd>{{ $m['ai']['failed'] }}</dd>
                     <dt>{{ __('ui.dashboard.health.latency') }}</dt><dd>{{ $num($m['ai']['p50_ms'], ' ms') }} / {{ $num($m['ai']['p95_ms'], ' ms') }}</dd>
@@ -38,7 +38,7 @@
             </x-filament::section>
 
             <x-filament::section :heading="__('ui.dashboard.health.worklog')">
-                <dl class="grid grid-cols-2 gap-2 text-sm">
+                <dl class="rf-dl text-sm">
                     <dt>{{ __('ui.dashboard.health.processed') }}</dt><dd>{{ $m['worklog']['processed'] }}</dd>
                     <dt>p50 / p95</dt><dd>{{ $num($m['worklog']['p50_seconds'], ' s') }} / {{ $num($m['worklog']['p95_seconds'], ' s') }}</dd>
                     <dt>{{ __('ui.dashboard.health.applied') }}</dt><dd>{{ $m['corrections']['applied'] }}</dd>
@@ -47,7 +47,7 @@
             </x-filament::section>
 
             <x-filament::section :heading="__('ui.dashboard.health.reports')">
-                <dl class="grid grid-cols-2 gap-2 text-sm">
+                <dl class="rf-dl text-sm">
                     <dt>{{ __('ui.dashboard.health.generated') }}</dt><dd>{{ $m['reports']['generated'] }}</dd>
                     <dt>{{ __('ui.dashboard.health.failed') }}</dt><dd>{{ $m['reports']['failed'] }}</dd>
                     <dt>{{ __('ui.dashboard.health.duration') }}</dt><dd>{{ $num($m['reports']['avg_ms'], ' ms') }} / {{ $num($m['reports']['p95_ms'], ' ms') }}</dd>
@@ -56,7 +56,7 @@
             </x-filament::section>
 
             <x-filament::section :heading="__('ui.dashboard.health.reminders')">
-                <dl class="grid grid-cols-2 gap-2 text-sm">
+                <dl class="rf-dl text-sm">
                     <dt>{{ __('ui.dashboard.health.sent') }}</dt><dd>{{ $m['reminders']['sent'] }}</dd>
                     <dt>{{ __('ui.dashboard.health.acted') }}</dt><dd>{{ $m['reminders']['acknowledged'] }} ({{ $pct($m['reminders']['conversion']) }})</dd>
                     <dt>{{ __('ui.dashboard.health.dismissed') }}</dt><dd>{{ $m['reminders']['dismissed'] }}</dd>
@@ -65,7 +65,7 @@
             </x-filament::section>
 
             <x-filament::section :heading="__('ui.dashboard.health.system')">
-                <dl class="grid grid-cols-2 gap-2 text-sm">
+                <dl class="rf-dl text-sm">
                     <dt>{{ __('ui.dashboard.health.failed_jobs') }}</dt><dd>{{ $m['queue']['failed_total'] }} ({{ $m['queue']['failed_period'] }})</dd>
                     <dt>{{ __('ui.dashboard.health.backlog') }}</dt><dd>@foreach ($m['queue']['backlog'] as $q => $n){{ $q }}: {{ $n }}@if (! $loop->last) · @endif @endforeach</dd>
                     <dt>{{ __('ui.dashboard.health.telegram_failures') }}</dt><dd>{{ $m['telegram_failures'] }}</dd>
@@ -74,7 +74,7 @@
         </div>
 
         <x-filament::section :heading="__('ui.dashboard.health.costs')">
-            <table class="w-full text-sm">
+            <table class="rf-table w-full text-sm">
                 <thead><tr class="text-left text-gray-500"><th>{{ __('ui.dashboard.health.purpose') }}</th><th>{{ __('ui.dashboard.health.requests') }}</th><th>{{ __('ui.dashboard.health.failed') }}</th><th>{{ __('ui.dashboard.health.tokens') }}</th></tr></thead>
                 <tbody>
                     @forelse ($m['costs']['by_purpose'] as $row)
@@ -85,7 +85,7 @@
                 </tbody>
             </table>
             @if ($m['costs']['by_project'] !== [])
-                <table class="mt-4 w-full text-sm">
+                <table class="rf-table mt-4 w-full text-sm">
                     <thead><tr class="text-left text-gray-500"><th>{{ __('ui.dashboard.reports.columns.project') }}</th><th>{{ __('ui.dashboard.health.tokens') }}</th></tr></thead>
                     <tbody>@foreach ($m['costs']['by_project'] as $row)<tr><td>{{ $row['project'] }}</td><td>{{ number_format($row['tokens_input']) }} / {{ number_format($row['tokens_output']) }}</td></tr>@endforeach</tbody>
                 </table>

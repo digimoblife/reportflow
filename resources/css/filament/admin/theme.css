@@ -1,0 +1,93 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+/* Tailwind only generates the utilities it finds: scan our own pages and Filament classes in PHP. */
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/**/*.blade.php';
+@source '../../../../lang/**/*.php';
+
+/* Slightly softer, more spacious look than the Filament default. */
+.fi-section {
+    box-shadow: 0 1px 2px 0 rgb(16 24 40 / 0.05), 0 1px 3px 0 rgb(16 24 40 / 0.06);
+}
+
+.fi-section-content {
+    padding: 1.25rem;
+}
+
+@media (min-width: 640px) {
+    .fi-section-content {
+        padding: 1.5rem;
+    }
+}
+
+.fi-input-wrp textarea {
+    padding: 0.625rem 0.75rem;
+    line-height: 1.5;
+}
+
+.fi-simple-main {
+    padding-block: 2rem;
+}
+
+/* Key/value lists and small tables on our own pages (Health, task detail). */
+.rf-dl {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 1.5rem;
+    row-gap: 0;
+}
+
+.rf-dl > dt,
+.rf-dl > dd {
+    padding-block: 0.5rem;
+    border-bottom: 1px solid rgb(0 0 0 / 0.06);
+}
+
+.rf-dl > dt {
+    color: var(--gray-500);
+}
+
+.rf-dl > dd {
+    margin: 0;
+    font-weight: 500;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.rf-dl > dt:nth-last-child(2),
+.rf-dl > dd:last-child {
+    border-bottom: 0;
+}
+
+.rf-table th,
+.rf-table td {
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid rgb(0 0 0 / 0.06);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.rf-table th {
+    font-weight: 500;
+    color: var(--gray-500);
+}
+
+.rf-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.dark .rf-dl > dt,
+.dark .rf-dl > dd,
+.dark .rf-table th,
+.dark .rf-table td {
+    border-color: rgb(255 255 255 / 0.08);
+}
+
+.dark .rf-dl > dt {
+    color: var(--gray-400);
+}
+
+/* A faintly grey canvas in light mode so the white cards stand out. */
+html:not(.dark) .fi-body {
+    background-color: var(--gray-50);
+}

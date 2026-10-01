@@ -773,3 +773,10 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 
 - Recreating `app` gave it a new IP while the nginx container kept the old one (fastcgi_pass resolved once at start) → 502. Both the VPS and production nginx configs now use Docker's resolver (127.0.0.11, 10 s) with `set $php_upstream app:9000`.
 - Known leak: the container nginx **error log** includes the request line, i.e. the secret webhook path, when an upstream error happens. Do not paste nginx logs; rotate `TELEGRAM_WEBHOOK_PATH` if they were shared (rotate-secrets.md).
+
+## Dashboard theme (1 Oct 2026)
+
+- Cause of the broken spacing: the panel used Filament's precompiled CSS, so Tailwind utilities used only in our own Blade pages (`gap-2`, `mt-2`, `space-y-6`, `text-xs`, ...) did not exist. Fixed with a Filament custom theme (`resources/css/filament/admin/theme.css`, `viteTheme()`) whose `@source` paths scan `app/Filament`, `resources/views` and `lang`.
+- Look: light mode by default (switchable), blue primary, "Pak Carik" brand name, softer cards, key/value lists and small tables on the Health page (`.rf-dl`, `.rf-table`).
+- Build: dev builds with a throw-away Node container (`docker run --rm -v "$PWD":/app -w /app node:22-alpine sh -c "npm install && npm run build"`; `public/build` is gitignored). The production image has a Node `assets` stage (needs `package-lock.json`), so the nginx image gets the CSS through its `COPY --from=app .../public`.
+- Also fixed on the way: `LoginLinkService::consume()` rejected the user id because the Redis cache returns integers as numeric strings, so one-time login links never worked with Redis (tests use the array store). Covered by a test.
