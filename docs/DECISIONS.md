@@ -768,3 +768,8 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 
 - Symptom: a Telegram note reached the dashboard but stayed `received` / "Mencatat…". Cause: the VPS `.env` lacked `QUEUE_CONNECTION`, `CACHE_STORE` and `SESSION_DRIVER`, so Laravel defaulted to `database` while workers listen on Redis. Fixed in the VPS `.env` (non-secret keys), containers recreated, the stranded message re-dispatched (the job is idempotent); AI extraction worked (8.8 s).
 - Prevention: the deploy runbook lists the three keys with a check command. A boot guard was not added because every production-environment test would need the extra variables; revisit if it happens again.
+
+## nginx re-resolves the app container (502 after recreate)
+
+- Recreating `app` gave it a new IP while the nginx container kept the old one (fastcgi_pass resolved once at start) → 502. Both the VPS and production nginx configs now use Docker's resolver (127.0.0.11, 10 s) with `set $php_upstream app:9000`.
+- Known leak: the container nginx **error log** includes the request line, i.e. the secret webhook path, when an upstream error happens. Do not paste nginx logs; rotate `TELEGRAM_WEBHOOK_PATH` if they were shared (rotate-secrets.md).

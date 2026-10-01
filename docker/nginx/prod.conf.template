@@ -61,8 +61,11 @@ server {
     ssl_stapling on;
     ssl_stapling_verify on;
     ssl_trusted_certificate /etc/letsencrypt/live/${APP_DOMAIN}/chain.pem;
-    resolver 1.1.1.1 9.9.9.9 valid=300s ipv6=off;
+    # Docker's DNS (it also resolves external names for OCSP). A variable in fastcgi_pass makes nginx re-resolve `app`
+    # instead of caching its IP at startup, so recreating the app container does not cause 502s.
+    resolver 127.0.0.11 valid=10s ipv6=off;
     resolver_timeout 5s;
+    set $php_upstream app:9000;
 
     # No add_header in the locations below: they would replace these instead of adding to them.
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
@@ -88,7 +91,7 @@ server {
 
         client_max_body_size 1m;
         include fastcgi_params;
-        fastcgi_pass app:9000;
+        fastcgi_pass $php_upstream;
         fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
         fastcgi_param SCRIPT_NAME /index.php;
         fastcgi_param HTTPS on;
@@ -102,7 +105,7 @@ server {
     # Only the front controller runs PHP.
     location ~ ^/index\.php(/|$) {
         include fastcgi_params;
-        fastcgi_pass app:9000;
+        fastcgi_pass $php_upstream;
         fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
         fastcgi_param HTTPS on;
         fastcgi_hide_header X-Powered-By;
