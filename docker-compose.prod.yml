@@ -71,9 +71,11 @@ services:
         limits:
           memory: 128M
 
-  # Backups read report files from the storage volume; the status file lives there too (storage/app/backup/status.json).
+  # Backups read the report files from the storage volume (mounted over the checkout's storage/); the status file lives
+  # there too (storage/app/backup/status.json). The checkout itself is read-only: only docker-compose*.yml and .env are copied.
   backup:
     volumes: !override
+      - .:/app:ro
       - app_storage:/app/storage
       - backup_data:/backups
       - ${BACKUP_KEY_FILE:-./secrets/backup.key}:/run/secrets/backup_key:ro

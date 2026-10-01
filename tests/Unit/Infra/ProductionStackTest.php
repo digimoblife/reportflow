@@ -113,3 +113,16 @@ it('has a certificate script that parses and a deploy path for renewals', functi
     expect(is_executable($script))->toBeTrue()->and($check->isSuccessful())->toBeTrue()
         ->and((string) file_get_contents(repoFile('docker-compose.prod.yml')))->toContain('certbot renew');
 });
+
+it('has the runbooks go-live needs, and every script path they mention exists', function () {
+    foreach (['deploy', 'rollback', 'rotate-secrets', 'backup-restore', 'incident', 'go-live-checklist', 'dogfooding'] as $name) {
+        $path = repoFile("docs/runbooks/{$name}.md");
+        expect(is_file($path))->toBeTrue($name);
+
+        preg_match_all('#(?:scripts/[a-z/-]+\.sh|/scripts/[a-z-]+\.sh)#', (string) file_get_contents($path), $m);
+        foreach (array_unique($m[0]) as $script) {
+            $relative = str_starts_with($script, '/scripts/') ? ltrim($script, '/') : $script;
+            expect(is_file(repoFile("scripts/backup/{$relative}")) || is_file(repoFile($relative)) || is_file(repoFile('scripts/backup/'.basename($script))))->toBeTrue("{$name} mentions {$script}");
+        }
+    }
+});

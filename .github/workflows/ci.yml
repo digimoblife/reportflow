@@ -109,3 +109,48 @@ jobs:
 
       - name: Run Pest tests
         run: php artisan test --env=testing
+
+  infra:
+    name: Docker images and compose files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Shell syntax of ops scripts
+        run: for f in scripts/backup/*.sh scripts/tls/*.sh docker/backup/entrypoint.sh; do bash -n "$f"; done
+
+      - name: Validate compose files (dev and production)
+        env:
+          APP_DOMAIN: reports.example.test
+          TELEGRAM_WEBHOOK_PATH: ci-webhook-path-not-a-real-secret-0000000
+          DB_PASSWORD: ci
+          REDIS_PASSWORD: ci
+        run: |
+          touch .env
+          docker compose --profile backup config -q
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile backup config -q
+
+      - name: Build production images
+        env:
+          APP_DOMAIN: reports.example.test
+          TELEGRAM_WEBHOOK_PATH: ci-webhook-path-not-a-real-secret-0000000
+          DB_PASSWORD: ci
+          REDIS_PASSWORD: ci
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml build app
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml build nginx
+          docker compose --profile backup build backup
+
+      - name: nginx accepts the production config
+        run: |
+          mkdir -p /tmp/le/live/ci.example.test
+          openssl req -x509 -nodes -newkey rsa:2048 -days 1 -subj '/CN=ci.example.test' \
+            -keyout /tmp/le/live/ci.example.test/privkey.pem -out /tmp/le/live/ci.example.test/fullchain.pem
+          cp /tmp/le/live/ci.example.test/fullchain.pem /tmp/le/live/ci.example.test/chain.pem
+          docker network create ci-net
+          docker run -d --name app --network ci-net --network-alias app --entrypoint sleep reportflow-app:latest 600
+          docker run --rm --network ci-net -e APP_DOMAIN=ci.example.test -e TELEGRAM_WEBHOOK_PATH=ci-webhook-path-not-a-real-secret-0000000 \
+            -e 'NGINX_ENVSUBST_FILTER=^(APP_DOMAIN|TELEGRAM_WEBHOOK_PATH)$' -v /tmp/le:/etc/letsencrypt:ro \
+            --entrypoint sh reportflow-nginx:latest -c '/docker-entrypoint.sh true && nginx -t'

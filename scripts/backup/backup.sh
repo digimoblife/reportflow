@@ -30,8 +30,10 @@ tar -czf "$work/bundle/storage.tar.gz" -C "$APP_DIR/storage/app" private
 (cd "$files_dir" && find . -type f -print0 | sort -z | xargs -0 -r sha256sum) > "$work/bundle/files.sha256"
 
 ERROR_CODE=config_copy
-[ -f "$APP_DIR/docker-compose.yml" ] && cp "$APP_DIR/docker-compose.yml" "$work/bundle/config/"
-[ -f "$APP_DIR/.env" ] && cp "$APP_DIR/.env" "$work/bundle/config/dot-env"
+for compose_file in docker-compose.yml docker-compose.prod.yml; do
+    if [ -f "$APP_DIR/$compose_file" ]; then cp "$APP_DIR/$compose_file" "$work/bundle/config/"; fi
+done
+if [ -f "$APP_DIR/.env" ]; then cp "$APP_DIR/.env" "$work/bundle/config/dot-env"; fi
 
 ERROR_CODE=encrypt
 log "bundling and encrypting"

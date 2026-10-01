@@ -77,6 +77,11 @@ docker compose exec app php artisan eval:run        # tersedia sejak M3
 docker compose exec app php artisan reportflow:login-link <telegram_id>   # link login dashboard sekali pakai (dev; M5)
 ```
 
+Operasi production (runbook di `docs/runbooks/`: `deploy`, `rollback`, `rotate-secrets`, `backup-restore`, `incident`,
+`go-live-checklist`, `dogfooding`): stack = `docker-compose.yml` + `docker-compose.prod.yml`. Backup/restore lewat
+`scripts/backup/*`, hapus data klien lewat `php artisan reportflow:purge` (dry run dulu). Jangan pernah `docker compose down -v`
+(menghapus volume data) dan jangan `migrate:fresh` di luar dev.
+
 Definition of Done tiap task: test hijau, pint + phpstan bersih, migrasi bisa `migrate:fresh --seed`, tidak ada
 secret di diff, dan PRD section terkait sudah dicek ulang.
 

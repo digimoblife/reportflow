@@ -748,3 +748,11 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - **No CSP** for now (Filament/Livewire need inline scripts); reasons and other omissions are in `docs/SECURITY_REVIEW.md`.
 - **Verified live** with a self-signed certificate: `nginx -t`, 80→443 redirect to the configured domain (not the Host header), headers, 421 on a foreign Host, handshake refused for a foreign SNI, TLS 1.1 refused, `*.php` 404, dotfiles 403, login rate limit (429 after the burst), static assets. Let's Encrypt itself cannot be tested without a real domain (go-live checklist).
 - The `/` route now redirects to `/admin`; the Laravel welcome page needed a Vite build that the image does not have.
+
+## M9f — Runbooks and close-out
+
+- Runbooks (Indonesian, like the existing ones): `deploy`, `rollback`, `rotate-secrets`, `backup-restore`, `incident`, `go-live-checklist`, `dogfooding`. A test checks that they exist and that every script path they mention exists.
+- Rollback = previous image tags (`:previous`, set by the routine deploy) or a revert commit; migrations are forward-only and compatible with the previous code, so a code rollback does not roll migrations back. Data damage is repaired by restoring a backup into a new database.
+- The backup container mounts the checkout read-only (for `.env` and the compose files) with `app_storage` over `storage/` in production.
+- CI gained an `infra` job: script syntax, `docker compose config` for dev and production, a real build of the production images, and `nginx -t` on the production template with a throw-away certificate.
+- **M9 acceptance:** restore test passed locally (backup → rclone local remote → scratch DB); §73/§76 are measurable on the Health page; alerts and the deep health endpoint exist. What only a human can finish is listed in `docs/runbooks/go-live-checklist.md`: VPS, domain, real certificate, rclone remote and backup key, `/setdomain`, DeepSeek prices, one month of dogfooding.
