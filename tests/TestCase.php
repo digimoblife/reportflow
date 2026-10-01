@@ -4,6 +4,7 @@ namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
@@ -27,6 +28,9 @@ abstract class TestCase extends BaseTestCase
 
         // No test may reach the network; tests that exercise the HTTP client add Http::fake().
         Http::preventStrayRequests();
+
+        // Generated reports never touch a real disk in tests.
+        Storage::fake('reports');
     }
 
     /**

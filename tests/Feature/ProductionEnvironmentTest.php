@@ -4,7 +4,7 @@ use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 
 it('serves the dashboard over HTTPS only, has no password login, and does not seed a dev user when APP_ENV is production', function () {
-    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'DEV_USER_EMAIL' => 'dev@example.test', 'DEV_USER_PASSWORD' => 'not-a-real-password'], function () {
+    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg', 'DEV_USER_EMAIL' => 'dev@example.test', 'DEV_USER_PASSWORD' => 'not-a-real-password'], function () {
         expect(app()->environment())->toBe('production')
             ->and(config('app.dev_user.email'))->toBe('dev@example.test');
 

@@ -7,6 +7,7 @@ use App\Enums\Language;
 use App\Enums\ReportCreatedBy;
 use App\Enums\ReportStatus;
 use App\Enums\ReportType;
+use App\Jobs\RenderReportFiles;
 use App\Models\InboundMessage;
 use App\Models\Project;
 use App\Models\Report;
@@ -158,7 +159,7 @@ class ReportGenerator
      */
     public function writeVersion(Report $report, ReportDataSet $data, array $sections, ReportCreatedBy $by, string $channel, ?string $instruction): ReportVersion
     {
-        return DB::transaction(function () use ($report, $data, $sections, $by, $channel, $instruction): ReportVersion {
+        $version = DB::transaction(function () use ($report, $data, $sections, $by, $channel, $instruction): ReportVersion {
             $next = (int) ReportVersion::query()->where('report_id', $report->id)->max('version_no') + 1;
 
             $version = ReportVersion::query()->create([
@@ -187,6 +188,11 @@ class ReportGenerator
 
             return $version;
         });
+
+        // PDF + Markdown are made on the `reports` queue, once the version is committed.
+        RenderReportFiles::dispatch($version->id, $this->context->requireUserId());
+
+        return $version;
     }
 
     /**

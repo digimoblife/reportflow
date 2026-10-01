@@ -29,9 +29,9 @@ arch('queued jobs are queueable and carry no Eloquent models or raw text')
     ->classes->toImplement(ShouldQueue::class)
     ->ignoring('App\Jobs\Middleware');
 
-arch('only the outgoing clients use the HTTP facade')
+arch('only the outgoing clients (Telegram, AI, PDF engine) use the HTTP facade')
     ->expect('Illuminate\Support\Facades\Http')
-    ->toOnlyBeUsedIn(['App\Services\Telegram\HttpTelegramClient', 'App\Services\Ai\DeepSeekProvider']);
+    ->toOnlyBeUsedIn(['App\Services\Telegram\HttpTelegramClient', 'App\Services\Ai\DeepSeekProvider', 'App\Services\Report\Pdf\GotenbergPdfRenderer']);
 
 arch('controllers stay thin: no models or redaction inside')
     ->expect('App\Http\Controllers')

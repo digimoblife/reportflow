@@ -15,6 +15,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 
 /**
+ * @property int $id
+ * @property int $report_version_id
+ * @property ReportFileFormat $format
+ * @property string $file_path
+ * @property string $checksum
+ * @property ReportVersion $reportVersion
+ *
  * PRD §49 report_files. Files live on the private disk (PRD §56).
  */
 #[Fillable(['report_version_id', 'format', 'file_path', 'checksum'])]

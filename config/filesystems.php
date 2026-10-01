@@ -38,6 +38,15 @@ return [
             'report' => false,
         ],
 
+        // Generated reports (PDF + Markdown). Private by design: only served through signed, expiring URLs (PRD §56, §64).
+        'reports' => [
+            'driver' => 'local',
+            'root' => env('REPORTS_DISK_ROOT', storage_path('app/private/reports')),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

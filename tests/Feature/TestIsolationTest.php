@@ -19,6 +19,8 @@ it('points every shared or external service at a test double or a dead host', fu
         ->and(config('database.redis.default.password'))->toBeIn([null, ''])
         ->and(env('GOTENBERG_URL'))->toEndWith('.invalid:3000')
         ->and(config('telegram.client'))->toBe('fake')
+        ->and(config('reports.pdf.renderer'))->toBe('fake')
+        ->and(config('filesystems.disks.reports.root'))->toStartWith(sys_get_temp_dir())
         ->and(config('telegram.token'))->toBeIn([null, ''])
         ->and(config('telegram.bot_username'))->toBeIn([null, ''])
         ->and(config('ai.provider'))->toBe('fake')

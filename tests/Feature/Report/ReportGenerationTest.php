@@ -13,6 +13,7 @@ use App\Models\AiInteraction;
 use App\Models\InboundMessage;
 use App\Models\Project;
 use App\Models\Report;
+use App\Models\ReportFile;
 use App\Models\ReportVersion;
 use App\Models\Task;
 use App\Models\User;
@@ -92,6 +93,14 @@ describe('a generated version', function () {
             ->and(AiInteraction::query()->where('purpose', 'report_section')->count())->toBe(4)
             ->and(AiInteraction::query()->where('purpose', 'report_section')->first()->prompt_version)->toBe('report_section@v1')
             ->and(AiInteraction::query()->where('purpose', 'report_section')->first()->report_id)->toBe($this->report->id);
+    });
+
+    it('queues the PDF and Markdown of the new version, which are made together', function () {
+        fakeAi()->using(fn (AiRequest $r) => goodNarrative($r));
+
+        $version = $this->generator->generate($this->report);
+
+        expect(ReportFile::query()->where('report_version_id', $version->id)->pluck('format')->map(fn ($f) => $f->value)->sort()->values()->all())->toBe(['md', 'pdf']);
     });
 
     it('creates the next version from a fresh snapshot and leaves the old one untouched', function () {

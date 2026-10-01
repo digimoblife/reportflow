@@ -7,6 +7,9 @@ use App\Http\Middleware\BindUserContext;
 use App\Services\Ai\AiProvider;
 use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\Fakes\FakeAiProvider;
+use App\Services\Report\Pdf\FakePdfRenderer;
+use App\Services\Report\Pdf\GotenbergPdfRenderer;
+use App\Services\Report\Pdf\PdfRenderer;
 use App\Services\Telegram\BotMessages;
 use App\Services\Telegram\CallbackRouter;
 use App\Services\Telegram\CorrectionHandler;
@@ -34,6 +37,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(UserContext::class);
+
+        $this->app->singleton(PdfRenderer::class, fn (): PdfRenderer => match (config('reports.pdf.renderer')) {
+            'gotenberg' => new GotenbergPdfRenderer((string) config('reports.pdf.url'), (int) config('reports.pdf.timeout')),
+            'fake' => new FakePdfRenderer,
+            default => throw new RuntimeException('PDF_RENDERER must be "gotenberg" or "fake".'),
+        });
 
         $this->app->singleton(TelegramClient::class, fn (): TelegramClient => match (config('telegram.client')) {
             'http' => new HttpTelegramClient,
@@ -65,6 +74,11 @@ class AppServiceProvider extends ServiceProvider
         // A fake Telegram client in production would silently swallow every user-facing message.
         if ($this->app->isProduction() && config('telegram.client') !== 'http') {
             throw new RuntimeException('TELEGRAM_CLIENT must be "http" in production.');
+        }
+
+        // A fake PDF renderer in production would hand out placeholder files as reports.
+        if ($this->app->isProduction() && config('reports.pdf.renderer') !== 'gotenberg') {
+            throw new RuntimeException('PDF_RENDERER must be "gotenberg" in production.');
         }
 
         // A fake AI provider in production would silently record nothing for every message.

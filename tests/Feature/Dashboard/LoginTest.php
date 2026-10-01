@@ -111,7 +111,7 @@ describe('one-time login link', function () {
         $this->artisan('reportflow:login-link', ['telegram_id' => 555001])->assertSuccessful()->expectsOutputToContain('/auth/link/');
         $this->artisan('reportflow:login-link', ['telegram_id' => 1])->assertFailed();
 
-        withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek'], function () {
+        withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg'], function () {
             $this->artisan('reportflow:login-link', ['telegram_id' => 555001])->assertFailed();
         });
     });

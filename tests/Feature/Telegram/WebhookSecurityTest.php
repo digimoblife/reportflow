@@ -113,7 +113,7 @@ it('rate limits authenticated traffic, and unauthenticated requests do not use u
 it('serves the webhook only over https in production', function () {
     $proxy = '10.1.2.3';
 
-    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'TRUSTED_PROXIES' => $proxy], function () use ($proxy) {
+    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg', 'TRUSTED_PROXIES' => $proxy], function () use ($proxy) {
         $secret = ['X-Telegram-Bot-Api-Secret-Token' => (string) config('telegram.secret_token')];
         $url = '/'.config('telegram.webhook_path');
         $payload = TelegramPayload::message('halo', from: 999888);
@@ -146,17 +146,22 @@ it('refuses to boot with a wildcard in TRUSTED_PROXIES', function (string $value
 })->with(['*', '10.0.0.1, *', '0.0.0.0/0', '::/0']);
 
 it('refuses to boot in production with the fake Telegram client', function () {
-    expect(fn () => withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'fake', 'AI_PROVIDER' => 'deepseek'], fn () => null))
+    expect(fn () => withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'fake', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg'], fn () => null))
         ->toThrow(RuntimeException::class, 'TELEGRAM_CLIENT must be "http" in production');
 });
 
 it('refuses to boot in production with the fake AI provider', function () {
-    expect(fn () => withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'fake'], fn () => null))
+    expect(fn () => withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'fake', 'PDF_RENDERER' => 'gotenberg'], fn () => null))
         ->toThrow(RuntimeException::class, 'AI_PROVIDER must be "deepseek" in production');
 });
 
+it('refuses to boot in production with the fake PDF renderer', function () {
+    expect(fn () => withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'fake'], fn () => null))
+        ->toThrow(RuntimeException::class, 'PDF_RENDERER must be "gotenberg" in production');
+});
+
 it('boots in production with the real client selected', function () {
-    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek'], function () {
+    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg'], function () {
         expect(app()->isProduction())->toBeTrue()
             ->and(app(TelegramClient::class))->toBeInstanceOf(HttpTelegramClient::class);
     });
