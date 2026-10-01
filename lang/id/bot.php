@@ -459,6 +459,101 @@ return [
         ],
     ],
 
+    'ops' => [
+        'alert' => [
+            'database' => [
+                'Waduh, database tidak bisa dihubungi. Cek container postgres sekarang.',
+                'Waduh, database tidak bisa dihubungi. Cek container postgres sekarang.',
+            ],
+            'redis' => [
+                'Redis tidak bisa dihubungi, jadi antrean dan cache terganggu.',
+                'Redis tidak bisa dihubungi, jadi antrean dan cache terganggu.',
+            ],
+            'gotenberg' => [
+                'Gotenberg (pembuat PDF) tidak terjangkau. Laporan belum bisa dibuat PDF-nya.',
+                'Gotenberg (pembuat PDF) tidak terjangkau. Laporan belum bisa dibuat PDF-nya.',
+            ],
+            'disk' => [
+                'Disk terisi :value% (batas :limit%). Bersihkan atau perbesar sebelum penuh.',
+                'Disk terisi :value% (batas :limit%). Bersihkan atau perbesar sebelum penuh.',
+            ],
+            'queue_backlog' => [
+                'Antrean menumpuk: :value pekerjaan menunggu (batas :limit). Cek worker.',
+                'Antrean menumpuk: :value pekerjaan menunggu (batas :limit). Cek worker.',
+            ],
+            'failed_jobs' => [
+                ':value pekerjaan antrean gagal dalam 24 jam terakhir. Lihat failed_jobs.',
+                ':value pekerjaan antrean gagal dalam 24 jam terakhir. Lihat failed_jobs.',
+            ],
+            'worker_default' => [
+                'Worker antrean utama tidak terlihat hidup (usia detak :value menit, batas :limit).',
+                'Worker antrean utama tidak terlihat hidup (usia detak :value menit, batas :limit).',
+            ],
+            'worker_reports' => [
+                'Worker laporan tidak terlihat hidup (usia detak :value menit, batas :limit).',
+                'Worker laporan tidak terlihat hidup (usia detak :value menit, batas :limit).',
+            ],
+            'backup_failed' => [
+                'Backup terakhir GAGAL. Periksa log layanan backup.',
+                'Backup terakhir GAGAL. Periksa log layanan backup.',
+            ],
+            'backup_stale' => [
+                'Backup terakhir sudah :value jam lalu (batas :limit jam), atau belum pernah berhasil.',
+                'Backup terakhir sudah :value jam lalu (batas :limit jam), atau belum pernah berhasil.',
+            ],
+            'restore_overdue' => [
+                'Uji restore terakhir sudah :value hari lalu (batas :limit). Jalankan restore-test.',
+                'Uji restore terakhir sudah :value hari lalu (batas :limit). Jalankan restore-test.',
+            ],
+        ],
+        'recovered' => [
+            'database' => [
+                'Database sudah bisa dihubungi lagi.',
+                'Database sudah bisa dihubungi lagi.',
+            ],
+            'redis' => [
+                'Redis sudah pulih.',
+                'Redis sudah pulih.',
+            ],
+            'gotenberg' => [
+                'Gotenberg sudah terjangkau lagi.',
+                'Gotenberg sudah terjangkau lagi.',
+            ],
+            'disk' => [
+                'Pemakaian disk sudah turun ke :value%.',
+                'Pemakaian disk sudah turun ke :value%.',
+            ],
+            'queue_backlog' => [
+                'Antrean sudah normal lagi.',
+                'Antrean sudah normal lagi.',
+            ],
+            'failed_jobs' => [
+                'Tidak ada lagi pekerjaan gagal dalam 24 jam terakhir.',
+                'Tidak ada lagi pekerjaan gagal dalam 24 jam terakhir.',
+            ],
+            'worker_default' => [
+                'Worker antrean utama hidup lagi.',
+                'Worker antrean utama hidup lagi.',
+            ],
+            'worker_reports' => [
+                'Worker laporan hidup lagi.',
+                'Worker laporan hidup lagi.',
+            ],
+            'backup_failed' => [
+                'Backup sudah berhasil lagi.',
+                'Backup sudah berhasil lagi.',
+            ],
+            'backup_stale' => [
+                'Backup sudah segar lagi.',
+                'Backup sudah segar lagi.',
+            ],
+            'restore_overdue' => [
+                'Uji restore sudah dilakukan, terima kasih.',
+                'Uji restore sudah dilakukan, terima kasih.',
+            ],
+        ],
+    ],
+
     'sync' => [
         'answered_via_dashboard' => [
             '✅ Sudah dijawab lewat dashboard.',

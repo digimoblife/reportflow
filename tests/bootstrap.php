@@ -33,6 +33,7 @@ foreach ([
     // Nothing in the suite may reach Telegram or an AI provider, and no real secret is ever read.
     'TELEGRAM_CLIENT' => 'fake',
     'PDF_RENDERER' => 'fake',
+    'OPS_PROBE' => 'fake',
     'REPORTS_DISK_ROOT' => sys_get_temp_dir().'/reportflow-test-reports',
     'AI_PROVIDER' => 'fake',
     'TELEGRAM_BOT_TOKEN' => '',

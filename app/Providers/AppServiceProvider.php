@@ -7,6 +7,10 @@ use App\Http\Middleware\BindUserContext;
 use App\Services\Ai\AiProvider;
 use App\Services\Ai\DeepSeekProvider;
 use App\Services\Ai\Fakes\FakeAiProvider;
+use App\Services\Ops\DefaultServiceProbe;
+use App\Services\Ops\FakeServiceProbe;
+use App\Services\Ops\HealthChecks;
+use App\Services\Ops\ServiceProbe;
 use App\Services\Report\Pdf\FakePdfRenderer;
 use App\Services\Report\Pdf\GotenbergPdfRenderer;
 use App\Services\Report\Pdf\PdfRenderer;
@@ -26,6 +30,10 @@ use App\Support\UserContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Connection;
 use Illuminate\Http\Request;
+use Illuminate\Queue\Events\Looping;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -39,6 +47,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(UserContext::class);
+
+        $this->app->singleton(ServiceProbe::class, fn (): ServiceProbe => match (config('ops.probe')) {
+            'real' => new DefaultServiceProbe,
+            'fake' => new FakeServiceProbe,
+            default => throw new RuntimeException('OPS_PROBE must be "real" or "fake".'),
+        });
 
         $this->app->singleton(PdfRenderer::class, fn (): PdfRenderer => match (config('reports.pdf.renderer')) {
             'gotenberg' => new GotenbergPdfRenderer((string) config('reports.pdf.url'), (int) config('reports.pdf.timeout')),
@@ -77,6 +91,18 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->isProduction() && config('telegram.client') !== 'http') {
             throw new RuntimeException('TELEGRAM_CLIENT must be "http" in production.');
         }
+
+        // A fake probe in production would report a dead system as healthy.
+        if ($this->app->isProduction() && config('ops.probe') !== 'real') {
+            throw new RuntimeException('OPS_PROBE must be "real" in production.');
+        }
+
+        // Heartbeats: a worker loop (idle or busy) proves the worker of those queues is alive.
+        Event::listen(Looping::class, function (Looping $event): void {
+            foreach (explode(',', $event->queue) as $queue) {
+                Cache::put(HealthChecks::workerKey(trim($queue)), Carbon::now('UTC')->getTimestamp(), 3600);
+            }
+        });
 
         // A fake PDF renderer in production would hand out placeholder files as reports.
         if ($this->app->isProduction() && config('reports.pdf.renderer') !== 'gotenberg') {

@@ -241,7 +241,7 @@ describe('signed downloads', function () {
     it('is HTTPS-only in production', function () {
         $url = $this->downloads->url($this->pdfFile->id, $this->user);
 
-        withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg'], function () use ($url) {
+        withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg', 'OPS_PROBE' => 'real'], function () use ($url) {
             $this->get(str_replace('https://', 'http://', $url))->assertNotFound();
         });
     });

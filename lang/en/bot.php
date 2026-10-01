@@ -458,6 +458,101 @@ return [
         ],
     ],
 
+    'ops' => [
+        'alert' => [
+            'database' => [
+                'The database cannot be reached. Check the postgres container now.',
+                'The database cannot be reached. Check the postgres container now.',
+            ],
+            'redis' => [
+                'Redis cannot be reached, so queues and cache are affected.',
+                'Redis cannot be reached, so queues and cache are affected.',
+            ],
+            'gotenberg' => [
+                'Gotenberg (the PDF engine) is unreachable. Reports cannot get their PDF yet.',
+                'Gotenberg (the PDF engine) is unreachable. Reports cannot get their PDF yet.',
+            ],
+            'disk' => [
+                'Disk is :value% full (limit :limit%). Clean up or grow it before it fills.',
+                'Disk is :value% full (limit :limit%). Clean up or grow it before it fills.',
+            ],
+            'queue_backlog' => [
+                'Queues are piling up: :value jobs waiting (limit :limit). Check the workers.',
+                'Queues are piling up: :value jobs waiting (limit :limit). Check the workers.',
+            ],
+            'failed_jobs' => [
+                ':value queue job(s) failed in the last 24 hours. See failed_jobs.',
+                ':value queue job(s) failed in the last 24 hours. See failed_jobs.',
+            ],
+            'worker_default' => [
+                'The main queue worker does not look alive (heartbeat age :value min, limit :limit).',
+                'The main queue worker does not look alive (heartbeat age :value min, limit :limit).',
+            ],
+            'worker_reports' => [
+                'The reports worker does not look alive (heartbeat age :value min, limit :limit).',
+                'The reports worker does not look alive (heartbeat age :value min, limit :limit).',
+            ],
+            'backup_failed' => [
+                'The last backup FAILED. Check the backup service log.',
+                'The last backup FAILED. Check the backup service log.',
+            ],
+            'backup_stale' => [
+                'The last backup was :value hours ago (limit :limit h), or never succeeded.',
+                'The last backup was :value hours ago (limit :limit h), or never succeeded.',
+            ],
+            'restore_overdue' => [
+                'The last restore test was :value days ago (limit :limit). Run the restore test.',
+                'The last restore test was :value days ago (limit :limit). Run the restore test.',
+            ],
+        ],
+        'recovered' => [
+            'database' => [
+                'The database is reachable again.',
+                'The database is reachable again.',
+            ],
+            'redis' => [
+                'Redis has recovered.',
+                'Redis has recovered.',
+            ],
+            'gotenberg' => [
+                'Gotenberg is reachable again.',
+                'Gotenberg is reachable again.',
+            ],
+            'disk' => [
+                'Disk use is back down to :value%.',
+                'Disk use is back down to :value%.',
+            ],
+            'queue_backlog' => [
+                'Queues are back to normal.',
+                'Queues are back to normal.',
+            ],
+            'failed_jobs' => [
+                'No more failed jobs in the last 24 hours.',
+                'No more failed jobs in the last 24 hours.',
+            ],
+            'worker_default' => [
+                'The main queue worker is alive again.',
+                'The main queue worker is alive again.',
+            ],
+            'worker_reports' => [
+                'The reports worker is alive again.',
+                'The reports worker is alive again.',
+            ],
+            'backup_failed' => [
+                'Backups succeed again.',
+                'Backups succeed again.',
+            ],
+            'backup_stale' => [
+                'The backup is fresh again.',
+                'The backup is fresh again.',
+            ],
+            'restore_overdue' => [
+                'A restore test was done, thank you.',
+                'A restore test was done, thank you.',
+            ],
+        ],
+    ],
+
     'sync' => [
         'answered_via_dashboard' => [
             '✅ Already answered via the dashboard.',

@@ -26,6 +26,9 @@ return [
         'heartbeat_max_age_minutes' => 10,
     ],
 
+    // 'real' talks to PostgreSQL, Redis, Gotenberg and the disk; 'fake' is for tests only and refused in production.
+    'probe' => env('OPS_PROBE', 'real'),
+
     // Where the backup service writes its status (read by ops:check).
     'backup_status_file' => env('BACKUP_STATUS_FILE', storage_path('app/backup-status.json')),
 ];

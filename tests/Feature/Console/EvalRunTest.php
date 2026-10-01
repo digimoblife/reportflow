@@ -112,7 +112,7 @@ it('validates its options', function (array $options, string $message) {
 ]);
 
 it('is refused in production', function () {
-    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg'], function () {
+    withAppEnvironment('production', ['TELEGRAM_CLIENT' => 'http', 'AI_PROVIDER' => 'deepseek', 'PDF_RENDERER' => 'gotenberg', 'OPS_PROBE' => 'real'], function () {
         expect(Artisan::call('eval:run'))->toBe(1)
             ->and(Artisan::output())->toContain('not allowed in production');
     });
