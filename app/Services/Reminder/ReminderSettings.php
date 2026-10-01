@@ -26,12 +26,17 @@ class ReminderSettings
 
     public const DEFAULT_MONTHLY_TIME = '09:00';
 
-    /** The monthly report reminder: last day of the month at `schedule.time` (PRD §25, §32). */
+    /** The monthly report reminder fires this many days before the last day of the month (0 = the last day itself). */
+    public const DEFAULT_MONTHLY_DAYS_BEFORE = 3;
+
+    public const MAX_MONTHLY_DAYS_BEFORE = 7;
+
+    /** The monthly report reminder: `schedule.days_before` days before the end of the month at `schedule.time` (PRD §25, §32; offset chosen by the user, decisions log). */
     public function monthly(): ReminderRule
     {
         return ReminderRule::query()->firstOrCreate(
             ['project_id' => null, 'type' => ReminderType::MonthlyReport],
-            ['schedule' => ['day' => 'last', 'time' => self::DEFAULT_MONTHLY_TIME], 'config' => [], 'priority' => ReminderPriority::Normal, 'enabled' => true],
+            ['schedule' => ['days_before' => self::DEFAULT_MONTHLY_DAYS_BEFORE, 'time' => self::DEFAULT_MONTHLY_TIME], 'config' => [], 'priority' => ReminderPriority::Normal, 'enabled' => true],
         );
     }
 
@@ -40,6 +45,28 @@ class ReminderSettings
         $time = $this->monthly()->schedule['time'] ?? null;
 
         return is_string($time) && ReminderSchedule::validTime($time) ? $time : self::DEFAULT_MONTHLY_TIME;
+    }
+
+    public function monthlyDaysBefore(): int
+    {
+        $days = $this->monthly()->schedule['days_before'] ?? null;
+
+        return is_int($days) && $days >= 0 && $days <= self::MAX_MONTHLY_DAYS_BEFORE ? $days : self::DEFAULT_MONTHLY_DAYS_BEFORE;
+    }
+
+    /**
+     * @return bool false when $days is outside 0..MAX_MONTHLY_DAYS_BEFORE
+     */
+    public function setMonthlyDaysBefore(int $days): bool
+    {
+        if ($days < 0 || $days > self::MAX_MONTHLY_DAYS_BEFORE) {
+            return false;
+        }
+
+        $rule = $this->monthly();
+        $rule->update(['schedule' => ['days_before' => $days] + (array) $rule->schedule]);
+
+        return true;
     }
 
     public function setMonthlyTime(string $time): bool

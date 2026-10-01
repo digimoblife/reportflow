@@ -7,6 +7,7 @@ use App\Enums\TaskStatus;
 use App\Models\Activity;
 use App\Models\Project;
 use App\Models\ReminderInstance;
+use App\Models\ReminderRule;
 use App\Models\Report;
 use App\Models\Task;
 use App\Models\User;
@@ -28,6 +29,7 @@ beforeEach(function () {
     Activity::factory()->for($this->task)->create(['activity_date' => '2026-09-15', 'summary' => 'Retry logic added']);
     User::query()->where('id', '!=', $this->user->id)->update(['reminders_enabled' => false]);
     app(ReminderSettings::class)->daily()->update(['enabled' => false]);   // these tests are about the monthly reminder
+    app(ReminderSettings::class)->setMonthlyDaysBefore(0);   // the default is 3 days before; these tests pin the last-day behaviour (see "days before the end of the month")
 });
 
 afterEach(fn () => Carbon::setTestNow());
@@ -92,6 +94,7 @@ describe('when it goes out', function () {
         $projectFar = asUser($far->id, fn () => Project::factory()->create(['user_id' => $far->id]));
         asUser($far->id, fn () => Activity::factory()->for(Task::factory()->for($projectFar)->create())->create(['activity_date' => '2026-09-10']));
         asUser($far->id, fn () => app(ReminderSettings::class)->daily()->update(['enabled' => false]));
+        asUser($far->id, fn () => app(ReminderSettings::class)->setMonthlyDaysBefore(0));
 
         monthEnd('2026-09-29 18:59:00');   // 08:59 on 30 September there
         expect(array_column(fakeTelegram()->sent, 'chat_id'))->not->toContain(555002);
@@ -240,5 +243,52 @@ describe('the buttons', function () {
 
         expect($this->instance->fresh()->action_taken)->toBe('rev')->and(Report::query()->count())->toBe(0)
             ->and(isVariantOf(collect(fakeTelegram()->answers)->last()['text'], 'reminder.answered', 'id'))->toBeTrue();
+    });
+});
+
+describe('days before the end of the month', function () {
+    it('goes out three days before the end of the month by default, whatever the month length', function (string $day, string $utcAt) {
+        asUser(test()->user->id, fn () => ReminderRule::query()->where('type', ReminderType::MonthlyReport)->delete());   // a fresh rule gets the default
+        Activity::factory()->for(test()->task)->create(['activity_date' => substr($day, 0, 7).'-02']);
+
+        monthEnd($utcAt);
+
+        expect(monthlyInstance()?->reminder_date->format('Y-m-d'))->toBe($day);
+    })->with([
+        '31-day month (Oct)' => ['2026-10-28', '2026-10-28 02:00:00'],
+        '30-day month (Sep)' => ['2026-09-27', '2026-09-27 02:00:00'],
+        'February' => ['2026-02-25', '2026-02-25 02:00:00'],
+        'leap February' => ['2028-02-26', '2028-02-26 02:00:00'],
+    ]);
+
+    it('does not go out on the last day any more once it is moved', function () {
+        app(ReminderSettings::class)->setMonthlyDaysBefore(3);
+
+        monthEnd('2026-09-30 02:00:00');
+
+        expect(monthlyInstance())->toBeNull()->and(fakeTelegram()->sent)->toBe([]);
+    });
+
+    it('still covers the whole month in the message and knows an approved report of the whole month', function () {
+        app(ReminderSettings::class)->setMonthlyDaysBefore(3);
+        Activity::factory()->for($this->task)->create(['activity_date' => '2026-09-29', 'summary' => 'Written after the reminder']);
+
+        monthEnd('2026-09-27 02:00:00');
+        expect(fakeTelegram()->sent)->toHaveCount(1)->and(fakeTelegram()->sent[0]['text'])->toContain('Aktivitas: 3');
+
+        Report::factory()->create(['project_id' => $this->project->id, 'status' => ReportStatus::Approved, 'period_start' => '2026-09-01', 'period_end' => '2026-09-30']);
+        fakeTelegram()->sent = [];
+        ReminderInstance::query()->delete();
+        monthEnd('2026-09-27 02:10:00');
+
+        expect(fakeTelegram()->sent)->toBe([]);   // nothing to remind about: the month already has its approved report
+    });
+
+    it('is configurable between 0 and 7 days and refuses anything else', function () {
+        $settings = app(ReminderSettings::class);
+
+        expect($settings->setMonthlyDaysBefore(7))->toBeTrue()->and($settings->monthlyDaysBefore())->toBe(7)
+            ->and($settings->setMonthlyDaysBefore(8))->toBeFalse()->and($settings->setMonthlyDaysBefore(-1))->toBeFalse()
+            ->and($settings->monthlyDaysBefore())->toBe(7);
     });
 });

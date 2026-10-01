@@ -24,6 +24,10 @@ return [
             'Project ":project" already exists. Feel free to tell me about your work.',
             'The name ":project" is taken, so I will use the existing project. Go ahead.',
         ],
+        'new_project_usage' => [
+            'Write the new project name, for example /project new Harbor Portal.',
+            'What should the new project be called? Example: /project new Kedai App.',
+        ],
         'name_invalid' => [
             "That project name can't be used. Use 1 to 80 characters.",
             'A project name must be 1 to 80 characters and not empty. Please try again.',
@@ -32,8 +36,8 @@ return [
 
     'help' => [
         'guide' => [
-            "How it works: just tell me what you worked on, for example \"Fixed the login bug on 9Club today\". I'll note it down and file it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily and monthly reminders\n/report - make the monthly report\n/review - review the draft report\n/reports - list reports\n/help - this guide",
-            "Quick guide: write what you did today and I'll log it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily and monthly reminders\n/report - make the monthly report\n/review - review the draft report\n/reports - list reports\n/help - this guide",
+            "How it works: just tell me what you worked on, for example \"Fixed the login bug on 9Club today\". I'll note it down and file it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/project new <name> - create a project\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily and monthly reminders\n/report - make the monthly report\n/review - review the draft report\n/reports - list reports\n/help - this guide",
+            "Quick guide: write what you did today and I'll log it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/project new <name> - create a project\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily and monthly reminders\n/report - make the monthly report\n/review - review the draft report\n/reports - list reports\n/help - this guide",
         ],
     ],
 
@@ -280,8 +284,8 @@ return [
             'Snoozed three times already, so today\'s reminder is closed.',
         ],
         'status' => [
-            "Reminder status:\n\nDaily: :state — :time (:days)\nMonthly: :mstate — :mtime (last day of the month)",
-            "Your reminders right now:\n\nDaily: :state — :time (:days)\nMonthly: :mstate — :mtime (last day of the month)",
+            "Reminder status:\n\nDaily: :state — :time (:days)\nMonthly: :mstate — :mtime (:mwhen)",
+            "Your reminders right now:\n\nDaily: :state — :time (:days)\nMonthly: :mstate — :mtime (:mwhen)",
         ],
         'on_done' => [
             'Okay, reminders are back on.',
@@ -300,7 +304,7 @@ return [
             'That time format is off. A valid one: /reminder daily 17:30.',
         ],
         'usage' => [
-            "Reminder commands:\n/reminder - status\n/reminder on - switch on\n/reminder off - switch off\n/reminder daily 18:00 - set the daily time\n/reminder monthly 09:00 - set the monthly reminder time",
+            "Reminder commands:\n/reminder - status\n/reminder on - switch on\n/reminder off - switch off\n/reminder daily 18:00 - set the daily time\n/reminder monthly 09:00 - set the monthly reminder time\n/reminder monthly days 3 - set how many days before the end of the month",
             "How reminders work:\n/reminder - status\n/reminder on or off\n/reminder daily 18:00 - daily reminder time",
         ],
         'monthly_intro' => [
@@ -320,8 +324,16 @@ return [
             'Have a look at the tasks in progress below first.',
         ],
         'monthly_set' => [
-            'Done, the monthly report reminder is now at :time on the last day of the month.',
-            'Okay, I will remind you about the monthly report on the last day of the month at :time.',
+            'Done, the monthly report reminder is now at :time (:when).',
+            'Okay, I will remind you about the monthly report at :time (:when).',
+        ],
+        'monthly_days_set' => [
+            'Done, I will send the monthly report reminder :when.',
+            'Okay, from this month I will remind you about the monthly report :when.',
+        ],
+        'monthly_days_invalid' => [
+            'That number does not work. Pick 0 to :max, for example /reminder monthly days 3.',
+            'It has to be between 0 and :max days. Example: /reminder monthly days 3.',
         ],
         'monthly_on' => [
             'Monthly report reminder switched on.',

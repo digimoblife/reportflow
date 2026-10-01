@@ -7,8 +7,10 @@ use App\Enums\Language;
 use App\Models\InboundMessage;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\Redaction\RedactionService;
 use App\Services\Reminder\ReminderSettings;
 use App\Services\Worklog\Outcome;
+use App\Services\Worklog\ProjectService;
 use App\Services\Worklog\UndoService;
 use Illuminate\Support\Facades\Lang;
 
@@ -28,6 +30,7 @@ class CommandRouter
         private readonly ListingCommands $listing,
         private readonly ReminderSettings $reminders,
         private readonly ReportCommands $reports,
+        private readonly ProjectService $projects,
     ) {}
 
     /**
@@ -54,7 +57,7 @@ class CommandRouter
             'help' => $this->reply($chatId, 'help.guide', $language),
             'undo' => $this->undoLast($user, $chatId, $language),
             'projects' => $this->show($chatId, $this->listing->projects($language)),
-            'project' => $this->show($chatId, $this->listing->project($argument, $language, $user->timezone)),
+            'project' => $this->project($user, $chatId, $language, $argument),
             'tasks' => $this->show($chatId, $this->listing->tasks(0, $language, $user->timezone)),
             'task' => $this->show($chatId, $this->listing->task($argument, $language, $user->timezone)),
             'inbox' => $this->show($chatId, $this->listing->inbox($language, $user->timezone)),
@@ -111,6 +114,60 @@ class CommandRouter
     }
 
     /**
+     * `/project` (list), `/project <name or number>` (detail) and `/project baru <name>` (create). The name is redacted
+     * before it is stored, exactly like a first-project name sent during onboarding.
+     */
+    private function project(User $user, int $chatId, Language $language, #[\SensitiveParameter] ?string $argument): void
+    {
+        $text = trim((string) $argument);
+
+        if (preg_match('/^(?:baru|new)(?:\s+(.*))?$/isu', $text, $m) === 1) {
+            $this->createProject($user, $chatId, $language, trim($m[1] ?? ''));
+
+            return;
+        }
+
+        $this->show($chatId, $this->listing->project($argument, $language, $user->timezone));
+    }
+
+    private function createProject(User $user, int $chatId, Language $language, #[\SensitiveParameter] string $name): void
+    {
+        if ($name === '') {
+            $this->reply($chatId, 'onboarding.new_project_usage', $language);
+
+            return;
+        }
+
+        $redaction = RedactionService::forUser($user->id)->redact($name);
+
+        if ($redaction->failed()) {
+            $this->reply($chatId, 'security.redaction_error', $language);
+
+            return;
+        }
+
+        if ($redaction->hasFindings()) {
+            if ($redaction->secretCount() > 0) {
+                $this->reply($chatId, 'security.credential_detected', $language, ['count' => $redaction->secretCount()]);
+            }
+
+            return;
+        }
+
+        $clean = $this->projects->normalizeName($redaction->text);
+
+        if ($clean === null) {
+            $this->reply($chatId, 'onboarding.name_invalid', $language);
+
+            return;
+        }
+
+        [$project, $created] = $this->projects->findOrCreate($clean);
+
+        $this->reply($chatId, $created ? 'onboarding.project_created' : 'onboarding.project_exists', $language, ['project' => $project->name]);
+    }
+
+    /**
      * `/reminder`, `/reminder on|off|status`, `/reminder daily HH:MM`, `/reminder monthly` (PRD §33). The argument is only
      * parsed here, never stored: a time is validated before it reaches ReminderSettings.
      */
@@ -140,9 +197,31 @@ class CommandRouter
             $rest === '' => $this->reminderStatus($user, $chatId, $language),
             $rest === 'on' => $this->monthlySwitch($chatId, $language, true),
             $rest === 'off' => $this->monthlySwitch($chatId, $language, false),
-            $this->reminders->setMonthlyTime($rest) => $this->reply($chatId, 'reminder.monthly_set', $language, ['time' => $this->reminders->monthlyTime()]),
+            preg_match('/^(?:days?|hari)\s+(\d+)$/u', $rest, $m) === 1 => $this->monthlyDays($chatId, $language, (int) $m[1]),
+            $this->reminders->setMonthlyTime($rest) => $this->reply($chatId, 'reminder.monthly_set', $language, ['time' => $this->reminders->monthlyTime(), 'when' => $this->monthlyWhen($language)]),
             default => $this->reply($chatId, 'reminder.daily_invalid', $language),
         };
+    }
+
+    private function monthlyDays(int $chatId, Language $language, int $days): void
+    {
+        if (! $this->reminders->setMonthlyDaysBefore($days)) {
+            $this->reply($chatId, 'reminder.monthly_days_invalid', $language, ['max' => ReminderSettings::MAX_MONTHLY_DAYS_BEFORE]);
+
+            return;
+        }
+
+        $this->reply($chatId, 'reminder.monthly_days_set', $language, ['when' => $this->monthlyWhen($language)]);
+    }
+
+    /** "the last day of the month" or "3 days before the end of the month", in the user's language. */
+    private function monthlyWhen(Language $language): string
+    {
+        $days = $this->reminders->monthlyDaysBefore();
+
+        return $days === 0
+            ? (string) Lang::get('ui.reminder_monthly_when.last', [], $language->value)
+            : trans_choice('ui.reminder_monthly_when.before', $days, ['days' => $days], $language->value);
     }
 
     private function monthlySwitch(int $chatId, Language $language, bool $on): void
@@ -178,6 +257,7 @@ class CommandRouter
             'days' => $days,
             'mstate' => (string) Lang::get('ui.reminder_states.'.($enabled && $this->reminders->monthly()->enabled ? 'on' : 'off'), [], $lang),
             'mtime' => $this->reminders->monthlyTime(),
+            'mwhen' => $this->monthlyWhen($language),
         ]);
     }
 

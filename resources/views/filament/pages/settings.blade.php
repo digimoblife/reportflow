@@ -47,6 +47,17 @@
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" wire:model="monthlyEnabled"> {{ __('ui.dashboard.settings.monthly') }}</label>
 
                 <label class="block text-sm">
+                    <span class="font-medium">{{ __('ui.dashboard.settings.monthly_days_before') }}</span>
+                    <x-filament::input.wrapper class="mt-1">
+                        <x-filament::input.select wire:model="monthlyDaysBefore">
+                            @foreach (range(0, \App\Services\Reminder\ReminderSettings::MAX_MONTHLY_DAYS_BEFORE) as $days)
+                                <option value="{{ $days }}">{{ $days === 0 ? __('ui.reminder_monthly_when.last') : trans_choice('ui.reminder_monthly_when.before', $days, ['days' => $days]) }}</option>
+                            @endforeach
+                        </x-filament::input.select>
+                    </x-filament::input.wrapper>
+                </label>
+
+                <label class="block text-sm">
                     <span class="font-medium">{{ __('ui.dashboard.settings.monthly_time') }}</span>
                     <x-filament::input.wrapper class="mt-1"><x-filament::input type="time" wire:model="monthlyTime" /></x-filament::input.wrapper>
                 </label>

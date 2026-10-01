@@ -48,8 +48,8 @@ class ReminderPolicy
     }
 
     /**
-     * Month-end report reminder: due on the last day of the month, still valid for two days after that (a snooze of one
-     * day lands on the 1st); skipped when nothing happened in the month or every active project already has an
+     * Month-end report reminder: due `days_before` days before the end of the month, still valid for three days after its date
+     * (a snooze of one day moves it on); skipped when nothing happened in the month or every active project already has an
      * approved report for it.
      */
     private function monthly(ReminderInstance $instance, User $user, CarbonImmutable $now, ?string $date): ?string
@@ -66,7 +66,8 @@ class ReminderPolicy
             return 'expired';
         }
 
-        [$from, $to] = [CarbonImmutable::parse($date)->startOfMonth()->format('Y-m-d'), $date];
+        // The reminder may fire a few days before the end of the month; the report always covers the whole month.
+        [$from, $to] = [CarbonImmutable::parse($date)->startOfMonth()->format('Y-m-d'), CarbonImmutable::parse($date)->endOfMonth()->format('Y-m-d')];
         $projects = Activity::query()->whereBetween('activity_date', [$from, $to])->distinct()->pluck('project_id')->all();
 
         if ($projects === []) {

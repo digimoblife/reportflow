@@ -204,7 +204,8 @@ return [
             'days' => ['mon' => 'Mon', 'tue' => 'Tue', 'wed' => 'Wed', 'thu' => 'Thu', 'fri' => 'Fri', 'sat' => 'Sat', 'sun' => 'Sun'],
             'reminders' => 'Daily reminder (workdays)',
             'reminder_time' => 'Daily reminder time',
-            'monthly' => 'Monthly report reminder (last day of the month)',
+            'monthly' => 'Monthly report reminder',
+            'monthly_days_before' => 'When to send the monthly reminder',
             'monthly_time' => 'Monthly reminder time',
             'save' => 'Save',
             'projects' => 'Projects',
@@ -326,6 +327,8 @@ return [
     ],
 
     'reminder_states' => ['on' => 'ON', 'off' => 'OFF'],
+
+    'reminder_monthly_when' => ['last' => 'the last day of the month', 'before' => '{1} :days day before the end of the month|[2,*] :days days before the end of the month'],
 
     'report_review' => [
         'snapshot' => 'data as of :at',

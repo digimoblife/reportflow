@@ -4,7 +4,7 @@ return [
     'start' => 'Begin and create your first project',
     'help' => 'Quick guide',
     'projects' => 'List projects',
-    'project' => 'Show or pick a project',
+    'project' => 'Show, pick or create a project',
     'tasks' => 'List tasks',
     'task' => 'Show one task',
     'undo' => 'Undo the last note',

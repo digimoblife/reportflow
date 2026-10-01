@@ -42,6 +42,8 @@ class Settings extends Page
 
     public string $monthlyTime = '09:00';
 
+    public int $monthlyDaysBefore = ReminderSettings::DEFAULT_MONTHLY_DAYS_BEFORE;
+
     public string $newProject = '';
 
     /** @var array<int, string> project id => name being edited */
@@ -81,13 +83,14 @@ class Settings extends Page
         $this->reminderTime = app(ReminderSettings::class)->time();
         $this->monthlyEnabled = app(ReminderSettings::class)->monthly()->enabled;
         $this->monthlyTime = app(ReminderSettings::class)->monthlyTime();
+        $this->monthlyDaysBefore = app(ReminderSettings::class)->monthlyDaysBefore();
         $this->loadProjects();
     }
 
     public function saveProfile(): void
     {
         $validated = validator(
-            ['language' => $this->language, 'timezone' => $this->timezone, 'workdays' => $this->workdays, 'reminderTime' => ReminderSchedule::parseTime($this->reminderTime), 'monthlyTime' => ReminderSchedule::parseTime($this->monthlyTime)],
+            ['language' => $this->language, 'timezone' => $this->timezone, 'workdays' => $this->workdays, 'reminderTime' => ReminderSchedule::parseTime($this->reminderTime), 'monthlyTime' => ReminderSchedule::parseTime($this->monthlyTime), 'monthlyDaysBefore' => $this->monthlyDaysBefore],
             [
                 'language' => ['required', Rule::in(array_map(fn (Language $l): string => $l->value, Language::cases()))],
                 'timezone' => ['required', Rule::in(DateTimeZone::listIdentifiers())],
@@ -95,6 +98,7 @@ class Settings extends Page
                 'workdays.*' => ['string', Rule::in(self::DAYS)],
                 'reminderTime' => ['required', 'string'],
                 'monthlyTime' => ['required', 'string'],
+                'monthlyDaysBefore' => ['required', 'integer', 'min:0', 'max:'.ReminderSettings::MAX_MONTHLY_DAYS_BEFORE],
             ],
         );
 
@@ -114,8 +118,10 @@ class Settings extends Page
         $reminders->setTime($this->reminderTime);
         $reminders->setEnabled($this->user(), $this->remindersEnabled);
         $reminders->setMonthlyTime($this->monthlyTime);
+        $reminders->setMonthlyDaysBefore($this->monthlyDaysBefore);
         $reminders->setMonthlyEnabled($this->monthlyEnabled);
         $this->monthlyTime = $reminders->monthlyTime();
+        $this->monthlyDaysBefore = $reminders->monthlyDaysBefore();
         $this->reminderTime = $reminders->time();
 
         app()->setLocale($this->language);

@@ -25,6 +25,10 @@ return [
             'Project ":project" sudah ada di arsip. Silakan langsung ceritakan pekerjaan Anda.',
             'Nama ":project" sudah terpakai, jadi saya pakai project yang sudah ada. Silakan lanjut bercerita.',
         ],
+        'new_project_usage' => [
+            'Tulis nama project barunya, misalnya /project baru Harbor Portal.',
+            'Nama project barunya apa? Contoh: /project baru Kedai App.',
+        ],
         'name_invalid' => [
             'Nama project belum bisa dipakai. Tulis 1 sampai 80 karakter.',
             'Nama project harus 1 sampai 80 karakter dan tidak boleh kosong. Coba tulis lagi.',
@@ -33,8 +37,8 @@ return [
 
     'help' => [
         'guide' => [
-            "Cara kerjanya: ceritakan saja pekerjaan Anda, misalnya \"Hari ini fix bug login 9Club\". Saya catat dan arsipkan.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian dan bulanan\n/report - buat laporan bulanan\n/review - tinjau draft laporan\n/reports - daftar laporan\n/help - panduan ini",
-            "Panduan singkat: tulis apa yang Anda kerjakan hari ini, nanti saya catat.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian dan bulanan\n/report - buat laporan bulanan\n/review - tinjau draft laporan\n/reports - daftar laporan\n/help - panduan ini",
+            "Cara kerjanya: ceritakan saja pekerjaan Anda, misalnya \"Hari ini fix bug login 9Club\". Saya catat dan arsipkan.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/project baru <nama> - buat project baru\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian dan bulanan\n/report - buat laporan bulanan\n/review - tinjau draft laporan\n/reports - daftar laporan\n/help - panduan ini",
+            "Panduan singkat: tulis apa yang Anda kerjakan hari ini, nanti saya catat.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/project baru <nama> - buat project baru\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian dan bulanan\n/report - buat laporan bulanan\n/review - tinjau draft laporan\n/reports - daftar laporan\n/help - panduan ini",
         ],
     ],
 
@@ -281,8 +285,8 @@ return [
             'Penundaan sudah tiga kali, pengingat hari ini saya tutup ya.',
         ],
         'status' => [
-            "Status pengingat:\n\nHarian: :state — :time (:days)\nBulanan: :mstate — :mtime (hari terakhir bulan)",
-            "Pengingat saat ini:\n\nHarian: :state — :time (:days)\nBulanan: :mstate — :mtime (hari terakhir bulan)",
+            "Status pengingat:\n\nHarian: :state — :time (:days)\nBulanan: :mstate — :mtime (:mwhen)",
+            "Pengingat saat ini:\n\nHarian: :state — :time (:days)\nBulanan: :mstate — :mtime (:mwhen)",
         ],
         'on_done' => [
             'Siap, pengingat saya nyalakan lagi.',
@@ -301,7 +305,7 @@ return [
             'Format jam salah. Contoh yang benar: /reminder daily 17:30.',
         ],
         'usage' => [
-            "Perintah pengingat:\n/reminder - lihat status\n/reminder on - nyalakan\n/reminder off - matikan\n/reminder daily 18:00 - atur jam harian\n/reminder monthly 09:00 - atur jam pengingat bulanan",
+            "Perintah pengingat:\n/reminder - lihat status\n/reminder on - nyalakan\n/reminder off - matikan\n/reminder daily 18:00 - atur jam harian\n/reminder monthly 09:00 - atur jam pengingat bulanan\n/reminder monthly days 3 - atur berapa hari sebelum akhir bulan",
             "Cara memakai pengingat:\n/reminder - status\n/reminder on atau off\n/reminder daily 18:00 - jam pengingat harian",
         ],
         'monthly_intro' => [
@@ -321,8 +325,16 @@ return [
             'Silakan tinjau dulu task yang berjalan di bawah ini.',
         ],
         'monthly_set' => [
-            'Siap, pengingat laporan bulanan sekarang pukul :time di hari terakhir bulan.',
-            'Baik, saya ingatkan soal laporan bulanan tiap hari terakhir bulan pukul :time.',
+            'Siap, pengingat laporan bulanan sekarang pukul :time (:when).',
+            'Baik, saya ingatkan soal laporan bulanan pukul :time (:when).',
+        ],
+        'monthly_days_set' => [
+            'Siap, pengingat laporan bulanan saya kirim :when.',
+            'Baik, mulai bulan ini saya ingatkan soal laporan bulanan :when.',
+        ],
+        'monthly_days_invalid' => [
+            'Angkanya belum pas. Pilih 0 sampai :max, misalnya /reminder monthly days 3.',
+            'Hitungannya harus 0 sampai :max hari. Contoh: /reminder monthly days 3.',
         ],
         'monthly_on' => [
             'Pengingat laporan bulanan dinyalakan.',

@@ -46,7 +46,7 @@ class ReminderDispatcher
         $this->createToday($user, $rule->id, $rule->enabled, $this->settings->time(), $now);
 
         $monthly = $this->settings->monthly();
-        $this->createMonthEnd($user, $monthly->id, $monthly->enabled, $this->settings->monthlyTime(), $now);
+        $this->createMonthEnd($user, $monthly->id, $monthly->enabled, $this->settings->monthlyTime(), $this->settings->monthlyDaysBefore(), $now);
 
         $queued = 0;
 
@@ -96,14 +96,14 @@ class ReminderDispatcher
         ]);
     }
 
-    /** On the last day of the user's month, at the monthly time (any weekday: a report does not depend on workdays). */
-    private function createMonthEnd(User $user, int $ruleId, bool $enabled, string $time, CarbonImmutable $now): void
+    /** `$daysBefore` days before the last day of the user's month, at the monthly time (any weekday: a report does not depend on workdays). */
+    private function createMonthEnd(User $user, int $ruleId, bool $enabled, string $time, int $daysBefore, CarbonImmutable $now): void
     {
         $local = ReminderSchedule::localNow($user, $now);
         $date = $local->format('Y-m-d');
         $at = ReminderSchedule::scheduledAt($user, $date, $time);
 
-        if (! $enabled || $date !== $local->endOfMonth()->format('Y-m-d') || $now->lessThan($at)
+        if (! $enabled || $date !== $local->endOfMonth()->subDays($daysBefore)->format('Y-m-d') || $now->lessThan($at)
             || $now->greaterThan($at->addMinutes(ReminderSchedule::EXPIRY_MINUTES))) {
             return;
         }

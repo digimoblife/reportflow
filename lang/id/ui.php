@@ -204,7 +204,8 @@ return [
             'days' => ['mon' => 'Sen', 'tue' => 'Sel', 'wed' => 'Rab', 'thu' => 'Kam', 'fri' => 'Jum', 'sat' => 'Sab', 'sun' => 'Min'],
             'reminders' => 'Pengingat harian (hari kerja)',
             'reminder_time' => 'Jam pengingat harian',
-            'monthly' => 'Pengingat laporan bulanan (hari terakhir bulan)',
+            'monthly' => 'Pengingat laporan bulanan',
+            'monthly_days_before' => 'Kapan pengingat bulanan dikirim',
             'monthly_time' => 'Jam pengingat bulanan',
             'save' => 'Simpan',
             'projects' => 'Project',
@@ -326,6 +327,8 @@ return [
     ],
 
     'reminder_states' => ['on' => 'AKTIF', 'off' => 'MATI'],
+
+    'reminder_monthly_when' => ['last' => 'hari terakhir bulan', 'before' => ':days hari sebelum akhir bulan'],
 
     'report_review' => [
         'snapshot' => 'versi data per :at',

@@ -9,7 +9,7 @@ return [
     'start' => 'Mulai dan buat project pertama',
     'help' => 'Panduan singkat',
     'projects' => 'Daftar project',
-    'project' => 'Detail atau pilih project',
+    'project' => 'Detail, pilih, atau buat project baru',
     'tasks' => 'Daftar task',
     'task' => 'Detail satu task',
     'undo' => 'Batalkan catatan terakhir',
