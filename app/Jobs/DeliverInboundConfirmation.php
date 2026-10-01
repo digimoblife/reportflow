@@ -89,7 +89,7 @@ class DeliverInboundConfirmation implements ShouldQueue
         }
 
         try {
-            $confirmationId = $this->deliver($messenger, $message, $chatId, $text, $keyboard);
+            $confirmationId = $this->deliver($messenger, $message, $chatId, $text, $keyboard ?? []);
 
             if ($outcome !== null) {
                 $outcome = $this->sendQuestions($messenger, $composer, $message, $outcome->withConfirmationMessage($confirmationId), $language, $chatId);

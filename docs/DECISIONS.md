@@ -14,7 +14,7 @@ putuskan berbeda. Setiap entri menyebut section PRD terkait.
   `config.platform.php = 8.3.0` dan `phpstan.neon` memuat `phpVersion: 80300`, sehingga tooling lokal
   dengan PHP yang lebih baru tetap menganalisis dan me-resolve paket untuk 8.3. Fitur khusus PHP 8.4
   (property hooks, asymmetric visibility, dll.) tidak boleh dipakai.
-- **PHPStan level 7** tanpa baseline, menganalisis `app/` dan `database/`. Target level 8 pada M4.
+- **PHPStan level 8** (naik dari 7 pada M4g) tanpa baseline, menganalisis `app/` dan `database/`.
 
 ### Waktu dan tanggal (PRD §49, CLAUDE.md konvensi)
 
@@ -569,3 +569,26 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - Dalam satu transaksi: undo hasil lama (`corrections(undo)`), lalu apply usulan ke pesan balasan. Undo hanya terjadi bila ada item yang tidak ditolak validator. Balasan yang bukan koreksi (`items: []`), usulan ditolak, atau AI gagal → hasil lama tidak berubah; bot bilang tidak ada yang berubah.
 - Bubble konfirmasi lama diedit menjadi "dibatalkan" tanpa tombol.
 - Belum ada: kasus koreksi di dataset eval (harness `eval:run` hanya mengevaluasi ekstraksi). Dicatat untuk M4g/Phase berikutnya; kualitas prompt koreksi di model sungguhan belum diukur.
+
+## M4g — Penutup M4 (30 Sep – 1 Okt 2026)
+
+- **Aturan produk Open → In Progress** (keputusan user): pekerjaan nyata (`ProposalApplier::WORK_TYPES`) pada task `open` memindahkannya ke `in_progress`; dijalankan backend, tercatat di `task_events`. Karena itu `eval:run`
+  tidak lagi menghitung "in_progress" pada task Open + pekerjaan nyata sebagai keputusan model (sisi label maupun prediksi dinormalkan menjadi "tanpa perubahan status"). Label dataset TIDAK diubah:
+  label tetap berarti "status yang dinyatakan eksplisit di pesan". (Mencoba melabel ulang membuat metrik menghukum model atas sesuatu yang dikerjakan backend; percobaan itu dibatalkan.)
+- **Eval v2, dataset `realistic`, DeepSeek `deepseek-flash`, 2 run, skor status dengan aturan di atas:**
+
+| Metrik | Run 1 | Run 2 |
+|---|---|---|
+| Extraction | 97,0% | 98,0% |
+| Project | 97,0% | 98,0% |
+| Task matching | 94,3% | 94,3% |
+| Date | 97,8% | 98,9% |
+| Tipe activity | 82,2% | 83,0% |
+| Status | 84,8% | 83,5% |
+| Aturan backend (`decision`) | 100% | 100% |
+
+  Target PRD (extraction 90, project 95, matching 90, date 95) tercapai di kedua run. Status (84%) masih di bawah v1 (91–92%): sisa kesalahan adalah model mengisi `in_progress`/`waiting`/`completed` pada
+  bagian tugas (R027, R030, R035, R064, R074, R081, …) atau melewatkan `completed` eksplisit (R052). Ditangani konfirmasi Completed/Cancelled dan Undo (M4c/M4d), bukan prompt. Angka ini dari data sintetis; ambang
+  dan keputusan prompt berikutnya tetap menunggu dataset nyata user (`tests/Eval/data/`).
+- PHPStan naik ke level 8 tanpa baseline. `WorklogResult` kini selalu membawa proposal dan outcome (bidang `placeholder` dihapus).
+- Prompt koreksi (`worklog_correction@v1`) belum punya kasus eval (lihat M4f).

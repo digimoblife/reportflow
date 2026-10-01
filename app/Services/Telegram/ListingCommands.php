@@ -108,11 +108,11 @@ class ListingCommands
         $lines = [$this->messages->get('list.tasks_title', $language, ['count' => $total, 'page' => $page + 1, 'pages' => $pages])];
         $current = null;
 
-        foreach ($tasks->sortBy(fn (Task $t): string => $t->project->name) as $task) {
+        foreach ($tasks->sortBy(fn (Task $t): string => ($t->project->name ?? '')) as $task) {
             if ($current !== $task->project_id) {
                 $current = $task->project_id;
                 $lines[] = '';
-                $lines[] = '📁 '.$task->project->name;
+                $lines[] = '📁 '.($task->project->name ?? '');
             }
 
             $lines[] = '#'.$task->id.' '.$this->clip($task->title, 60).' — '.$this->status($task, $lang);
@@ -232,7 +232,7 @@ class ListingCommands
 
         $lines = [
             '#'.$task->id.' '.$task->title,
-            '📁 '.$task->project->name,
+            '📁 '.($task->project->name ?? ''),
             '🔄 '.$this->status($task, $lang),
         ];
 

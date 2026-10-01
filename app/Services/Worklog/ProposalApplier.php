@@ -39,7 +39,7 @@ class ProposalApplier
     public const MAX_ITEMS = 5;
 
     /** Activity types that count as real work: they move an Open task to In Progress (product rule, 2026-09-30). */
-    private const WORK_TYPES = ['development', 'bug_fix', 'configuration', 'testing', 'deployment', 'investigation', 'research', 'documentation', 'milestone', 'resolution'];
+    public const WORK_TYPES = ['development', 'bug_fix', 'configuration', 'testing', 'deployment', 'investigation', 'research', 'documentation', 'milestone', 'resolution'];
 
     public function __construct(
         private readonly TaskLifecycle $lifecycle,

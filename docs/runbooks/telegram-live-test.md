@@ -58,7 +58,7 @@ bash scripts/verify-tunnel-port.sh                         # semua harus 404, "A
 2. `cloudflared tunnel --no-autoupdate --url http://127.0.0.1:8081` (satu instance). Catat URL `https://….trycloudflare.com`.
 3. `scripts/dev-env.py put APP_URL https://….trycloudflare.com`, lalu `docker compose restart worker scheduler`.
 4. `docker compose exec app php artisan telegram:set-webhook --dry-run` → url ter-mask, secret `[hidden]`,
-   `allowed_updates` = `message`, `edited_message`. Lalu tanpa `--dry-run`.
+   `allowed_updates` = `message`, `edited_message`, `callback_query` (tombol). Lalu tanpa `--dry-run`.
 5. Verifikasi tanpa mencetak token/path (token tidak masuk argumen proses):
    ```bash
    docker compose exec -T app php artisan tinker --execute='
@@ -68,6 +68,23 @@ bash scripts/verify-tunnel-port.sh                         # semua harus 404, "A
 6. `php artisan telegram:sync-commands --dry-run`, lalu tanpa `--dry-run`.
 7. Kirim satu pesan ke bot; ID Telegram ada di `storage/logs/laravel.log` (`unregistered_sender`).
    `php artisan reportflow:user:create <ID> --name="…" --language=id` (tanpa `--email` agar akun kosong dan onboarding bisa diuji).
+
+## Skenario tombol dan koreksi (M4)
+
+Setelah webhook aktif dan user terdaftar (`reportflow:user:create`, lalu `/start` dan nama project pertama; tambah project/task lewat pesan atau seeder).
+Kirim tiap catatan sebagai pesan baru, amati bubble konfirmasi:
+
+1. **Catatan jelas**: "Harbor: bug invoice sudah diperbaiki". Konfirmasi memuat project → task, aktivitas, status; tombol Undo / Pindah Task / Ubah Status / Ganti Project.
+2. **Undo**: tekan ↩️ Undo → bubble menjadi "dibatalkan", tanpa tombol; `/tasks` menunjukkan status kembali.
+3. **Pindah Task / Ubah Status / Ganti Project** (task baru saja): pilih dari daftar, tekan ⬅️ Kembali untuk batal. Ubah Status hanya menawarkan status yang sah.
+4. **Pertanyaan klarifikasi**: catatan samar ("yang kemarin itu sudah beres") → satu pesan pertanyaan per item; jawab Ya / Task baru / Batal.
+5. **Lebih dari 5 item** dalam satu pesan → tidak ada yang tersimpan, bot minta dipecah.
+6. **Edit pesan** yang sudah diproses → bot menawarkan Proses ulang / Biarkan.
+7. **Reply koreksi**: balas bubble konfirmasi dengan "bukan, itu untuk task X" → hasil lama dibatalkan, hasil baru dikonfirmasi, bubble lama menjadi "dibatalkan".
+8. **Command**: `/projects`, `/project <nama>`, `/tasks` (tombol halaman), `/task <id|kata>`, `/inbox` (tombol Proses ulang), `/undo`.
+9. Tekan tombol dua kali cepat, dan tombol milik pesan lama setelah Undo: tidak boleh ada efek ganda.
+
+Callback tidak masuk bila webhook lama masih memakai `allowed_updates` lama: jalankan ulang `telegram:set-webhook`.
 
 ## Pembacaan database (hanya baca)
 

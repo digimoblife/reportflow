@@ -9,5 +9,5 @@ parameters:
     # Docker and CI run PHP 8.3; analyse against 8.3 even when a local PHP is newer.
     phpVersion: 80300
 
-    # M0 started at level 5; M1 raised it to 7 (clean, no baseline). Plan: reach level 8 by M4.
-    level: 7
+    # M0 started at level 5; M1 raised it to 7, M4 to 8 (clean, no baseline).
+    level: 8

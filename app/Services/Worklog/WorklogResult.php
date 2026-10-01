@@ -11,8 +11,7 @@ use App\Services\Worklog\Extraction\ValidatedProposal;
 final readonly class WorklogResult
 {
     public function __construct(
-        public bool $placeholder = true,
-        public ?ValidatedProposal $proposal = null,
-        public ?Outcome $outcome = null,
+        public ValidatedProposal $proposal,
+        public Outcome $outcome,
     ) {}
 }

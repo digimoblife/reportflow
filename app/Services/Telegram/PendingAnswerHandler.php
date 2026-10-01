@@ -54,7 +54,7 @@ class PendingAnswerHandler
             }
 
             $written = $this->answer($context, $message, $outcome, $item);
-            $updated = Outcome::fromArray($message->fresh()->outcome);
+            $updated = Outcome::fromArray($message->fresh()?->outcome);
 
             if ($updated !== null && ! $updated->hasPending() && $message->status === InboundMessageStatus::NeedsClarification) {
                 InboundMessage::query()->whereKey($message->id)->update(['status' => InboundMessageStatus::Processed->value]);

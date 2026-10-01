@@ -14,6 +14,7 @@ use App\Services\Ai\Eval\EvalSecrets;
 use App\Services\Ai\Eval\OracleResponder;
 use App\Services\Ai\Fakes\FakeAiProvider;
 use App\Services\Redaction\RedactionService;
+use App\Services\Worklog\ProposalApplier;
 use Carbon\CarbonImmutable;
 
 function sampleDataset(string $name = 'sample'): EvalDataset
@@ -124,6 +125,24 @@ describe('scoring', function () {
         expect($metrics['extraction']['rate'])->toEqual(1)
             ->and($metrics['classification']['rate'])->toBeLessThan(0.5)
             ->and($report->cases[0]['detail']['predicted'][0])->toContain('|other|');
+    });
+
+    it('does not score "open → in_progress" on real work as a model decision: the backend does that anyway', function () {
+        $report = runSample(function (array $case, $map, $today, $oracle) {
+            $json = json_decode($oracle->respond($case, $map, $today), true);
+            foreach ($json['items'] as &$item) {
+                $key = $item['task_ref']['type'] === 'existing' ? $map->taskKey($item['task_ref']['task_id']) : null;
+
+                if ($key !== null && $map->taskStatus[$key] === 'open' && $item['status_change'] === null
+                    && in_array($item['activity']['type'], ProposalApplier::WORK_TYPES, true)) {
+                    $item['status_change'] = ['from' => 'open', 'to' => 'in_progress'];
+                }
+            }
+
+            return json_encode($json);
+        });
+
+        expect($report->metrics()['status']['rate'])->toEqual(1);
     });
 
     it('catches wrong task matches, and shows them in the confidence buckets', function () {

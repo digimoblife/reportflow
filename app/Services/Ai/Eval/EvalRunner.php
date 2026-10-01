@@ -18,6 +18,7 @@ use App\Services\Worklog\CandidateBuilder;
 use App\Services\Worklog\Extraction\ExtractionValidator;
 use App\Services\Worklog\Extraction\ItemDecision;
 use App\Services\Worklog\Extraction\ValidatedItem;
+use App\Services\Worklog\ProposalApplier;
 use App\Support\UserContext;
 use Carbon\CarbonImmutable;
 use Closure;
@@ -79,7 +80,7 @@ class EvalRunner
                     'calls' => $rows->count(),
                     'tokens_input' => (int) $rows->sum('tokens_input'),
                     'tokens_output' => (int) $rows->sum('tokens_output'),
-                    'avg_latency_ms' => $rows->whereNotNull('latency_ms')->isEmpty() ? null : (int) round($rows->whereNotNull('latency_ms')->avg('latency_ms')),
+                    'avg_latency_ms' => $rows->whereNotNull('latency_ms')->isEmpty() ? null : (int) round((float) $rows->whereNotNull('latency_ms')->avg('latency_ms')),
                 ];
             });
         } finally {
@@ -191,7 +192,7 @@ class EvalRunner
             'project' => $i['project'] ?? 'unknown',
             'ref' => $i['task'] === 'new' ? 'new' : 'existing:'.$i['task'],
             'type' => $i['activity_type'],
-            'status' => $i['status_to'] ?? '-',
+            'status' => $this->effectiveStatus($i['status_to'] ?? '-', 'existing:'.$i['task'], $i['task'], $i['activity_type'], $map),
             'date' => $oracle->date($i['date'] ?? 0, $today),
         ], $expected['items']);
 
@@ -199,7 +200,7 @@ class EvalRunner
             'project' => $map->projectKey($i->projectId) ?? 'unknown',
             'ref' => $i->taskId === null ? 'new' : 'existing:'.($map->taskKey($i->taskId) ?? '?'),
             'type' => (string) $i->data['activity']['type'],
-            'status' => $i->statusChange['to'] ?? '-',
+            'status' => $this->effectiveStatus($i->statusChange['to'] ?? '-', $i->taskId === null ? 'new' : 'existing', (string) ($map->taskKey($i->taskId ?? 0) ?? ''), (string) $i->data['activity']['type'], $map),
             'date' => (string) $i->activityDate?->format('Y-m-d'),
         ], $predicted);
 
@@ -231,5 +232,18 @@ class EvalRunner
         $line = fn (array $r): string => "{$r['project']}|{$r['ref']}|{$r['type']}|{$r['status']}|{$r['date']}";
 
         return [$scores, ['expected' => array_values(array_map($line, $exp)), 'predicted' => array_map($line, $got)]];
+    }
+
+    /**
+     * Real work on an Open task moves it to In Progress in the backend (ProposalApplier, M4), whatever the model says,
+     * so "in_progress" on such an item is not a model decision and is scored as "no status change" on both sides.
+     */
+    private function effectiveStatus(string $status, string $ref, string $taskKey, string $type, SnapshotMap $map): string
+    {
+        if ($status === 'in_progress' && $ref !== 'new' && ($map->taskStatus[$taskKey] ?? null) === 'open' && in_array($type, ProposalApplier::WORK_TYPES, true)) {
+            return '-';
+        }
+
+        return $status;
     }
 }
