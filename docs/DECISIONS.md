@@ -763,3 +763,8 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
 - Host nginx files are kept in `vps/host/` for reference (`/etc/nginx/conf.d/reportflow-limits.conf` with uniquely named rate-limit zones, and the server block managed by certbot). The host block sets `access_log off` because the webhook path is a secret in the request line, and the same security headers and rate limits as the production template. HSTS and foreign-SNI refusal are not applied here (other sites share the IP and server).
 - Host pinning (`trustHosts` from `APP_URL`) still holds in Laravel; the container healthcheck therefore uses `/nginx-health`, which the container nginx answers itself.
 - First deploy done without backup: `BACKUP_REMOTE` is empty, so `ops:check` raises `backup_stale` until the backup service is configured (expected).
+
+## First live note (1 Oct 2026): jobs never ran
+
+- Symptom: a Telegram note reached the dashboard but stayed `received` / "Mencatat…". Cause: the VPS `.env` lacked `QUEUE_CONNECTION`, `CACHE_STORE` and `SESSION_DRIVER`, so Laravel defaulted to `database` while workers listen on Redis. Fixed in the VPS `.env` (non-secret keys), containers recreated, the stranded message re-dispatched (the job is idempotent); AI extraction worked (8.8 s).
+- Prevention: the deploy runbook lists the three keys with a check command. A boot guard was not added because every production-environment test would need the extra variables; revisit if it happens again.

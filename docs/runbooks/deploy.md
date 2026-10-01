@@ -23,6 +23,9 @@ Prasyarat (tugas manusia, lihat `go-live-checklist.md`): VPS, domain dengan DNS 
    `APP_DOMAIN=<domain>`, `DB_PASSWORD`, `REDIS_PASSWORD`, `TELEGRAM_*` (token, secret, `TELEGRAM_WEBHOOK_PATH` ≥ 32 karakter),
    `TELEGRAM_CLIENT=http`, `AI_PROVIDER=deepseek`, `DEEPSEEK_API_KEY`, `PDF_RENDERER=gotenberg`, `OPS_PROBE=real`,
    `ADMIN_TELEGRAM_USER_ID`, `BACKUP_REMOTE`. Hapus `DEV_USER_*`. `chmod 600 .env`.
+   **Wajib juga** `QUEUE_CONNECTION=redis`, `CACHE_STORE=redis`, `SESSION_DRIVER=redis`: bila hilang, Laravel memakai `database`, job
+   tidak pernah diambil worker (worker mendengarkan Redis) dan catatan berhenti di "Menunggu diproses". Cek dengan
+   `dc exec app php artisan tinker --execute="echo config('queue.default');"` (harus `redis`).
 3. Build (urutan penting: image app dulu, nginx menyalin `public/` darinya):
    ```bash
    dc build app
