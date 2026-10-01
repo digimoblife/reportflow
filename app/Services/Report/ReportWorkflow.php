@@ -96,12 +96,30 @@ class ReportWorkflow
         DB::transaction(function () use ($report): void {
             $locked = Report::query()->lockForUpdate()->findOrFail($report->id);
 
-            if (in_array($locked->status, [ReportStatus::Approved, ReportStatus::Generating, ReportStatus::Cancelled], true)) {
+            if (in_array($locked->status, [ReportStatus::Approved, ReportStatus::Outdated, ReportStatus::Generating, ReportStatus::Cancelled], true)) {
                 throw new InvalidArgumentException('This report cannot be cancelled now.');
             }
 
             $locked->update(['status' => ReportStatus::Cancelled]);
         });
+    }
+
+    /**
+     * An approved report whose period data changed afterwards becomes `outdated` (PRD §43). The approved version stays as it
+     * is. False when the report was not approved (nothing happens).
+     */
+    public function markOutdated(Report $report): bool
+    {
+        return Report::query()->whereKey($report->id)->where('status', ReportStatus::Approved)->update(['status' => ReportStatus::Outdated]) === 1;
+    }
+
+    /**
+     * "Abaikan": the report is approved again and later drift is measured from now. False when it was not outdated.
+     */
+    public function dismissDrift(Report $report): bool
+    {
+        return Report::query()->whereKey($report->id)->where('status', ReportStatus::Outdated)
+            ->update(['status' => ReportStatus::Approved, 'drift_dismissed_at' => Carbon::now('UTC')]) === 1;
     }
 
     /**

@@ -13,6 +13,18 @@
             @endif
         </div>
 
+        @if (! $this->isGenerating() && $driftCount > 0 && in_array($report->status->value, ['in_review', 'draft', 'approved', 'outdated'], true))
+            <div class="flex flex-wrap items-center gap-3 rounded-lg bg-warning-50 p-3 text-sm text-warning-800 dark:bg-white/5 dark:text-warning-400" wire:key="drift">
+                <span>{{ __($report->status->value === 'in_review' || $report->status->value === 'draft' ? 'ui.dashboard.reports.view.drift_draft' : 'ui.dashboard.reports.view.drift_approved', ['count' => $driftCount]) }}</span>
+                <x-filament::button size="xs" wire:click="regenerate">
+                    {{ __($report->status->value === 'in_review' || $report->status->value === 'draft' ? 'ui.dashboard.reports.view.update_draft' : 'ui.dashboard.reports.view.new_version') }}
+                </x-filament::button>
+                @if (in_array($report->status->value, ['approved', 'outdated'], true))
+                    <x-filament::button size="xs" color="gray" wire:click="ignoreDrift">{{ __('ui.dashboard.reports.view.ignore') }}</x-filament::button>
+                @endif
+            </div>
+        @endif
+
         @if ($this->isGenerating())
             <p class="text-sm text-info-600">{{ __('ui.dashboard.reports.view.generating') }}</p>
         @endif
@@ -99,7 +111,7 @@
                         @if ($report->status->value === 'in_review')
                             <x-filament::button color="success" wire:click="approve" wire:confirm="{{ __('ui.dashboard.reports.view.approve') }}?">{{ __('ui.dashboard.reports.view.approve') }}</x-filament::button>
                         @endif
-                        @if ($report->status->value !== 'approved')
+                        @if (! in_array($report->status->value, ['approved', 'outdated'], true))
                             <x-filament::button color="danger" outlined wire:click="cancelReport" wire:confirm="{{ __('ui.dashboard.reports.view.cancel_report') }}?">{{ __('ui.dashboard.reports.view.cancel_report') }}</x-filament::button>
                         @endif
                     </div>

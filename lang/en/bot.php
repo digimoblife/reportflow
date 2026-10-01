@@ -358,6 +358,10 @@ return [
             'The :period report is already approved. Make a new version?',
             'The :period report is final. Want a new version?',
         ],
+        'outdated' => [
+            'The :period report (:project) is approved, but :count change(s) were made to that period after its data was taken. Create a new version?',
+            ':count change(s) were made to the period of the :period report (:project) after it was approved. Want a new version?',
+        ],
         'dismissed' => [
             'Okay, nothing was changed.',
             'Fine, I left it as it was.',

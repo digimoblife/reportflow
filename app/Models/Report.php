@@ -28,13 +28,14 @@ use Illuminate\Support\Carbon;
  * @property int|null $current_version_id
  * @property Carbon|null $generation_lock_until
  * @property Carbon|null $approved_at
+ * @property Carbon|null $drift_dismissed_at
  * @property Project $project
  *
  * PRD §36–§44, §49 reports.
  */
 #[Fillable([
     'project_id', 'type', 'period_start', 'period_end', 'language', 'template_id', 'status',
-    'current_version_id', 'generation_lock_until', 'approved_at',
+    'current_version_id', 'generation_lock_until', 'approved_at', 'drift_dismissed_at',
 ])]
 class Report extends Model implements UserScoped
 {
@@ -54,6 +55,7 @@ class Report extends Model implements UserScoped
             'status' => ReportStatus::class,
             'generation_lock_until' => 'datetime',
             'approved_at' => 'datetime',
+            'drift_dismissed_at' => 'datetime',
         ];
     }
 

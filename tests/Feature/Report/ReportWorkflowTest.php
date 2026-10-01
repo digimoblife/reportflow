@@ -121,7 +121,7 @@ describe('cancelling', function () {
         $this->report->update(['status' => $status]);
 
         expect(fn () => $this->workflow->cancel($this->report->fresh()))->toThrow(InvalidArgumentException::class);
-    })->with([ReportStatus::Approved, ReportStatus::Generating, ReportStatus::Cancelled]);
+    })->with([ReportStatus::Approved, ReportStatus::Outdated, ReportStatus::Generating, ReportStatus::Cancelled]);
 });
 
 describe('regenerating', function () {

@@ -359,6 +359,10 @@ return [
             'Laporan :period sudah disetujui. Buat versi baru?',
             'Laporan :period sudah final. Mau dibuatkan versi baru?',
         ],
+        'outdated' => [
+            'Laporan :period (:project) sudah disetujui, tetapi ada :count perubahan pada periode itu sejak datanya diambil. Buat versi baru?',
+            'Ada :count perubahan di periode laporan :period (:project) setelah laporannya disetujui. Mau dibuatkan versi baru?',
+        ],
         'dismissed' => [
             'Baik, tidak ada yang diubah.',
             'Siap, saya biarkan seperti semula.',

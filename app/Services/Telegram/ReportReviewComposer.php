@@ -67,11 +67,15 @@ class ReportReviewComposer
             $rows[] = [$btn('edit', 'ed')];
         }
 
+        if ($report->status === ReportStatus::Outdated) {
+            $rows[] = [$btn('new_version', 'nv'), $btn('dismiss', 'ig')];
+        }
+
         if ($url !== null) {
             $rows[] = [['text' => (string) Lang::get('ui.report_review.buttons.dashboard', [], $lang), 'url' => $url]];
         }
 
-        if (! in_array($report->status, [ReportStatus::Approved, ReportStatus::Cancelled, ReportStatus::Generating], true)) {
+        if (! in_array($report->status, [ReportStatus::Approved, ReportStatus::Outdated, ReportStatus::Cancelled, ReportStatus::Generating], true)) {
             $rows[] = [$btn('cancel', 'cx')];
         }
 

@@ -81,6 +81,7 @@ class ReportReviewHandler
     private function unversioned(ReportCallback $data, Report $report, TelegramUpdate $update, Language $language): void
     {
         if ($data->action === 'ig') {
+            $this->workflow->dismissDrift($report);
             $this->edit($update, $this->messages->get('report.dismissed', $language), []);
 
             return;

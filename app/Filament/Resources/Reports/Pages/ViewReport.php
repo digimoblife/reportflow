@@ -12,8 +12,10 @@ use App\Models\ReportVersion;
 use App\Models\User;
 use App\Services\Report\ReportDataSelector;
 use App\Services\Report\ReportDiff;
+use App\Services\Report\ReportDrift;
 use App\Services\Report\ReportEditor;
 use App\Services\Report\ReportHtml;
+use App\Services\Report\ReportRequests;
 use App\Services\Report\ReportWorkflow;
 use App\Services\Report\SignedDownload;
 use App\Services\Report\StaleReportException;
@@ -61,6 +63,9 @@ class ViewReport extends ViewRecord
 
     public string $factType = 'other';
 
+    /** Changes to the period's data since the snapshot (late entries, PRD §43). */
+    public int $driftCount = 0;
+
     public bool $newerAvailable = false;
 
     public ?int $compareFrom = null;
@@ -75,6 +80,7 @@ class ViewReport extends ViewRecord
         parent::mount($record);
 
         $this->loadVersion($this->report()->current_version_id);
+        $this->driftCount = app(ReportDrift::class)->count($this->report());
     }
 
     public function getTitle(): string|Htmlable
@@ -101,6 +107,7 @@ class ViewReport extends ViewRecord
     public function refreshState(): void
     {
         $this->record = Report::query()->with(['project', 'currentVersion'])->findOrFail($this->report()->id);
+        $this->driftCount = app(ReportDrift::class)->count($this->report());
         $current = $this->report()->current_version_id;
 
         if ($current === null || $current === $this->loadedVersionId) {
@@ -214,6 +221,28 @@ class ViewReport extends ViewRecord
         $data = app(ReportDataSelector::class)->select($this->report()->project, $this->report()->period_start->format('Y-m-d'), $this->report()->period_end->format('Y-m-d'), $this->timezone(), CarbonImmutable::instance($version->data_snapshot_at), $version->source_activity_ids);
 
         return array_map(fn (array $t): string => $t['title'], $data->tasks);
+    }
+
+    /** "Perbarui Draft" / "Buat Versi Baru": a new version from a fresh snapshot of the period. */
+    public function regenerate(): void
+    {
+        $report = $this->report();
+        $result = app(ReportRequests::class)->request($report->project, $report->period_start->format('Y-m-d'), $report->period_end->format('Y-m-d'), $report->language);
+
+        $this->record = Report::query()->with(['project', 'currentVersion'])->findOrFail($report->id);
+        $note = Notification::make()->title((string) __('ui.dashboard.reports.notices.'.$result['status']));
+        ($result['status'] === ReportRequests::QUEUED ? $note->success() : $note->warning())->send();
+    }
+
+    /** "Abaikan": the report stays as approved and later changes are counted from now. */
+    public function ignoreDrift(): void
+    {
+        $this->guarded(function (ReportWorkflow $workflow): string {
+            $workflow->dismissDrift($this->report());
+            $this->driftCount = 0;
+
+            return 'drift_dismissed';
+        });
     }
 
     public function approve(): void
@@ -369,6 +398,6 @@ class ViewReport extends ViewRecord
         $this->record = Report::query()->with(['project', 'currentVersion'])->findOrFail($this->report()->id);
         $notification = Notification::make()->title((string) __('ui.dashboard.reports.notices.'.$key, $this->notes));
         $this->notes = [];
-        (in_array($key, ['saved', 'approved', 'cancelled', 'instructed', 'fact_saved'], true) ? $notification->success() : $notification->warning())->send();
+        (in_array($key, ['saved', 'approved', 'cancelled', 'instructed', 'fact_saved', 'drift_dismissed'], true) ? $notification->success() : $notification->warning())->send();
     }
 }

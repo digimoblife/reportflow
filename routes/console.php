@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // PRD §25: the daily worklog reminder. Cheap when nothing is due; the dispatcher is idempotent.
 Schedule::command('reminders:dispatch')->everyMinute()->withoutOverlapping(5);
+
+// PRD §43: approved reports whose period changed afterwards become outdated, and the person is told once.
+Schedule::command('reports:check-drift')->everyTenMinutes()->withoutOverlapping(10);
