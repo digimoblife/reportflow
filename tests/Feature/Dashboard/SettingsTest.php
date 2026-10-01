@@ -5,6 +5,7 @@ use App\Enums\ProjectStatus;
 use App\Filament\Pages\Settings;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\Reminder\ReminderSettings;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -18,12 +19,13 @@ describe('account settings', function () {
     it('shows the current values and saves new ones', function () {
         Livewire::test(Settings::class)
             ->assertSet('language', 'id')->assertSet('timezone', 'Asia/Jakarta')
-            ->set('language', 'en')->set('timezone', 'Asia/Makassar')->set('workdays', ['mon', 'wed'])->set('remindersEnabled', true)
+            ->set('language', 'en')->set('timezone', 'Asia/Makassar')->set('workdays', ['mon', 'wed'])->set('remindersEnabled', true)->set('reminderTime', '17:45')
             ->call('saveProfile')->assertSee('Settings saved');
 
         $user = $this->user->fresh();
         expect($user->default_language)->toBe(Language::English)->and($user->timezone)->toBe('Asia/Makassar')
-            ->and($user->workdays)->toBe(['mon', 'wed'])->and($user->reminders_enabled)->toBeTrue();
+            ->and($user->workdays)->toBe(['mon', 'wed'])->and($user->reminders_enabled)->toBeTrue()
+            ->and(app(ReminderSettings::class)->time())->toBe('17:45');
     });
 
     it('rejects an unknown language, timezone or weekday without saving anything', function (array $changes) {
@@ -39,6 +41,7 @@ describe('account settings', function () {
         'timezone' => [['timezone' => 'Mars/Olympus']],
         'weekday' => [['workdays' => ['funday']]],
         'no workdays' => [['workdays' => []]],
+        'reminder time' => [['reminderTime' => '25:00']],
     ]);
 });
 

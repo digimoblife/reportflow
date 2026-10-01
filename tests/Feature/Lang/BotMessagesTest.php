@@ -114,7 +114,7 @@ it('registers exactly the commands of PRD §20, without /update', function () {
 
     expect(array_map(fn ($c) => $c->name, $registry->all()))->toBe($expected)
         ->and($registry->find('update'))->toBeNull()
-        ->and(array_values(array_map(fn ($c) => $c->name, array_filter($registry->all(), fn ($c) => $c->available))))->toBe(['start', 'help', 'projects', 'project', 'tasks', 'task', 'undo', 'inbox']);
+        ->and(array_values(array_map(fn ($c) => $c->name, array_filter($registry->all(), fn ($c) => $c->available))))->toBe(['start', 'help', 'projects', 'project', 'tasks', 'task', 'undo', 'inbox', 'reminder']);
 });
 
 it('describes every command in both languages within Telegram limits', function () {

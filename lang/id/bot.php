@@ -33,8 +33,8 @@ return [
 
     'help' => [
         'guide' => [
-            "Cara kerjanya: ceritakan saja pekerjaan Anda, misalnya \"Hari ini fix bug login 9Club\". Saya catat dan arsipkan.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/help - panduan ini\n\nPerintah laporan menyusul bertahap.",
-            "Panduan singkat: tulis apa yang Anda kerjakan hari ini, nanti saya catat.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/help - panduan ini\n\nPerintah laporan menyusul bertahap, nggih.",
+            "Cara kerjanya: ceritakan saja pekerjaan Anda, misalnya \"Hari ini fix bug login 9Club\". Saya catat dan arsipkan.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian\n/help - panduan ini\n\nPerintah laporan menyusul bertahap.",
+            "Panduan singkat: tulis apa yang Anda kerjakan hari ini, nanti saya catat.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/reminder - atur pengingat harian\n/help - panduan ini\n\nPerintah laporan menyusul bertahap, nggih.",
         ],
     ],
 
@@ -279,6 +279,34 @@ return [
         'snooze_limit' => [
             'Sudah tiga kali ditunda, jadi pengingat hari ini saya tutup.',
             'Penundaan sudah tiga kali, pengingat hari ini saya tutup ya.',
+        ],
+        'status' => [
+            "Status pengingat:\n\nHarian: :state — :time (:days)\nBulanan: segera hadir",
+            "Pengingat saat ini:\n\nHarian: :state — :time (:days)\nBulanan: segera hadir",
+        ],
+        'on_done' => [
+            'Siap, pengingat saya nyalakan lagi.',
+            'Baik, pengingat aktif kembali.',
+        ],
+        'off_done' => [
+            'Baik, pengingat saya matikan. Nyalakan lagi dengan /reminder on.',
+            'Siap, tidak ada pengingat lagi sampai Anda menyalakannya (/reminder on).',
+        ],
+        'daily_set' => [
+            'Siap, pengingat harian sekarang pukul :time.',
+            'Baik, saya ingatkan tiap hari kerja pukul :time.',
+        ],
+        'daily_invalid' => [
+            'Jamnya belum jelas. Tulis seperti /reminder daily 18:00.',
+            'Format jam salah. Contoh yang benar: /reminder daily 17:30.',
+        ],
+        'monthly_unavailable' => [
+            'Pengingat bulanan belum tersedia, nanti menyusul bersama laporan.',
+            'Yang bulanan belum ada, menyusul setelah fitur laporan jadi.',
+        ],
+        'usage' => [
+            "Perintah pengingat:\n/reminder - lihat status\n/reminder on - nyalakan\n/reminder off - matikan\n/reminder daily 18:00 - atur jam harian",
+            "Cara memakai pengingat:\n/reminder - status\n/reminder on atau off\n/reminder daily 18:00 - jam pengingat harian",
         ],
         'answered' => [
             'Pengingat ini sudah ditanggapi.',

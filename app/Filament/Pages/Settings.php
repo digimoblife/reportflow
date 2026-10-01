@@ -6,6 +6,8 @@ use App\Enums\Language;
 use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\Reminder\ReminderSchedule;
+use App\Services\Reminder\ReminderSettings;
 use App\Services\Worklog\ProjectService;
 use BackedEnum;
 use DateTimeZone;
@@ -33,6 +35,8 @@ class Settings extends Page
     public array $workdays = [];
 
     public bool $remindersEnabled = false;
+
+    public string $reminderTime = '18:00';
 
     public string $newProject = '';
 
@@ -70,18 +74,20 @@ class Settings extends Page
         $this->timezone = $user->timezone;
         $this->workdays = collect((array) $user->workdays)->map(fn ($day): string => (string) $day)->values()->all();
         $this->remindersEnabled = (bool) $user->reminders_enabled;
+        $this->reminderTime = app(ReminderSettings::class)->time();
         $this->loadProjects();
     }
 
     public function saveProfile(): void
     {
         $validated = validator(
-            ['language' => $this->language, 'timezone' => $this->timezone, 'workdays' => $this->workdays],
+            ['language' => $this->language, 'timezone' => $this->timezone, 'workdays' => $this->workdays, 'reminderTime' => ReminderSchedule::parseTime($this->reminderTime)],
             [
                 'language' => ['required', Rule::in(array_map(fn (Language $l): string => $l->value, Language::cases()))],
                 'timezone' => ['required', Rule::in(DateTimeZone::listIdentifiers())],
                 'workdays' => ['array', 'min:1'],
                 'workdays.*' => ['string', Rule::in(self::DAYS)],
+                'reminderTime' => ['required', 'string'],
             ],
         );
 
@@ -95,8 +101,12 @@ class Settings extends Page
             'default_language' => Language::from($this->language),
             'timezone' => $this->timezone,
             'workdays' => array_values(array_intersect(self::DAYS, $this->workdays)),
-            'reminders_enabled' => $this->remindersEnabled,
         ]);
+
+        $reminders = app(ReminderSettings::class);
+        $reminders->setTime($this->reminderTime);
+        $reminders->setEnabled($this->user(), $this->remindersEnabled);
+        $this->reminderTime = $reminders->time();
 
         app()->setLocale($this->language);
         $this->flash('saved', true);

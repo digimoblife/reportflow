@@ -32,8 +32,8 @@ return [
 
     'help' => [
         'guide' => [
-            "How it works: just tell me what you worked on, for example \"Fixed the login bug on 9Club today\". I'll note it down and file it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/help - this guide\n\nReport commands will arrive step by step.",
-            "Quick guide: write what you did today and I'll log it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/help - this guide\n\nReport commands are coming step by step.",
+            "How it works: just tell me what you worked on, for example \"Fixed the login bug on 9Club today\". I'll note it down and file it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily reminder\n/help - this guide\n\nReport commands will arrive step by step.",
+            "Quick guide: write what you did today and I'll log it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/reminder - set the daily reminder\n/help - this guide\n\nReport commands are coming step by step.",
         ],
     ],
 
@@ -278,6 +278,34 @@ return [
         'snooze_limit' => [
             "That's three snoozes, so I'm closing today's reminder.",
             'Snoozed three times already, so today\'s reminder is closed.',
+        ],
+        'status' => [
+            "Reminder status:\n\nDaily: :state — :time (:days)\nMonthly: coming soon",
+            "Your reminders right now:\n\nDaily: :state — :time (:days)\nMonthly: coming soon",
+        ],
+        'on_done' => [
+            'Okay, reminders are back on.',
+            'Done, reminders are active again.',
+        ],
+        'off_done' => [
+            'Okay, reminders are off. Turn them back on with /reminder on.',
+            'Done, no more reminders until you switch them on (/reminder on).',
+        ],
+        'daily_set' => [
+            'Done, the daily reminder is now at :time.',
+            'Okay, I will remind you on workdays at :time.',
+        ],
+        'daily_invalid' => [
+            'I could not read that time. Write it like /reminder daily 18:00.',
+            'That time format is off. A valid one: /reminder daily 17:30.',
+        ],
+        'monthly_unavailable' => [
+            'The monthly reminder is not available yet; it comes with reports.',
+            'Monthly is not there yet, it follows once reports are built.',
+        ],
+        'usage' => [
+            "Reminder commands:\n/reminder - status\n/reminder on - switch on\n/reminder off - switch off\n/reminder daily 18:00 - set the daily time",
+            "How reminders work:\n/reminder - status\n/reminder on or off\n/reminder daily 18:00 - daily reminder time",
         ],
         'answered' => [
             'This reminder was already answered.',

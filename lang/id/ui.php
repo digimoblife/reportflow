@@ -118,7 +118,8 @@ return [
             'timezone' => 'Zona waktu',
             'workdays' => 'Hari kerja',
             'days' => ['mon' => 'Sen', 'tue' => 'Sel', 'wed' => 'Rab', 'thu' => 'Kam', 'fri' => 'Jum', 'sat' => 'Sab', 'sun' => 'Min'],
-            'reminders' => 'Pengingat harian (segera hadir)',
+            'reminders' => 'Pengingat harian (hari kerja)',
+            'reminder_time' => 'Jam pengingat harian',
             'save' => 'Simpan',
             'projects' => 'Project',
             'project_name' => 'Nama project',
@@ -194,6 +195,8 @@ return [
             'not_configured' => 'Login Telegram belum dikonfigurasi. Hubungi pemilik sistem.',
         ],
     ],
+
+    'reminder_states' => ['on' => 'AKTIF', 'off' => 'MATI'],
 
     'lists' => [
         'active_tasks' => 'task aktif',

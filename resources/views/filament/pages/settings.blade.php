@@ -39,6 +39,11 @@
 
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" wire:model="remindersEnabled"> {{ __('ui.dashboard.settings.reminders') }}</label>
 
+                <label class="block text-sm">
+                    <span class="font-medium">{{ __('ui.dashboard.settings.reminder_time') }}</span>
+                    <x-filament::input.wrapper class="mt-1"><x-filament::input type="time" wire:model="reminderTime" /></x-filament::input.wrapper>
+                </label>
+
                 <x-filament::button type="submit">{{ __('ui.dashboard.settings.save') }}</x-filament::button>
             </form>
         </x-filament::section>

@@ -118,7 +118,8 @@ return [
             'timezone' => 'Timezone',
             'workdays' => 'Workdays',
             'days' => ['mon' => 'Mon', 'tue' => 'Tue', 'wed' => 'Wed', 'thu' => 'Thu', 'fri' => 'Fri', 'sat' => 'Sat', 'sun' => 'Sun'],
-            'reminders' => 'Daily reminders (coming soon)',
+            'reminders' => 'Daily reminder (workdays)',
+            'reminder_time' => 'Daily reminder time',
             'save' => 'Save',
             'projects' => 'Projects',
             'project_name' => 'Project name',
@@ -194,6 +195,8 @@ return [
             'not_configured' => 'Telegram login is not configured. Contact the system owner.',
         ],
     ],
+
+    'reminder_states' => ['on' => 'ON', 'off' => 'OFF'],
 
     'lists' => [
         'active_tasks' => 'active tasks',
