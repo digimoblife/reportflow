@@ -18,6 +18,9 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property int $task_id
+ * @property int $project_id
+ * @property ActivitySource $source
  * @property string $summary
  * @property ActivityType $activity_type
  * @property Carbon $activity_date
