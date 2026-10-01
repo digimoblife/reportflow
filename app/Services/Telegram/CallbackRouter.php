@@ -17,6 +17,9 @@ class CallbackRouter
     /** @var array<string, Closure(CallbackContext): void> */
     private array $handlers = [];
 
+    /** @var (Closure(ViewData, TelegramUpdate, User, Language): void)|null */
+    private ?Closure $viewHandler = null;
+
     public function __construct(
         private readonly TelegramMessenger $messenger,
         private readonly BotMessages $messages,
@@ -31,11 +34,27 @@ class CallbackRouter
     }
 
     /**
+     * @param  Closure(ViewData, TelegramUpdate, User, Language): void  $handler
+     */
+    public function onView(Closure $handler): void
+    {
+        $this->viewHandler = $handler;
+    }
+
+    /**
      * Must run inside the user's UserContext.
      */
     public function handle(TelegramUpdate $update, User $user, Language $language): void
     {
         $callbackId = (string) $update->callbackId;
+        $view = ViewData::parse((string) $update->callbackData);
+
+        if ($view !== null && $this->viewHandler !== null) {
+            ($this->viewHandler)($view, $update, $user, $language);
+
+            return;
+        }
+
         $data = CallbackData::parse((string) $update->callbackData);
         $message = $data === null ? null : InboundMessage::query()->find($data->inboundMessageId);
 

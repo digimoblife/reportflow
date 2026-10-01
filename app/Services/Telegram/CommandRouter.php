@@ -23,12 +23,13 @@ class CommandRouter
         private readonly OnboardingState $onboarding,
         private readonly UndoService $undo,
         private readonly ConfirmationComposer $composer,
+        private readonly ListingCommands $listing,
     ) {}
 
     /**
      * Must run inside the user's UserContext (counts the user's projects).
      */
-    public function handle(string $commandName, User $user, int $chatId, Language $language): void
+    public function handle(string $commandName, User $user, int $chatId, Language $language, #[\SensitiveParameter] ?string $argument = null): void
     {
         $command = $this->registry->find($commandName);
 
@@ -48,6 +49,11 @@ class CommandRouter
             'start' => $this->start($user, $chatId, $language),
             'help' => $this->reply($chatId, 'help.guide', $language),
             'undo' => $this->undoLast($user, $chatId, $language),
+            'projects' => $this->show($chatId, $this->listing->projects($language)),
+            'project' => $this->show($chatId, $this->listing->project($argument, $language, $user->timezone)),
+            'tasks' => $this->show($chatId, $this->listing->tasks(0, $language, $user->timezone)),
+            'task' => $this->show($chatId, $this->listing->task($argument, $language, $user->timezone)),
+            'inbox' => $this->show($chatId, $this->listing->inbox($language, $user->timezone)),
             default => null,
         };
     }
@@ -86,6 +92,14 @@ class CommandRouter
         }
 
         $this->reply($chatId, 'undo.done', $language);
+    }
+
+    /**
+     * @param  array{text: string, keyboard: list<list<array{text: string, callback_data: string}>>}  $view
+     */
+    private function show(int $chatId, array $view): void
+    {
+        $this->messenger->trySend($chatId, $view['text'], null, $view['keyboard'] === [] ? null : $view['keyboard']);
     }
 
     private function start(User $user, int $chatId, Language $language): void

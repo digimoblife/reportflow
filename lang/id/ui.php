@@ -39,5 +39,33 @@ return [
         'cancel' => '✖️ Batal',
         'keep_date' => '✅ Pakai :date',
         'today' => '📅 Hari ini',
+        'redo' => '🔄 Proses ulang',
+        'keep' => 'Biarkan',
+        'prev' => '⬅️ Sebelumnya',
+        'next' => 'Berikutnya ➡️',
+    ],
+
+    'lists' => [
+        'active_tasks' => 'task aktif',
+        'completed_tasks' => 'selesai',
+        'project' => 'Project',
+        'status' => 'Status',
+        'waiting_for' => 'Menunggu',
+        'last_activity' => 'Aktivitas terakhir',
+        'timeline' => 'Riwayat',
+        'recent' => 'Catatan terakhir',
+        'none' => 'belum ada',
+        'inbox_failed' => 'gagal diproses',
+        'inbox_pending' => 'menunggu jawaban',
+        'more' => '…dan :count lagi',
+    ],
+
+    'events' => [
+        'created' => 'dibuat', 'status_changed' => 'status berubah', 'title_changed' => 'judul diubah',
+        'moved' => 'dipindahkan', 'merged' => 'digabung', 'reopened' => 'dibuka lagi', 'undone' => 'dibatalkan',
+    ],
+
+    'waiting_reasons' => [
+        'client' => 'klien', 'vendor' => 'vendor', 'api' => 'API', 'launch' => 'peluncuran', 'confirmation' => 'konfirmasi',
     ],
 ];

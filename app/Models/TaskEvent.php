@@ -14,8 +14,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Carbon;
 
 /**
+ * @property int $id
+ * @property int $task_id
+ * @property TaskEventType $event_type
+ * @property array<string, mixed>|null $from_value
+ * @property array<string, mixed>|null $to_value
+ * @property EventActor $actor
+ * @property Carbon $created_at
+ *
  * PRD §47, §49 task_events: append-only audit trail. from_value / to_value shapes per
  * event_type are documented in docs/DECISIONS.md so undo (M4) can restore state exactly.
  */

@@ -552,3 +552,12 @@ Bug: `EvalRunner` mengabaikan `--prompt` pada tahap penilaian. Diperbaiki + test
   **Ini keputusan produk, bukan bug model** — masuk daftar keputusan terbuka M4: apakah pekerjaan pertama pada task Open otomatis memindahkannya ke In Progress? Bila ya, label dataset ikut diubah dan aturan dinyatakan eksplisit.
 - Klaim "bagian tugas selesai ≠ task selesai" (R063–R065) sebagian masih salah; ditangani konfirmasi status terminal di M4.
 - Default `ai.extraction.prompt` = `worklog_extraction@v2` (keputusan user).
+
+## M4e — Command daftar dan proses ulang (PRD §10, §20, §58)
+
+- `/projects`, `/project [nama]`, `/tasks`, `/task <id|kata>`, `/inbox` bersifat baca-saja dan ber-scope user; teksnya label + data, persona hanya di satu baris judul (`bot.list.*`).
+- Tombol navigasi yang tidak terkait pesan masuk memakai payload `v:{view}:{page}[:{ref}]` (`ViewData`), bukan `a:`; hanya view baca-saja.
+- Argumen command adalah teks mentah: hanya dipakai sebagai kata pencarian (LIKE dengan wildcard di-escape), tidak disimpan atau dicatat.
+- Proses ulang (`redo`) = `ReprocessService`: undo hasil run lama (`corrections(undo)`), status → `received`, `outcome` → null, `reprocess_count++`, job baru. Hanya dari `processed|failed|needs_clarification`; tekan ganda → "sedang diproses".
+  Bubble pertanyaan lama diedit menjadi "diganti" tanpa tombol; bubble konfirmasi lama menjadi "⏳" lalu diedit oleh job pengiriman. Penanda cache pengiriman kini memuat `reprocess_count`.
+- Suntingan pesan yang sudah selesai: pesan menawarkan [Proses ulang] / [Biarkan]; tanpa jawaban tidak ada yang berubah (menutup TODO M2).

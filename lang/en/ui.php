@@ -39,5 +39,33 @@ return [
         'cancel' => '✖️ Cancel',
         'keep_date' => '✅ Use :date',
         'today' => '📅 Today',
+        'redo' => '🔄 Reprocess',
+        'keep' => 'Keep as is',
+        'prev' => '⬅️ Previous',
+        'next' => 'Next ➡️',
+    ],
+
+    'lists' => [
+        'active_tasks' => 'active tasks',
+        'completed_tasks' => 'completed',
+        'project' => 'Project',
+        'status' => 'Status',
+        'waiting_for' => 'Waiting on',
+        'last_activity' => 'Last activity',
+        'timeline' => 'History',
+        'recent' => 'Recent notes',
+        'none' => 'none yet',
+        'inbox_failed' => 'failed',
+        'inbox_pending' => 'awaiting your answer',
+        'more' => '…and :count more',
+    ],
+
+    'events' => [
+        'created' => 'created', 'status_changed' => 'status changed', 'title_changed' => 'title changed',
+        'moved' => 'moved', 'merged' => 'merged', 'reopened' => 'reopened', 'undone' => 'undone',
+    ],
+
+    'waiting_reasons' => [
+        'client' => 'client', 'vendor' => 'vendor', 'api' => 'API', 'launch' => 'launch', 'confirmation' => 'confirmation',
     ],
 ];

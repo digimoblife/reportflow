@@ -67,9 +67,8 @@ class DeliverInboundConfirmation implements ShouldQueue
 
     public function handle(TelegramMessenger $messenger, BotMessages $messages, LanguageDetector $languages, ConfirmationComposer $composer): void
     {
-        $deliveredKey = "inbound:{$this->inboundMessageId}:delivered:{$this->kind}";
-
         $message = InboundMessage::query()->find($this->inboundMessageId);
+        $deliveredKey = "inbound:{$this->inboundMessageId}:{$message?->reprocess_count}:delivered:{$this->kind}";
 
         if ($message === null
             || $message->source !== MessageSource::Telegram

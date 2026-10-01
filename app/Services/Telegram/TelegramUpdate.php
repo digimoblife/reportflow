@@ -170,6 +170,21 @@ final class TelegramUpdate
         return ['name' => strtolower($m[1])];
     }
 
+    /**
+     * What follows the command (`/task invoice` → "invoice"), trimmed and capped. Raw user text: it may only
+     * be used as a search term, never stored or logged.
+     */
+    public function commandArgument(): ?string
+    {
+        if ($this->text === null || $this->command() === null) {
+            return null;
+        }
+
+        $argument = trim((string) preg_replace('~^/[A-Za-z0-9_]{1,32}(?:@[A-Za-z0-9_]{1,64})?~', '', $this->text));
+
+        return $argument === '' ? null : mb_substr($argument, 0, 60);
+    }
+
     /** The user's words: text, or the caption of a media message. */
     public function content(): ?string
     {

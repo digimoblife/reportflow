@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -25,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property InboundMessageStatus $status
  * @property string|null $error
  * @property array<string, mixed>|null $outcome
+ * @property Carbon $received_at
+ * @property int $reprocess_count
  *
  * PRD §23, §48, §49 inbound_messages. `text` is always the post-redaction text.
  * reply_message_id is the bot's reply (the "⏳" message) that gets edited into the confirmation.

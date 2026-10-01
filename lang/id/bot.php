@@ -33,8 +33,8 @@ return [
 
     'help' => [
         'guide' => [
-            "Cara pakai: ceritakan saja pekerjaan Anda, misalnya \"Hari ini fix bug login 9Club\". Saya catat dan arsipkan.\n\nPerintah yang sudah aktif:\n/start - mulai dan buat project pertama\n/help - panduan ini\n\nPerintah lain (tasks, undo, report, dan seterusnya) menyusul bertahap.",
-            "Panduan singkat: tulis saja apa yang Anda kerjakan hari ini, nanti saya catat.\n\nPerintah yang sudah aktif:\n/start - mulai dan buat project pertama\n/help - panduan ini\n\nPerintah lain menyusul bertahap, nggih.",
+            "Cara kerjanya: ceritakan saja pekerjaan Anda, misalnya \"Hari ini fix bug login 9Club\". Saya catat dan arsipkan.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/help - panduan ini\n\nPerintah laporan menyusul bertahap.",
+            "Panduan singkat: tulis apa yang Anda kerjakan hari ini, nanti saya catat.\n\nPerintah yang tersedia:\n/start - mulai dan buat project pertama\n/projects - daftar project\n/project - detail satu project\n/tasks - task yang sedang berjalan\n/task - detail satu task\n/undo - batalkan catatan terakhir\n/inbox - catatan yang perlu dicek\n/help - panduan ini\n\nPerintah laporan menyusul bertahap, nggih.",
         ],
     ],
 
@@ -70,8 +70,8 @@ return [
             'Catatan ini gagal saya proses. Pesan aslinya aman tersimpan, nanti bisa diproses ulang.',
         ],
         'edit_saved_notice' => [
-            'Suntingan Anda tersimpan di arsip. Catatan yang sudah dibuat sebelumnya tidak ikut berubah.',
-            'Suntingan sudah saya simpan di arsip, nggih. Catatan yang sudah jadi tidak ikut berubah.',
+            'Suntingan Anda tersimpan. Catatan yang sudah dibuat dari versi lama belum berubah. Proses ulang dengan teks baru?',
+            'Suntingan sudah saya simpan, nggih. Catatan lama belum ikut berubah. Mau diproses ulang dengan teks baru?',
         ],
         'attachment_ignored' => [
             'Lampirannya belum bisa saya baca, jadi hanya tulisannya yang saya catat.',
@@ -182,6 +182,72 @@ return [
         'project_new_only' => [
             'Ganti project hanya untuk task baru. Untuk task lama, pakai Pindah Task.',
             'Task lama tidak bisa pindah project; pindahkan catatannya lewat Pindah Task.',
+        ],
+    ],
+
+    'list' => [
+        'projects_title' => [
+            'Project Anda (:count):',
+            'Ini daftar project Anda (:count):',
+        ],
+        'projects_empty' => [
+            'Belum ada project. Ketik /start untuk membuat yang pertama.',
+            'Project masih kosong. Ketik /start dulu, nggih.',
+        ],
+        'project_not_found' => [
+            'Tidak ada project dengan nama itu. Coba /projects untuk melihat daftarnya.',
+            'Project itu tidak ketemu. Lihat daftar lengkap di /projects.',
+        ],
+        'project_pick' => [
+            'Ada beberapa project yang cocok. Pilih salah satu:',
+            'Yang cocok lebih dari satu. Silakan pilih:',
+        ],
+        'tasks_title' => [
+            'Task aktif (:count), halaman :page/:pages:',
+            'Ada :count task aktif, halaman :page/:pages:',
+        ],
+        'tasks_empty' => [
+            'Belum ada task aktif.',
+            'Tidak ada task yang sedang berjalan.',
+        ],
+        'task_usage' => [
+            'Tulis nomor atau kata dari judul task, misalnya /task 12 atau /task invoice.',
+            'Sebutkan nomor atau kata judul task, contoh: /task 12 atau /task invoice.',
+        ],
+        'task_not_found' => [
+            'Tidak ada task yang cocok. Coba /tasks untuk melihat daftarnya.',
+            'Task itu tidak ketemu. Lihat daftar di /tasks.',
+        ],
+        'task_pick' => [
+            'Ada beberapa task yang cocok. Pilih salah satu:',
+            'Yang cocok lebih dari satu. Silakan pilih:',
+        ],
+        'inbox_title' => [
+            'Catatan yang perlu dicek (:count):',
+            'Ada :count catatan yang masih perlu dicek:',
+        ],
+        'inbox_empty' => [
+            'Beres, tidak ada catatan yang tertahan.',
+            'Kotak masuk bersih, tidak ada yang perlu dicek.',
+        ],
+    ],
+
+    'reprocess' => [
+        'started' => [
+            'Siap, catatan itu saya proses ulang.',
+            'Nggih, saya proses ulang catatan itu.',
+        ],
+        'busy' => [
+            'Catatan itu sedang diproses.',
+            'Catatan itu sedang berjalan, tunggu sebentar.',
+        ],
+        'superseded' => [
+            'Pertanyaan ini diganti karena catatannya diproses ulang.',
+            'Catatan ini sedang diproses ulang, pertanyaan lama tidak berlaku.',
+        ],
+        'kept' => [
+            'Baik, catatan lama saya biarkan seperti semula.',
+            'Oke, tidak ada yang diubah.',
         ],
     ],
 

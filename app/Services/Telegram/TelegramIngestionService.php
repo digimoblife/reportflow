@@ -14,6 +14,7 @@ use App\Services\Worklog\ProjectService;
 use App\Support\UserContext;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -68,7 +69,7 @@ class TelegramIngestionService
         }
 
         if (! $update->isEdit() && $update->command() !== null) {
-            $this->once($update, fn () => $this->commands->handle($update->command()['name'], $user, $update->chatId, $default));
+            $this->once($update, fn () => $this->commands->handle($update->command()['name'], $user, $update->chatId, $default, $update->commandArgument()));
 
             return;
         }
@@ -208,9 +209,12 @@ class TelegramIngestionService
             $this->notifyCredential($update->chatId, $redaction, $language);
 
             // received/processing: the pending run picks up the new text, stay quiet.
-            // Already finished: the notes made from the old text do not change (reprocess: M4).
+            // Already finished: the notes made from the old text do not change unless the user asks to reprocess.
             if (in_array($existing->status, [InboundMessageStatus::Processed, InboundMessageStatus::Failed, InboundMessageStatus::NeedsClarification], true)) {
-                $this->messenger->trySend($update->chatId, $this->messages->get('worklog.edit_saved_notice', $language));
+                $this->messenger->trySend($update->chatId, $this->messages->get('worklog.edit_saved_notice', $language), null, [[
+                    Keyboard::button((string) Lang::get('ui.buttons.redo', [], $language->value), new CallbackData($existing->id, 'redo')),
+                    Keyboard::button((string) Lang::get('ui.buttons.keep', [], $language->value), new CallbackData($existing->id, 'keep')),
+                ]]);
             }
         });
     }

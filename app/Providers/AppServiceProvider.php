@@ -11,6 +11,7 @@ use App\Services\Telegram\CallbackRouter;
 use App\Services\Telegram\CorrectionHandler;
 use App\Services\Telegram\Fakes\FakeTelegramClient;
 use App\Services\Telegram\HttpTelegramClient;
+use App\Services\Telegram\NavigationHandler;
 use App\Services\Telegram\PendingAnswerHandler;
 use App\Services\Telegram\TelegramClient;
 use App\Services\Worklog\Extraction\ConfidencePolicy;
@@ -70,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->afterResolving(CallbackRouter::class, function (CallbackRouter $router): void {
             $this->app->make(PendingAnswerHandler::class)->register($router);
             $this->app->make(CorrectionHandler::class)->register($router);
+            $this->app->make(NavigationHandler::class)->register($router);
         });
 
         RateLimiter::for('telegram-webhook', fn (Request $request): Limit => Limit::perMinute(120)->by($request->ip() ?? 'unknown'));

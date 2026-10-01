@@ -32,8 +32,8 @@ return [
 
     'help' => [
         'guide' => [
-            "How it works: just tell me what you worked on, for example \"Fixed the login bug on 9Club today\". I'll note it down and file it.\n\nAvailable commands:\n/start - begin and create your first project\n/help - this guide\n\nThe other commands (tasks, undo, report, and so on) will arrive step by step.",
-            "Quick guide: write what you did today and I'll log it.\n\nAvailable commands:\n/start - begin and create your first project\n/help - this guide\n\nMore commands are coming step by step.",
+            "How it works: just tell me what you worked on, for example \"Fixed the login bug on 9Club today\". I'll note it down and file it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/help - this guide\n\nReport commands will arrive step by step.",
+            "Quick guide: write what you did today and I'll log it.\n\nAvailable commands:\n/start - begin and create your first project\n/projects - list projects\n/project - one project in detail\n/tasks - tasks in progress\n/task - one task in detail\n/undo - cancel the last note\n/inbox - notes that need a look\n/help - this guide\n\nReport commands are coming step by step.",
         ],
     ],
 
@@ -69,8 +69,8 @@ return [
             'This note failed to process. The original message is safely stored and can be reprocessed later.',
         ],
         'edit_saved_notice' => [
-            'Your edit is saved in the archive. Entries already created from the earlier version are not changed.',
-            'Edit saved in the archive. Anything already recorded stays as it was.',
+            'Your edit is saved. Entries already created from the earlier version are not changed. Reprocess with the new text?',
+            'Edit saved. Anything already recorded stays as it was. Want me to reprocess it with the new text?',
         ],
         'attachment_ignored' => [
             "I can't read attachments yet, so I only noted the text.",
@@ -181,6 +181,72 @@ return [
         'project_new_only' => [
             'Changing the project only works for new tasks. For an existing task use Move task.',
             'Existing tasks cannot change project; move the note with Move task instead.',
+        ],
+    ],
+
+    'list' => [
+        'projects_title' => [
+            'Your projects (:count):',
+            'Here are your projects (:count):',
+        ],
+        'projects_empty' => [
+            'No projects yet. Type /start to create the first one.',
+            'Nothing here yet. Type /start first.',
+        ],
+        'project_not_found' => [
+            'No project with that name. Try /projects to see the list.',
+            "I can't find that project. See the full list at /projects.",
+        ],
+        'project_pick' => [
+            'Several projects match. Pick one:',
+            'More than one match. Please choose:',
+        ],
+        'tasks_title' => [
+            'Active tasks (:count), page :page/:pages:',
+            ':count active task(s), page :page/:pages:',
+        ],
+        'tasks_empty' => [
+            'No active tasks yet.',
+            'Nothing is in progress right now.',
+        ],
+        'task_usage' => [
+            'Give a number or a word from the title, for example /task 12 or /task invoice.',
+            'Name the task by number or a title word, e.g. /task 12 or /task invoice.',
+        ],
+        'task_not_found' => [
+            'No matching task. Try /tasks to see the list.',
+            "I can't find that task. See the list at /tasks.",
+        ],
+        'task_pick' => [
+            'Several tasks match. Pick one:',
+            'More than one match. Please choose:',
+        ],
+        'inbox_title' => [
+            'Notes that need a look (:count):',
+            ':count note(s) still need your attention:',
+        ],
+        'inbox_empty' => [
+            'All clear, nothing is held up.',
+            'Inbox is clean, nothing to check.',
+        ],
+    ],
+
+    'reprocess' => [
+        'started' => [
+            'Got it, reprocessing that note.',
+            "On it, I'll process that note again.",
+        ],
+        'busy' => [
+            'That note is already being processed.',
+            'That note is in progress, give it a moment.',
+        ],
+        'superseded' => [
+            'This question was replaced because the note is being reprocessed.',
+            'The note is being reprocessed, so this old question no longer applies.',
+        ],
+        'kept' => [
+            'Okay, the earlier note stays as it was.',
+            'Fine, nothing was changed.',
         ],
     ],
 
