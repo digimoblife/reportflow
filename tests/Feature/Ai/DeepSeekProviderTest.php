@@ -41,7 +41,7 @@ it('calls chat completions in JSON mode and maps the reply and token usage', fun
             && $body['response_format'] === ['type' => 'json_object']
             && $body['temperature'] === 0
             && $body['stream'] === false
-            && $body['max_tokens'] === 2048
+            && $body['max_tokens'] === 10000
             && $body['messages'] === [['role' => 'system', 'content' => 'SYSTEM PROMPT with json'], ['role' => 'user', 'content' => '{"message":"halo"}']];
     });
 });

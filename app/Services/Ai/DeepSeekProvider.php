@@ -135,7 +135,7 @@ final class DeepSeekProvider implements BatchAiProvider
                 ['role' => 'user', 'content' => $request->user],
             ],
             'temperature' => 0,
-            'max_tokens' => (int) config('ai.deepseek.max_tokens', 2048),
+            'max_tokens' => (int) config('ai.deepseek.max_tokens', 10000),
             'stream' => false,
         ];
 

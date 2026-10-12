@@ -16,7 +16,7 @@ return [
         'model' => env('AI_MODEL', 'deepseek-flash'),
         'connect_timeout' => 5,
         'timeout' => 25,
-        'max_tokens' => 2048,
+        'max_tokens' => (int) env('AI_MAX_TOKENS', 10000),
     ],
 
     // PRD §13 initial values; retuned from the evaluation dataset (skill prompt-eval).
