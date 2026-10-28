@@ -53,11 +53,12 @@ final readonly class ReportDataSet
     }
 
     /**
-     * @return array{activities: int, completed: int, ongoing: int, waiting: int, cross_month: int, incidents: int}
+     * @return array{tasks: int, activities: int, completed: int, ongoing: int, waiting: int, cross_month: int, incidents: int}
      */
     public function counts(): array
     {
         return [
+            'tasks' => count($this->completedTaskIds) + count($this->ongoingTaskIds) + count($this->waitingTaskIds),
             'activities' => count($this->activities),
             'completed' => count($this->completedTaskIds),
             'ongoing' => count($this->ongoingTaskIds),

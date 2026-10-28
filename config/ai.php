@@ -34,7 +34,7 @@ return [
     ],
 
     'report_section' => [
-        'prompt' => 'report_section@v1',
+        'prompt' => 'report_section@v2',
     ],
 
     'correction' => [

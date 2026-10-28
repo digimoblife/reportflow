@@ -191,7 +191,7 @@ describe('facts (deterministic Markdown)', function () {
             expect($this->facts->fallbackNarrative($section, $this->data, ReportType::Monthly, Language::English))->not->toBe('');
         }
 
-        expect($this->facts->fallbackNarrative('overview', $this->data, ReportType::Monthly, Language::English))->toContain('2 activities were recorded for Harbor Portal');
+        expect($this->facts->fallbackNarrative('overview', $this->data, ReportType::Monthly, Language::English))->toContain('2 tasks were worked on for Harbor Portal');
     });
 });
 

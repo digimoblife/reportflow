@@ -91,7 +91,7 @@ describe('a generated version', function () {
         expect($sections)->toBe(['overview', 'detailed', 'ongoing', 'summary'])
             ->and(array_column($ongoing['tasks'], 'title'))->toBe(['Shipment Tracking API'])   // only the ongoing task, not the completed one
             ->and(AiInteraction::query()->where('purpose', 'report_section')->count())->toBe(4)
-            ->and(AiInteraction::query()->where('purpose', 'report_section')->first()->prompt_version)->toBe('report_section@v1')
+            ->and(AiInteraction::query()->where('purpose', 'report_section')->first()->prompt_version)->toBe('report_section@v2')
             ->and(AiInteraction::query()->where('purpose', 'report_section')->first()->report_id)->toBe($this->report->id);
     });
 
@@ -124,7 +124,7 @@ describe('traceability', function () {
 
         $overview = sectionOf($this->generator->generate($this->report), 'overview');
 
-        expect($overview['fallback'])->toBeTrue()->and($overview['markdown'])->toContain('During September 2026, 3 activities were recorded for Harbor Portal')
+        expect($overview['fallback'])->toBeTrue()->and($overview['markdown'])->toContain('During September 2026, 2 tasks were worked on for Harbor Portal')
             ->and($overview['markdown'])->not->toContain('Not in this report');
         expect(AiInteraction::query()->where('success', false)->first()->error)->toContain('markdown:unknown_task_token');
     });
@@ -206,7 +206,7 @@ describe('traceability', function () {
         $version = $this->generator->generate($empty);
 
         expect(fakeAi()->requests)->toBe([])->and(sectionOf($version, 'incidents')['markdown'])->toBe('None.')
-            ->and(sectionOf($version, 'overview')['markdown'])->toContain('0 activities were recorded');
+            ->and(sectionOf($version, 'overview')['markdown'])->toContain('0 tasks were worked on');
     });
 
     it('never puts message text, summaries or the rejected reply in the logs', function () {

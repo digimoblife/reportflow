@@ -63,6 +63,7 @@ class ReportFactsBuilder
         return (string) Lang::get('report.fallback.'.$section, [
             'project' => $data->projectName,
             'period' => $this->periodLabel($type, $data->periodStart, $data->periodEnd, $language),
+            'tasks' => $counts['tasks'],
             'activities' => $counts['activities'],
             'completed' => $counts['completed'],
             'ongoing' => $counts['ongoing'],

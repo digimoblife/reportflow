@@ -59,9 +59,9 @@ return [
 
     // Kalimat pengganti bila narasi AI ditolak backend (traceability): hanya angka dari data.
     'fallback' => [
-        'overview' => 'Pada periode :period tercatat :activities aktivitas pada project :project: :completed task selesai, :ongoing task berjalan, :waiting task menunggu, dan :cross task lintas bulan.',
+        'overview' => 'Pada periode :period terdapat :tasks task yang dikerjakan pada project :project: :completed task selesai, :ongoing task berjalan, :waiting task menunggu, dan :cross task lintas bulan.',
         'detailed' => 'Rincian aktivitas pada periode ini disajikan per task berikut.',
         'ongoing' => 'Task berikut masih berjalan atau menunggu pada akhir periode.',
-        'summary' => 'Pada periode :period tercatat :activities aktivitas; :completed task diselesaikan dan :open task masih berjalan atau menunggu.',
+        'summary' => 'Pada periode :period terdapat :tasks task yang dikerjakan; :completed task diselesaikan dan :open task masih berjalan atau menunggu.',
     ],
 ];

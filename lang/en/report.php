@@ -59,9 +59,9 @@ return [
 
     // Sentences used when the AI narrative is rejected by the backend (traceability): numbers from the data only.
     'fallback' => [
-        'overview' => 'During :period, :activities activities were recorded for :project: :completed tasks completed, :ongoing tasks ongoing, :waiting tasks waiting and :cross tasks carried over from earlier months.',
+        'overview' => 'During :period, :tasks tasks were worked on for :project: :completed tasks completed, :ongoing tasks ongoing, :waiting tasks waiting and :cross tasks carried over from earlier months.',
         'detailed' => 'The activities of this period are listed below, task by task.',
         'ongoing' => 'The following tasks were still ongoing or waiting at the end of the period.',
-        'summary' => 'During :period, :activities activities were recorded; :completed tasks were completed and :open tasks remain ongoing or waiting.',
+        'summary' => 'During :period, :tasks tasks were worked on; :completed tasks were completed and :open tasks remain ongoing or waiting.',
     ],
 ];
