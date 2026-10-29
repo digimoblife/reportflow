@@ -66,7 +66,7 @@ class CommandRouter
             'report' => $this->reports->start($user, $chatId, $language, $argument),
             'review' => $this->reports->review($user, $chatId, $language),
             'reports' => $this->reports->reports($user, $chatId, $language),
-            'scrum' => $this->scrum->start($user, $chatId, $language),
+            'scrum' => $this->scrum->start($user, $chatId, $language, $argument),
             default => null,
         };
     }

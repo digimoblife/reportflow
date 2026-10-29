@@ -13,6 +13,9 @@ Artisan::command('inspire', function () {
 // PRD §25: the daily worklog reminder. Cheap when nothing is due; the dispatcher is idempotent.
 Schedule::command('reminders:dispatch')->everyMinute()->withoutOverlapping(5);
 
+// PRD Scrum §5: morning scrum brief standup helper for active projects
+Schedule::command('scrum:morning-brief')->everyMinute()->withoutOverlapping(5);
+
 // PRD §78, §84: a heartbeat for external monitors, and the five-minute watch over disk, services, queues and backups.
 Schedule::call(fn () => Cache::put(HealthChecks::HEARTBEAT_SCHEDULER, now('UTC')->getTimestamp(), 3600))->everyMinute()->name('ops-heartbeat');
 Schedule::command('ops:check')->everyFiveMinutes()->withoutOverlapping(5);

@@ -6,9 +6,11 @@ use App\Enums\Language;
 use App\Models\Person;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\Scrum\MorningScrumBriefService;
 use App\Services\Scrum\ScrumService;
 use App\Services\Scrum\ScrumSessionManager;
 use App\Services\Scrum\ScrumTextParser;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 
 class ScrumTelegramHandler
@@ -18,6 +20,7 @@ class ScrumTelegramHandler
         private readonly ScrumService $scrum,
         private readonly ScrumTextParser $parser,
         private readonly TelegramMessenger $messenger,
+        private readonly MorningScrumBriefService $briefService,
     ) {}
 
     public function register(CallbackRouter $router): void
@@ -25,8 +28,17 @@ class ScrumTelegramHandler
         $router->onScrum(fn (ScrumCallback $data, TelegramUpdate $update, User $user, Language $language) => $this->handleCallback($data, $update, $user, $language));
     }
 
-    public function start(User $user, int $chatId, Language $language): void
+    public function start(User $user, int $chatId, Language $language, ?string $argument = null): void
     {
+        if ($argument !== null && in_array(strtolower(trim($argument)), ['brief', 'standup', 'morning'], true)) {
+            $sent = $this->briefService->sendBriefForUser($user, CarbonImmutable::now('UTC'), force: true);
+            if ($sent === 0) {
+                $this->messenger->trySend($chatId, 'Belum ada catatan scrum sebelumnya yang tersimpan untuk membuat Morning Brief.');
+            }
+
+            return;
+        }
+
         $projects = Project::query()->where('status', 'active')->orderBy('name')->get();
 
         if ($projects->isEmpty()) {
