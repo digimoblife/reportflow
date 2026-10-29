@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -56,5 +57,13 @@ class Person extends Model implements UserScoped
             ->as('assignment')
             ->withPivot('id', 'role')
             ->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<ScrumEntry, $this>
+     */
+    public function scrumEntries(): HasMany
+    {
+        return $this->hasMany(ScrumEntry::class);
     }
 }

@@ -29,6 +29,9 @@ class CallbackRouter
     /** @var (Closure(ReportStartCallback, TelegramUpdate, User, Language): void)|null */
     private ?Closure $reportStartHandler = null;
 
+    /** @var (Closure(ScrumCallback, TelegramUpdate, User, Language): void)|null */
+    private ?Closure $scrumHandler = null;
+
     public function __construct(
         private readonly TelegramMessenger $messenger,
         private readonly BotMessages $messages,
@@ -75,6 +78,14 @@ class CallbackRouter
     }
 
     /**
+     * @param  Closure(ScrumCallback, TelegramUpdate, User, Language): void  $handler
+     */
+    public function onScrum(Closure $handler): void
+    {
+        $this->scrumHandler = $handler;
+    }
+
+    /**
      * Must run inside the user's UserContext.
      */
     public function handle(TelegramUpdate $update, User $user, Language $language): void
@@ -108,6 +119,14 @@ class CallbackRouter
 
         if ($view !== null && $this->viewHandler !== null) {
             ($this->viewHandler)($view, $update, $user, $language);
+
+            return;
+        }
+
+        $scrum = ScrumCallback::parse((string) $update->callbackData);
+
+        if ($scrum !== null && $this->scrumHandler !== null) {
+            ($this->scrumHandler)($scrum, $update, $user, $language);
 
             return;
         }

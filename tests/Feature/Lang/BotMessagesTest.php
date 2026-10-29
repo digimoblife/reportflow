@@ -109,12 +109,12 @@ it('throws for an unknown key', function () {
 })->throws(InvalidArgumentException::class);
 
 it('registers exactly the commands of PRD §20, without /update', function () {
-    $expected = ['start', 'help', 'projects', 'project', 'tasks', 'task', 'undo', 'inbox', 'report', 'reports', 'review', 'generate', 'settings', 'reminder'];
+    $expected = ['start', 'help', 'projects', 'project', 'tasks', 'task', 'undo', 'inbox', 'report', 'reports', 'review', 'generate', 'settings', 'reminder', 'scrum'];
     $registry = new BotCommandRegistry;
 
     expect(array_map(fn ($c) => $c->name, $registry->all()))->toBe($expected)
         ->and($registry->find('update'))->toBeNull()
-        ->and(array_values(array_map(fn ($c) => $c->name, array_filter($registry->all(), fn ($c) => $c->available))))->toBe(['start', 'help', 'projects', 'project', 'tasks', 'task', 'undo', 'inbox', 'report', 'reports', 'review', 'reminder']);
+        ->and(array_values(array_map(fn ($c) => $c->name, array_filter($registry->all(), fn ($c) => $c->available))))->toBe(['start', 'help', 'projects', 'project', 'tasks', 'task', 'undo', 'inbox', 'report', 'reports', 'review', 'reminder', 'scrum']);
 });
 
 it('describes every command in both languages within Telegram limits', function () {
@@ -122,7 +122,7 @@ it('describes every command in both languages within Telegram limits', function 
 
     foreach ([Language::Indonesian, Language::English] as $language) {
         $payload = $registry->payload($language);
-        expect($payload)->toHaveCount(14);
+        expect($payload)->toHaveCount(15);
 
         foreach ($payload as $entry) {
             expect($entry['command'])->toMatch('/^[a-z0-9_]{1,32}$/')

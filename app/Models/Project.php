@@ -62,6 +62,14 @@ class Project extends Model implements UserScoped
     }
 
     /**
+     * @return HasMany<ScrumEntry, $this>
+     */
+    public function scrumEntries(): HasMany
+    {
+        return $this->hasMany(ScrumEntry::class);
+    }
+
+    /**
      * @return HasMany<Activity, $this>
      */
     public function activities(): HasMany

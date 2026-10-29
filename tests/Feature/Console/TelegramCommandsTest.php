@@ -76,7 +76,7 @@ describe('telegram:sync-commands', function () {
             ->and($sets[0]['language_code'])->toBeNull()
             ->and($sets[1]['language_code'])->toBe('en')
             ->and(array_column($sets[0]['commands'], 'command'))->toBe(array_column($sets[1]['commands'], 'command'))
-            ->and($sets[0]['commands'])->toHaveCount(14);
+            ->and($sets[0]['commands'])->toHaveCount(15);
     });
 });
 

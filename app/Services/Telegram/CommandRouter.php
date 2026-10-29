@@ -31,6 +31,7 @@ class CommandRouter
         private readonly ReminderSettings $reminders,
         private readonly ReportCommands $reports,
         private readonly ProjectService $projects,
+        private readonly ScrumTelegramHandler $scrum,
     ) {}
 
     /**
@@ -65,6 +66,7 @@ class CommandRouter
             'report' => $this->reports->start($user, $chatId, $language, $argument),
             'review' => $this->reports->review($user, $chatId, $language),
             'reports' => $this->reports->reports($user, $chatId, $language),
+            'scrum' => $this->scrum->start($user, $chatId, $language),
             default => null,
         };
     }

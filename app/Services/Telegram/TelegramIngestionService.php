@@ -10,6 +10,7 @@ use App\Models\InboundMessage;
 use App\Models\User;
 use App\Services\Redaction\RedactionResult;
 use App\Services\Redaction\RedactionService;
+use App\Services\Scrum\ScrumSessionManager;
 use App\Services\Worklog\Outcome;
 use App\Services\Worklog\ProjectService;
 use App\Support\UserContext;
@@ -40,6 +41,8 @@ class TelegramIngestionService
         private readonly CallbackRouter $callbacks,
         private readonly AwaitingReportInstruction $awaitingInstruction,
         private readonly ReportReviewHandler $reportReview,
+        private readonly ScrumSessionManager $scrumSession,
+        private readonly ScrumTelegramHandler $scrumHandler,
     ) {}
 
     public function handle(TelegramUpdate $update): void
@@ -111,6 +114,19 @@ class TelegramIngestionService
         if (! $update->isEdit() && $this->onboarding->isAwaitingProjectName($user->id) && ! $update->hasAttachment()) {
             $this->once($update, fn () => $this->createFirstProject($redaction, $update, $user, $default));
 
+            return;
+        }
+
+        if (! $update->isEdit() && ! $update->hasAttachment() && $this->scrumSession->isAwaitingInput($user->id)) {
+            $this->once($update, function () use ($redaction, $update, $user, $default): void {
+                $this->notifyCredential($update->chatId, $redaction, $default);
+                $this->scrumHandler->handleTextInput($user, $update->chatId, $default, $redaction->text);
+            });
+
+            return;
+        }
+
+        if (! $update->isEdit() && ! $update->hasAttachment() && $this->scrumHandler->handleDirectPaste($user, $update->chatId, $default, $redaction->text)) {
             return;
         }
 
