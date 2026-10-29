@@ -213,6 +213,37 @@ return [
                 'deleted' => 'Team member deleted.',
             ],
         ],
+        'scrum' => [
+            'nav' => 'Scrum Entries',
+            'title' => 'Scrum Entry',
+            'plural' => 'Scrum Entries',
+            'columns' => [
+                'date' => 'Date',
+                'project' => 'Project',
+                'person' => 'Team Member',
+                'what_have_done' => 'Done',
+                'issue' => 'Issue / Blocker',
+                'what_to_do_next' => 'Next Plan',
+            ],
+            'fields' => [
+                'project' => 'Project',
+                'person' => 'Team Member',
+                'date' => 'Scrum Date',
+                'what_have_done' => 'What Have Done',
+                'what_have_done_placeholder' => "- Design homepage\n- Review pull request",
+                'issue' => 'Issue / Blocker (optional)',
+                'issue_placeholder' => '- Missing UI components',
+                'what_to_do_next' => 'What To Do Next',
+                'what_to_do_next_placeholder' => "- Complete homepage design\n- Integrate payment gateway",
+            ],
+            'filters' => [
+                'project' => 'Project',
+                'person' => 'Team Member',
+            ],
+            'actions' => [
+                'create' => 'New Scrum Entry',
+            ],
+        ],
         'inbox' => [
             'nav' => 'Inbox',
             'title' => 'Inbox',

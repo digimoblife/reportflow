@@ -213,6 +213,37 @@ return [
                 'deleted' => 'Anggota tim berhasil dihapus.',
             ],
         ],
+        'scrum' => [
+            'nav' => 'Catatan Scrum',
+            'title' => 'Catatan Scrum',
+            'plural' => 'Catatan Scrum',
+            'columns' => [
+                'date' => 'Tanggal',
+                'project' => 'Project',
+                'person' => 'Anggota Tim',
+                'what_have_done' => 'Selesai (Done)',
+                'issue' => 'Issue / Kendala',
+                'what_to_do_next' => 'Rencana (Next)',
+            ],
+            'fields' => [
+                'project' => 'Project',
+                'person' => 'Anggota Tim',
+                'date' => 'Tanggal Scrum',
+                'what_have_done' => 'What Have Done (Pekerjaan Selesai)',
+                'what_have_done_placeholder' => "- Membuat desain homepage\n- Review pull request",
+                'issue' => 'Issue / Kendala (opsional)',
+                'issue_placeholder' => '- Komponen website kurang',
+                'what_to_do_next' => 'What To Do Next (Rencana Berikutnya)',
+                'what_to_do_next_placeholder' => "- Menyelesaikan desain homepage\n- Integrasi payment gateway",
+            ],
+            'filters' => [
+                'project' => 'Project',
+                'person' => 'Anggota Tim',
+            ],
+            'actions' => [
+                'create' => 'Tambah Catatan Scrum',
+            ],
+        ],
         'inbox' => [
             'nav' => 'Inbox',
             'title' => 'Inbox',
