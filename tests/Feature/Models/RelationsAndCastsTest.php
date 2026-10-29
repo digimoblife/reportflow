@@ -52,7 +52,10 @@ it('links projects, tasks, activities, people and events', function () {
         'activity_type' => ActivityType::Milestone,
         'content_structured' => ['entities' => ['domain']],
     ]);
-    $person = Person::factory()->create();
+    $person = Person::factory()->create([
+        'project_id' => $project->id,
+        'role_title' => 'Lead Developer',
+    ]);
     $task->people()->attach($person, ['role' => TaskPersonRole::Requester]);
     $event = TaskEvent::factory()->for($task)->create([
         'event_type' => TaskEventType::StatusChanged,
@@ -69,6 +72,7 @@ it('links projects, tasks, activities, people and events', function () {
         ->and($project->aliases)->toBe(['NC', 'nineclub'])
         ->and($project->status)->toBe(ProjectStatus::Active)
         ->and($project->tasks->modelKeys())->toBe([$task->id])
+        ->and($project->people->modelKeys())->toBe([$person->id])
         ->and($project->activities->modelKeys())->toBe([$activity->id])
         ->and($task->status)->toBe(TaskStatus::Waiting)
         ->and($task->priority)->toBe(TaskPriority::Normal)
@@ -77,6 +81,8 @@ it('links projects, tasks, activities, people and events', function () {
         ->and($task->events->first()->to_value)->toBe(['status' => 'waiting', 'waiting_reason' => 'client'])
         ->and($task->people->first()->assignment->role)->toBe(TaskPersonRole::Requester)
         ->and($person->tasks->modelKeys())->toBe([$task->id])
+        ->and($person->project->is($project))->toBeTrue()
+        ->and($person->role_title)->toBe('Lead Developer')
         ->and($activity->activity_type)->toBe(ActivityType::Milestone)
         ->and($activity->content_structured)->toBe(['entities' => ['domain']])
         ->and($activity->activity_date)->toBeInstanceOf(CarbonInterface::class)

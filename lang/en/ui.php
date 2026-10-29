@@ -179,6 +179,39 @@ return [
                 'undone' => 'Undone',
             ],
         ],
+        'team' => [
+            'nav' => 'Team Members',
+            'title' => 'Team Member',
+            'plural' => 'Team Members',
+            'columns' => [
+                'name' => 'Name',
+                'project' => 'Project',
+                'role' => 'Role / Title',
+                'aliases' => 'Aliases',
+                'tasks_count' => 'Assigned Tasks',
+                'created_at' => 'Created',
+            ],
+            'fields' => [
+                'name' => 'Member Name',
+                'project' => 'Project',
+                'role' => 'Role / Title (optional)',
+                'role_placeholder' => 'e.g. Frontend Developer, UI/UX Designer',
+                'aliases' => 'Aliases / Nicknames',
+                'aliases_helper' => 'Nicknames recognized by the bot / AI.',
+                'notes' => 'Notes',
+            ],
+            'filters' => [
+                'project' => 'Project',
+            ],
+            'actions' => [
+                'create' => 'Add Team Member',
+            ],
+            'notices' => [
+                'created' => 'Team member added successfully.',
+                'updated' => 'Team member updated successfully.',
+                'deleted' => 'Team member deleted.',
+            ],
+        ],
         'inbox' => [
             'nav' => 'Inbox',
             'title' => 'Inbox',

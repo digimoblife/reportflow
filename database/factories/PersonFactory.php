@@ -17,7 +17,9 @@ class PersonFactory extends Factory
     {
         return [
             'user_id' => $this->contextUser(),
+            'project_id' => null,
             'name' => fake()->firstName(),
+            'role_title' => null,
             'aliases' => [],
             'notes' => null,
         ];

@@ -179,6 +179,39 @@ return [
                 'undone' => 'Dibatalkan',
             ],
         ],
+        'team' => [
+            'nav' => 'Manajemen Tim',
+            'title' => 'Anggota Tim',
+            'plural' => 'Anggota Tim',
+            'columns' => [
+                'name' => 'Nama',
+                'project' => 'Project',
+                'role' => 'Role / Jabatan',
+                'aliases' => 'Alias',
+                'tasks_count' => 'Task Terkait',
+                'created_at' => 'Dibuat',
+            ],
+            'fields' => [
+                'name' => 'Nama Anggota',
+                'project' => 'Project',
+                'role' => 'Role / Jabatan (opsional)',
+                'role_placeholder' => 'Contoh: Frontend Developer, UI/UX Designer',
+                'aliases' => 'Alias / Panggilan',
+                'aliases_helper' => 'Nama panggilan untuk dikenali oleh bot / AI.',
+                'notes' => 'Catatan',
+            ],
+            'filters' => [
+                'project' => 'Project',
+            ],
+            'actions' => [
+                'create' => 'Tambah Anggota Tim',
+            ],
+            'notices' => [
+                'created' => 'Anggota tim berhasil ditambahkan.',
+                'updated' => 'Data anggota tim berhasil diperbarui.',
+                'deleted' => 'Anggota tim berhasil dihapus.',
+            ],
+        ],
         'inbox' => [
             'nav' => 'Inbox',
             'title' => 'Inbox',

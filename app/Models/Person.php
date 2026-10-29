@@ -9,16 +9,19 @@ use Database\Factories\PersonFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property int $id
+ * @property int|null $project_id
  * @property string $name
+ * @property string|null $role_title
  * @property array<int, mixed>|null $aliases
  *
  * PRD §49 people: requesters, assignees and stakeholders mentioned in worklogs.
  */
-#[Fillable(['user_id', 'name', 'aliases', 'notes'])]
+#[Fillable(['user_id', 'project_id', 'name', 'role_title', 'aliases', 'notes'])]
 class Person extends Model implements UserScoped
 {
     use BelongsToUser;
@@ -33,6 +36,14 @@ class Person extends Model implements UserScoped
         return [
             'aliases' => 'array',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Project, $this>
+     */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     /**

@@ -52,6 +52,16 @@ class Project extends Model implements UserScoped
     }
 
     /**
+     * Team members / people assigned to this project.
+     *
+     * @return HasMany<Person, $this>
+     */
+    public function people(): HasMany
+    {
+        return $this->hasMany(Person::class);
+    }
+
+    /**
      * @return HasMany<Activity, $this>
      */
     public function activities(): HasMany
