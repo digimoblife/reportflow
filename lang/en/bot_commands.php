@@ -15,5 +15,5 @@ return [
     'generate' => 'Generate a report now',
     'settings' => 'Settings',
     'reminder' => 'Set reminders',
-    'scrum' => 'Record daily team scrum',
+    'scrum' => 'Record daily team scrum or view brief (/scrum brief)',
 ];

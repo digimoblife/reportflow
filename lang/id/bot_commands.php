@@ -20,5 +20,5 @@ return [
     'generate' => 'Buat laporan sekarang',
     'settings' => 'Pengaturan',
     'reminder' => 'Atur pengingat',
-    'scrum' => 'Catat daily scrum tim',
+    'scrum' => 'Catat daily scrum atau lihat brief (/scrum brief)',
 ];
