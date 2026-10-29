@@ -17,6 +17,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -69,45 +70,53 @@ class ScrumEntryResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->components([
-            DatePicker::make('scrum_date')
-                ->label(__('ui.dashboard.scrum.fields.date'))
-                ->required()
-                ->default(fn () => now()->toDateString()),
-            Select::make('project_id')
-                ->label(__('ui.dashboard.scrum.fields.project'))
-                ->options(fn (): array => Project::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id')->all())
-                ->required()
-                ->searchable()
-                ->preload()
-                ->live(),
-            Select::make('person_id')
-                ->label(__('ui.dashboard.scrum.fields.person'))
-                ->options(function (callable $get): array {
-                    $projectId = $get('project_id');
+        return $schema
+            ->columns(1)
+            ->components([
+                DatePicker::make('scrum_date')
+                    ->label(__('ui.dashboard.scrum.fields.date'))
+                    ->required()
+                    ->default(fn () => now()->toDateString())
+                    ->columnSpanFull(),
+                Select::make('project_id')
+                    ->label(__('ui.dashboard.scrum.fields.project'))
+                    ->options(fn (): array => Project::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id')->all())
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->live()
+                    ->columnSpanFull(),
+                Select::make('person_id')
+                    ->label(__('ui.dashboard.scrum.fields.person'))
+                    ->options(function (callable $get): array {
+                        $projectId = $get('project_id');
 
-                    return Person::query()
-                        ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
-                        ->orderBy('name')
-                        ->pluck('name', 'id')
-                        ->all();
-                })
-                ->required()
-                ->searchable()
-                ->preload(),
-            Textarea::make('what_to_do_next')
-                ->label(__('ui.dashboard.scrum.fields.what_to_do_next'))
-                ->placeholder((string) __('ui.dashboard.scrum.fields.what_to_do_next_placeholder'))
-                ->rows(3),
-            Textarea::make('what_have_done')
-                ->label(__('ui.dashboard.scrum.fields.what_have_done'))
-                ->placeholder((string) __('ui.dashboard.scrum.fields.what_have_done_placeholder'))
-                ->rows(3),
-            Textarea::make('issue')
-                ->label(__('ui.dashboard.scrum.fields.issue'))
-                ->placeholder((string) __('ui.dashboard.scrum.fields.issue_placeholder'))
-                ->rows(2),
-        ]);
+                        return Person::query()
+                            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->all();
+                    })
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->columnSpanFull(),
+                Textarea::make('what_have_done')
+                    ->label(__('ui.dashboard.scrum.fields.what_have_done'))
+                    ->placeholder((string) __('ui.dashboard.scrum.fields.what_have_done_placeholder'))
+                    ->rows(3)
+                    ->columnSpanFull(),
+                Textarea::make('issue')
+                    ->label(__('ui.dashboard.scrum.fields.issue'))
+                    ->placeholder((string) __('ui.dashboard.scrum.fields.issue_placeholder'))
+                    ->rows(2)
+                    ->columnSpanFull(),
+                Textarea::make('what_to_do_next')
+                    ->label(__('ui.dashboard.scrum.fields.what_to_do_next'))
+                    ->placeholder((string) __('ui.dashboard.scrum.fields.what_to_do_next_placeholder'))
+                    ->rows(3)
+                    ->columnSpanFull(),
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -154,8 +163,10 @@ class ScrumEntryResource extends Resource
                     ->options(fn (): array => Person::query()->orderBy('name')->pluck('name', 'id')->all()),
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->modalWidth(Width::TwoExtraLarge),
                 EditAction::make()
+                    ->modalWidth(Width::TwoExtraLarge)
                     ->using(function (ScrumEntry $record, array $data): ScrumEntry {
                         $user = auth()->user();
                         if ($user instanceof User) {

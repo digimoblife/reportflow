@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Scrum\ScrumService;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Enums\Width;
 
 class ListScrumEntries extends ListRecords
 {
@@ -18,6 +19,7 @@ class ListScrumEntries extends ListRecords
         return [
             CreateAction::make()
                 ->label((string) __('ui.dashboard.scrum.actions.create'))
+                ->modalWidth(Width::TwoExtraLarge)
                 ->using(function (array $data): ScrumEntry {
                     $user = auth()->user();
                     if ($user instanceof User) {
