@@ -276,7 +276,7 @@ class ViewReport extends ViewRecord
                     SendReportReview::dispatch($this->loadedVersionId, (int) auth()->id());
                     Notification::make()->title((string) __('ui.dashboard.reports.notices.sent_telegram'))->success()->send();
                 }),
-            ListReports::generateAction($report->project_id, $report->period_start->format('Y-m-d'), $report->period_end->format('Y-m-d'), $report->language->value, 'regenerate')->color('gray'),
+            ListReports::generateAction($report->project_id, $report->period_start->format('Y-m-d'), $report->period_end->format('Y-m-d'), $report->language->value, 'regenerate', $report->type->value)->color('gray'),
         ];
     }
 

@@ -9,6 +9,7 @@ use App\Jobs\SendReportReview;
 use App\Models\Activity;
 use App\Models\Project;
 use App\Models\Report;
+use App\Models\ScrumEntry;
 use App\Models\User;
 use App\Services\Report\ReportFactsBuilder;
 use App\Services\Report\ReportGenerator;
@@ -31,11 +32,19 @@ class ReportCommands
     ) {}
 
     /**
-     * `/report [YYYY-MM]`: the month to report is the one given, else the current month from day 25 on, else the last one.
+     * `/report [YYYY-MM]` or `/report weekly`: the month to report is the one given, else weekly if requested,
+     * else the current month from day 25 on, else the last one.
      * Projects with no activity in it are not offered; with several, the person picks.
      */
     public function start(User $user, int $chatId, Language $language, #[\SensitiveParameter] ?string $argument): void
     {
+        $arg = $argument !== null ? trim($argument) : '';
+        if (in_array(strtolower($arg), ['weekly', 'mingguan', 'week'], true)) {
+            $this->startWeekly($user, $chatId, $language);
+
+            return;
+        }
+
         $month = $this->month($user, $argument);
 
         if ($month === null) {
@@ -71,14 +80,93 @@ class ReportCommands
         ));
     }
 
-    /** The person picked a project for the month. */
+    public function startWeekly(User $user, int $chatId, Language $language): void
+    {
+        $now = CarbonImmutable::now($user->timezone);
+        $from = $now->startOfWeek()->format('Y-m-d');
+        $to = $now->endOfWeek()->format('Y-m-d');
+
+        $projects = [];
+
+        foreach (Project::query()->where('status', 'active')->orderBy('name')->get() as $project) {
+            $hasActivity = Activity::query()->where('project_id', $project->id)->whereBetween('activity_date', [$from, $to])->exists();
+            $hasScrum = ScrumEntry::query()->where('project_id', $project->id)->whereBetween('scrum_date', [$from, $to])->exists();
+            if ($hasActivity || $hasScrum) {
+                $projects[] = $project;
+            }
+        }
+
+        if ($projects === []) {
+            $projects = Project::query()->where('status', 'active')->orderBy('name')->get()->all();
+        }
+
+        $periodLabel = $this->facts->periodLabel(ReportType::Weekly, $from, $to, $language);
+
+        if ($projects === []) {
+            $this->messenger->trySend($chatId, $this->messages->get('report.no_activity', $language, ['month' => $periodLabel]));
+
+            return;
+        }
+
+        if (count($projects) === 1) {
+            $this->beginWeekly($user, $chatId, $language, $projects[0], $from, $to);
+
+            return;
+        }
+
+        $weekCode = 'w'.$now->isoWeekYear().'-'.sprintf('%02d', $now->isoWeek());
+
+        $this->messenger->trySend($chatId, $this->messages->get('report.pick_project', $language, ['month' => $periodLabel]), null, array_map(
+            fn (Project $p): array => [['text' => '📁 '.mb_substr($p->name, 0, 40), 'callback_data' => (new ReportStartCallback($p->id, $weekCode))->encode()]],
+            array_slice($projects, 0, 10),
+        ));
+    }
+
+    public function beginWeekly(User $user, int $chatId, Language $language, Project $project, string $from, string $to): void
+    {
+        $reportLanguage = $project->default_language ?? $user->default_language;
+        $report = $this->generator->findOrCreate($project, ReportType::Weekly, $from, $to, $reportLanguage);
+
+        if ($report->status === ReportStatus::Approved) {
+            $periodLabel = $this->facts->periodLabel(ReportType::Weekly, $from, $to, $language);
+            $this->messenger->trySend($chatId, $this->messages->get('report.already_approved', $language, ['period' => $periodLabel]), null, [[
+                $this->button($report, 'nv', 'new_version', $language),
+                $this->button($report, 'ig', 'dismiss', $language),
+            ]]);
+
+            return;
+        }
+
+        $pending = $this->generator->pendingEntries();
+
+        if ($pending > 0) {
+            $this->messenger->trySend($chatId, $this->messages->get('report.pending_entries', $language, ['count' => $pending]), null, [[
+                $this->button($report, 'wt', 'wait', $language),
+                $this->button($report, 'sk', 'skip', $language),
+            ]]);
+
+            return;
+        }
+
+        $this->generate($report, $chatId, $language, false);
+    }
+
+    /** The person picked a project for the month or week. */
     public function startFromButton(ReportStartCallback $data, TelegramUpdate $update, User $user, Language $language): void
     {
         $this->messenger->tryAnswer((string) $update->callbackId);
         $project = Project::query()->find($data->projectId);
 
         if ($project !== null) {
-            $this->begin($user, $update->chatId, $language, $project, $data->month);
+            if (str_starts_with($data->month, 'w')) {
+                [$year, $week] = explode('-', substr($data->month, 1));
+                $date = CarbonImmutable::now($user->timezone)->setISODate((int) $year, (int) $week);
+                $from = $date->startOfWeek()->format('Y-m-d');
+                $to = $date->endOfWeek()->format('Y-m-d');
+                $this->beginWeekly($user, $update->chatId, $language, $project, $from, $to);
+            } else {
+                $this->begin($user, $update->chatId, $language, $project, $data->month);
+            }
         }
     }
 

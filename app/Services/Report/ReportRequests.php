@@ -35,10 +35,10 @@ class ReportRequests
      * @param  bool  $waitForEntries  "Tunggu Selesai": hold back until nothing is being processed (or the wait limit)
      * @return array{status: string, report: Report|null}
      */
-    public function request(Project $project, string $start, string $end, Language $language, bool $waitForEntries = false, string $channel = 'dashboard'): array
+    public function request(Project $project, string $start, string $end, Language $language, bool $waitForEntries = false, string $channel = 'dashboard', ?ReportType $type = null): array
     {
         try {
-            $report = $this->generator->findOrCreate($project, $this->typeOf($start, $end), $start, $end, $language);
+            $report = $this->generator->findOrCreate($project, $type ?? $this->typeOf($start, $end), $start, $end, $language);
         } catch (InvalidArgumentException|InvalidFormatException) {
             return ['status' => self::INVALID, 'report' => null];
         }
@@ -62,11 +62,20 @@ class ReportRequests
         return ['status' => self::QUEUED, 'report' => $report];
     }
 
-    /** A whole calendar month is a monthly report; any other range is custom (PRD §36). */
+    /** A whole calendar month is a monthly report; Monday-Sunday week is weekly; any other range is custom (PRD §36, PRD Scrum §6). */
     public function typeOf(string $start, string $end): ReportType
     {
         $from = CarbonImmutable::parse($start);
+        $to = CarbonImmutable::parse($end);
 
-        return $from->day === 1 && $from->endOfMonth()->format('Y-m-d') === CarbonImmutable::parse($end)->format('Y-m-d') ? ReportType::Monthly : ReportType::Custom;
+        if ($from->day === 1 && $from->endOfMonth()->format('Y-m-d') === $to->format('Y-m-d')) {
+            return ReportType::Monthly;
+        }
+
+        if ($from->isMonday() && $to->isSunday() && (int) $from->diffInDays($to) === 6) {
+            return ReportType::Weekly;
+        }
+
+        return ReportType::Custom;
     }
 }

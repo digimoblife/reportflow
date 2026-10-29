@@ -61,6 +61,7 @@ return [
             'filters' => ['status' => 'Status', 'project' => 'Project'],
             'generate' => [
                 'action' => 'Buat laporan',
+                'type' => 'Tipe laporan',
                 'project' => 'Project',
                 'from' => 'Dari tanggal',
                 'until' => 'Sampai tanggal',

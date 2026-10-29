@@ -6,6 +6,7 @@
 
 return [
     'title' => 'Laporan Bulanan :project — :period',
+    'title_weekly' => 'Laporan Mingguan :project — :period',
     'title_custom' => 'Laporan Aktivitas :project — :period',
     'generic_template' => 'Laporan Bulanan Umum',
 

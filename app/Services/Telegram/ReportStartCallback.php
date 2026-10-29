@@ -12,24 +12,36 @@ final readonly class ReportStartCallback
 {
     public function __construct(
         public int $projectId,
-        public string $month,   // YYYY-MM
+        public string $month,   // YYYY-MM or wYYYY-WW
     ) {
-        if ($projectId < 1 || preg_match('/^(20[0-9]{2})-(0[1-9]|1[0-2])$/', $month) !== 1) {
+        if ($projectId < 1 || preg_match('/^(?:20[0-9]{2}-(?:0[1-9]|1[0-2])|w20[0-9]{2}-(?:0[1-9]|[1-4][0-9]|5[0-3]))$/', $month) !== 1) {
             throw new InvalidArgumentException('Invalid report start callback parts.');
         }
     }
 
     public static function parse(string $raw): ?self
     {
-        if (strlen($raw) > CallbackData::MAX_BYTES || preg_match('/^g:([0-9]{1,12}):(20[0-9]{2})(0[1-9]|1[0-2])$/D', $raw, $m) !== 1) {
+        if (strlen($raw) > CallbackData::MAX_BYTES) {
             return null;
         }
 
-        try {
-            return new self((int) $m[1], $m[2].'-'.$m[3]);
-        } catch (InvalidArgumentException) {
-            return null;
+        if (preg_match('/^g:([0-9]{1,12}):(20[0-9]{2})(0[1-9]|1[0-2])$/D', $raw, $m) === 1) {
+            try {
+                return new self((int) $m[1], $m[2].'-'.$m[3]);
+            } catch (InvalidArgumentException) {
+                return null;
+            }
         }
+
+        if (preg_match('/^g:([0-9]{1,12}):w(20[0-9]{2})(0[1-9]|[1-4][0-9]|5[0-3])$/D', $raw, $m) === 1) {
+            try {
+                return new self((int) $m[1], 'w'.$m[2].'-'.$m[3]);
+            } catch (InvalidArgumentException) {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     public function encode(): string

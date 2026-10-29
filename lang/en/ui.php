@@ -61,6 +61,7 @@ return [
             'filters' => ['status' => 'Status', 'project' => 'Project'],
             'generate' => [
                 'action' => 'Generate report',
+                'type' => 'Report type',
                 'project' => 'Project',
                 'from' => 'From date',
                 'until' => 'Until date',

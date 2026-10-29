@@ -23,12 +23,25 @@ class ReportFactsBuilder
             return $from->translatedFormat('F Y');
         }
 
+        if ($type === ReportType::Weekly) {
+            $weekNo = $from->isoWeek();
+            $range = $from->translatedFormat('j M').' – '.$to->translatedFormat('j M Y');
+
+            return $language === Language::English
+                ? "Week {$weekNo} ({$range})"
+                : "Minggu ke-{$weekNo} ({$range})";
+        }
+
         return $from->translatedFormat('j M Y').' – '.$to->translatedFormat('j M Y');
     }
 
     public function title(ReportDataSet $data, ReportType $type, Language $language): string
     {
-        $key = $type === ReportType::Monthly ? 'report.title' : 'report.title_custom';
+        $key = match ($type) {
+            ReportType::Monthly => 'report.title',
+            ReportType::Weekly => 'report.title_weekly',
+            default => 'report.title_custom',
+        };
 
         return (string) Lang::get($key, ['project' => $data->projectName, 'period' => $this->periodLabel($type, $data->periodStart, $data->periodEnd, $language)], $language->value);
     }
@@ -114,7 +127,8 @@ class ReportFactsBuilder
 
         foreach ($data->completedTaskIds as $id) {
             $task = $data->tasks[$id];
-            $rows[] = [$this->escape($task['title']), $this->date((string) $task['completed'], $language), (string) count($data->activitiesOf($id))];
+            $assignees = ! empty($task['people']) ? ' ('.implode(', ', $task['people']).')' : '';
+            $rows[] = [$this->escape($task['title']).$assignees, $this->date((string) $task['completed'], $language), (string) count($data->activitiesOf($id))];
         }
 
         return $this->table([$this->label('task', $language), $this->label('completed_on', $language), $this->label('activities', $language)], $rows);
@@ -129,7 +143,9 @@ class ReportFactsBuilder
         $blocks = [];
 
         foreach ($this->taskIdsByTitle($data, array_values(array_unique(array_map(fn (array $a): int => $a['task_id'], $data->activities)))) as $id) {
-            $lines = ['### '.$this->escape($data->tasks[$id]['title'] ?? '#'.$id), ''];
+            $task = $data->tasks[$id] ?? null;
+            $assignees = ($task !== null && ! empty($task['people'])) ? ' ('.implode(', ', $task['people']).')' : '';
+            $lines = ['### '.$this->escape($task['title'] ?? '#'.$id).$assignees, ''];
 
             foreach ($data->activitiesOf($id) as $a) {
                 $lines[] = '- '.$this->date($a['date'], $language).' — '.$this->typeLabel($a['type'], $language).': '.$this->escape($a['summary']);
@@ -153,7 +169,8 @@ class ReportFactsBuilder
 
         foreach ($this->taskIdsByTitle($data, $ids) as $id) {
             $task = $data->tasks[$id];
-            $rows[] = [$this->escape($task['title']), $this->statusLabel($task, $language), $task['last_activity'] === null ? '-' : $this->date($task['last_activity'], $language)];
+            $assignees = ! empty($task['people']) ? ' ('.implode(', ', $task['people']).')' : '';
+            $rows[] = [$this->escape($task['title']).$assignees, $this->statusLabel($task, $language), $task['last_activity'] === null ? '-' : $this->date($task['last_activity'], $language)];
         }
 
         return $this->table([$this->label('task', $language), $this->label('status', $language), $this->label('last_activity', $language)], $rows);

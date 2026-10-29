@@ -6,6 +6,7 @@
 
 return [
     'title' => ':project Monthly Report — :period',
+    'title_weekly' => ':project Weekly Report — :period',
     'title_custom' => ':project Activity Report — :period',
     'generic_template' => 'Generic Monthly Report',
 
